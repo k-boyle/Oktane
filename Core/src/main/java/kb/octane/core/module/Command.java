@@ -13,6 +13,9 @@ import kb.octane.core.results.precondition.SuccessfulPreconditionResult;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a command.
+ */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class Command {
     private final String name;
@@ -25,7 +28,7 @@ public class Command {
     private final Module module;
     private final boolean synchronised;
 
-    public Command(
+    Command(
             String name,
             ImmutableSet<String> aliases,
             Optional<String> description,
@@ -46,10 +49,15 @@ public class Command {
         this.synchronised = synchronised;
     }
 
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Runs the preconditions that belong to this command.
+     * @param context The context to pass to the preconditions.
+     * @return The result of executing the preconditions.
+     */
     public PreconditionResult runPreconditions(CommandContext context) {
         PreconditionResult moduleResult = module.runPreconditions(context);
 
@@ -77,10 +85,16 @@ public class Command {
             : SuccessfulPreconditionResult.get();
     }
 
+    /**
+     * @return The commands name.
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * @return The commands aliases.
+     */
     public ImmutableSet<String> aliases() {
         return aliases;
     }

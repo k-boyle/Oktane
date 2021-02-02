@@ -29,7 +29,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+/**
+ * The entry point for executing commands.
+ * @param <T> The type of context that's used in commands.
+ */
 public class CommandHandler<T extends CommandContext> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -37,16 +42,31 @@ public class CommandHandler<T extends CommandContext> {
 
     private final CommandMap commandMap;
     private final ArgumentParser argumentParser;
+    private final ImmutableList<Module> modules;
 
-    private CommandHandler(CommandMap commandMapper, ArgumentParser argumentParser) {
+    private CommandHandler(CommandMap commandMapper, ArgumentParser argumentParser, ImmutableList<Module> modules) {
         this.commandMap = commandMapper;
         this.argumentParser = argumentParser;
+        this.modules = modules;
     }
 
+    /**
+     * Creates a new builder for the CommandHandler.
+     * @param contextClazz The class representing the type of your context.
+     * @param <T> The type of context that's used in commands.
+     * @return A new CommandHandler builder.
+     */
     public static <T extends CommandContext> Builder<T> builderForContext(Class<T> contextClazz) {
+        Preconditions.checkNotNull(contextClazz, "contextClazz cannot be null");
         return new Builder<>(contextClazz);
     }
 
+    /**
+     * Attempts to executes a command based on the given input.
+     * @param input The input to parse.
+     * @param context The context for the command invocation.
+     * @return A Mono holding the result of the execution.
+     */
     public Mono<Result> executeAsync(String input, T context) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
@@ -127,7 +147,21 @@ public class CommandHandler<T extends CommandContext> {
         return Mono.just(new CommandMatchFailedResult(failedResults.build()));
     }
 
-    private static Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClazzes) {
+    /**
+     * @return All of the modules that belong to the CommandHandler.
+     */
+    public ImmutableList<Module> modules() {
+        return modules;
+    }
+
+    /**
+     * @return All of the commands that belong to the CommandHandler.
+     */
+    public Stream<Command> commands(){
+        return modules.stream().flatMap(module -> module.commands().stream());
+    }
+
+    private Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClazzes) {
         if (beanClazzes.isEmpty()) {
             return EMPTY_BEANS;
         }
@@ -135,6 +169,11 @@ public class CommandHandler<T extends CommandContext> {
         Object[] beans = new Object[beanClazzes.size()];
         for (int i = 0; i < beanClazzes.size(); i++) {
             Class<?> beanClazz = beanClazzes.get(i);
+            if (beanClazz.equals(getClass())) {
+                beans[i] = this;
+                continue;
+            }
+
             beans[i] = Preconditions.checkNotNull(
                 context.beanProvider().getBean(beanClazz),
                 "A bean of type %s must be in your provider",
@@ -145,6 +184,10 @@ public class CommandHandler<T extends CommandContext> {
         return beans;
     }
 
+    /**
+     * A builder for the CommandHandler.
+     * @param <T> The type of context that's used in commands.
+     */
     public static class Builder<T extends CommandContext> {
         private final Class<T> contextClazz;
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
@@ -162,42 +205,71 @@ public class CommandHandler<T extends CommandContext> {
             this.beanProvider = BeanProvider.get();
         }
 
-        public <S >Builder<T> withTypeParser(Class<S> clazz, TypeParser<S> parser) {
+        /**
+         * Adds a type parser that will be used by the CommandHandler.
+         * @param clazz The class representing the type that the TypeParser is for.
+         * @param parser The TypeParser.
+         * @param <S> The type that the TypeParser is for.
+         * @return The builder.
+         */
+        public <S> Builder<T> withTypeParser(Class<S> clazz, TypeParser<S> parser) {
             Preconditions.checkNotNull(clazz, "Clazz cannot be null");
             Preconditions.checkNotNull(parser, "Parser cannot be null");
             this.typeParserByClass.put(clazz, parser);
             return this;
         }
 
+        /**
+         * Adds a module that will be used by the CommandBuilder.
+         * @param moduleClazz The class representing the type of module that you want to add.
+         * @param <S> The type of module you want to add.
+         * @return The builder.
+         */
         public <S extends CommandModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
             Preconditions.checkNotNull(moduleClazz, "moduleClazz cannot be null");
             this.commandModules.add(moduleClazz);
             return this;
         }
 
+        /**
+         * Adds the bean provider that will be used to fetch dependencies for singleton modules and preconditions.
+         * @param beanProvider The bean provider.
+         * @return The builder.
+         */
         public Builder<T> withBeanProvider(BeanProvider beanProvider) {
             Preconditions.checkNotNull(beanProvider, "beanProvider cannot be null");
             this.beanProvider = beanProvider;
             return this;
         }
 
+        /**
+         * Sets the ArgumentParser that will be used, if none if specified then the default will be used.
+         * @param argumentParser The argument parser.
+         * @return The bulder.
+         */
         public Builder<T> withArgumentParser(ArgumentParser argumentParser) {
             Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
             this.argumentParser = argumentParser;
             return this;
         }
 
+        /**
+         * Builds the CommandHandler.
+         * @return The built CommandHandler.
+         */
         public CommandHandler<T> build() {
+            List<Module> modules = new ArrayList<>();
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
                 Module module = CommandModuleFactory.create(contextClazz, moduleClazz, beanProvider);
-                this.commandMap.map(module);
+                modules.add(module);
+                commandMap.map(module);
             }
 
             if (argumentParser == null) {
                 argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
-            return new CommandHandler<>(commandMap.build(), argumentParser);
+            return new CommandHandler<>(commandMap.build(), argumentParser, ImmutableList.copyOf(modules));
         }
     }
 }
