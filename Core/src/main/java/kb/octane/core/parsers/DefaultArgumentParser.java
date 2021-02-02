@@ -56,11 +56,7 @@ public class DefaultArgumentParser implements ArgumentParser {
                     continue;
                 }
 
-                if (currentCharacter == ESCAPE && input.charAt(index - 1) == ESCAPE) {
-                    break;
-                }
-
-                if (currentCharacter != ESCAPE) {
+                if (currentCharacter != ESCAPE || input.charAt(index - 1) == ESCAPE) {
                     break;
                 }
             }
