@@ -11,19 +11,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>Core</artifactId>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>15</source>
-                    <target>15</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
     <properties>
+        <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
+        <sonar.organization>k-boyle</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
     </properties>
@@ -52,4 +45,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>15</source>
+                    <target>15</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
