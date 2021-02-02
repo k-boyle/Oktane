@@ -11,6 +11,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>Discord4J</artifactId>
+
+    <properties>
+        <sonar.projectKey>k-boyle_OktaneDiscord4j</sonar.projectKey>
+        <sonar.organization>k-boyle</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+        <maven.compiler.source>15</maven.compiler.source>
+        <maven.compiler.target>15</maven.compiler.target>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -23,10 +33,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <maven.compiler.source>15</maven.compiler.source>
-        <maven.compiler.target>15</maven.compiler.target>
-    </properties>
 
 </project>
