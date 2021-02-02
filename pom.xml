@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>kb.octane</groupId>
+    <groupId>com.github.k-boyle</groupId>
     <artifactId>Oktane</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>Core</module>
-        <module>Benchmark</module>
-        <module>Discord4J</module>
+        <module>OktaneCore</module>
+        <module>OktaneBenchmark</module>
+        <module>Oktane4J</module>
     </modules>
 
     <name>Oktane</name>
@@ -81,8 +81,8 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>kb.octane</groupId>
-                <artifactId>Core</artifactId>
+                <groupId>com.github.k-boyle</groupId>
+                <artifactId>OktaneCore</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
