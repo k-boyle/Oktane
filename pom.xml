@@ -15,7 +15,6 @@
     </modules>
 
     <properties>
-        <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
