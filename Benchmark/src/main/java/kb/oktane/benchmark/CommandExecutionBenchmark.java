@@ -33,24 +33,24 @@ public class CommandExecutionBenchmark {
     private final CommandCallback b = commands.get("b").commandCallback();
     private final CommandCallback a = commands.get("a").commandCallback();
 
-    private final Object[] EMPTY = new Object[0];
-    private final Object[] ONE = new Object[] { "abc" };
-    private final Object[] FIVE = new Object[] { "a", "b", "c", "d", "e" };
+    private final Object[] empty = new Object[0];
+    private final Object[] one = new Object[] { "abc" };
+    private final Object[] five = new Object[] { "a", "b", "c", "d", "e" };
     private final BenchmarkCommandContext context = new BenchmarkCommandContext();
 
     @Benchmark
     public Mono<CommandResult> commandNoParameters() {
-        return a.execute(context, EMPTY, EMPTY);
+        return a.execute(context, empty, empty);
     }
 
     @Benchmark
     public Mono<CommandResult> commandOneParameter() {
-        return b.execute(context, EMPTY, ONE);
+        return b.execute(context, empty, one);
     }
 
     @Benchmark
     public Mono<CommandResult> commandFiveParameters() {
-        return c.execute(context, EMPTY, FIVE);
+        return c.execute(context, empty, five);
     }
 
 
