@@ -4,7 +4,7 @@ import kb.octane.core.results.SuccessfulResult;
 
 public class SuccessfulPreconditionResult implements SuccessfulResult, PreconditionResult {
     private static class SingletonHolder {
-        private static SuccessfulPreconditionResult INSTANCE = new SuccessfulPreconditionResult();
+        private static final SuccessfulPreconditionResult INSTANCE = new SuccessfulPreconditionResult();
     }
 
     public static SuccessfulPreconditionResult get() {

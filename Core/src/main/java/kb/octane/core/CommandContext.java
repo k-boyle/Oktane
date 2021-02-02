@@ -7,7 +7,7 @@ public abstract class CommandContext {
 
     Command command;
 
-    public CommandContext(BeanProvider beanProvider) {
+    protected CommandContext(BeanProvider beanProvider) {
         this.beanProvider = beanProvider;
     }
 

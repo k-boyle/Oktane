@@ -197,7 +197,7 @@ public class CommandHandler<T extends CommandContext> {
                 argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
-            return new CommandHandler<T>(commandMap.build(), argumentParser);
+            return new CommandHandler<>(commandMap.build(), argumentParser);
         }
     }
 }
