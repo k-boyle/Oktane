@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Streams;
 import kb.octane.core.BeanProvider;
 import kb.octane.core.CommandContext;
+import kb.octane.core.exceptions.FailedToInstantiateRuntimeModule;
 import kb.octane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,9 @@ class CommandCallbackFactory {
         """;
 
     private static final String CLASSPATH = System.getProperty("java.class.path");
+    private static final String OBJECT = "Object";
+    private static final String LOCK = "lock";
+    private static final String MODULE = "module";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -92,6 +96,7 @@ class CommandCallbackFactory {
     }
 
     // todo clean this up, not really important rn but it's big spaghet
+    @SuppressWarnings("rawtypes")
     public <T extends CommandContext> CommandCallback createCommandCallback(
             Class<T> concreteCommandContextClazz,
             Class<? extends CommandModuleBase<T>> moduleClazz,
@@ -136,16 +141,16 @@ class CommandCallbackFactory {
         List<Object> ctorParams = new ArrayList<>();
 
         if (module != null) {
-            fields.add(String.format(FIELD, moduleClazz.getSimpleName(), "module"));
-            ctorArgs.add(String.format(CTOR_PARAM, moduleClazz.getSimpleName(), "module"));
-            ctorAssignment.add(String.format(ASSIGNMENT, "module"));
+            fields.add(String.format(FIELD, moduleClazz.getSimpleName(), MODULE));
+            ctorArgs.add(String.format(CTOR_PARAM, moduleClazz.getSimpleName(), MODULE));
+            ctorAssignment.add(String.format(ASSIGNMENT, MODULE));
             ctorParams.add(module);
         }
 
         if (moduleLock != null) {
-            fields.add(String.format(FIELD, "Object", "lock"));
-            ctorArgs.add(String.format(CTOR_PARAM, "Object", "lock"));
-            ctorAssignment.add(String.format(ASSIGNMENT, "lock"));
+            fields.add(String.format(FIELD, OBJECT, LOCK));
+            ctorArgs.add(String.format(CTOR_PARAM, OBJECT, LOCK));
+            ctorAssignment.add(String.format(ASSIGNMENT, LOCK));
             ctorParams.add(moduleLock);
         }
 
@@ -264,7 +269,7 @@ class CommandCallbackFactory {
             Constructor<?> callbackConstructor = generatedClass.getDeclaredConstructors()[0];
             return (CommandCallback) (!ctorParams.isEmpty() ? callbackConstructor.newInstance(ctorParams.toArray()) : callbackConstructor.newInstance());
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new FailedToInstantiateRuntimeModule(ex);
         }
     }
 

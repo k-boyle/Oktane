@@ -188,17 +188,17 @@ public class Command {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
 
-            ImmutableSet<String> aliases = this.aliases.build();
+            ImmutableSet<String> builtAliases = this.aliases.build();
             Preconditions.checkState(
-                isValidAliases(aliases, module.groups()),
+                isValidAliases(builtAliases, module.groups()),
                 "A command must have a non-empty alias if there are no module groups"
             );
 
-            ImmutableList<CommandParameter> parameters = this.parameters.build();
-            for (int i = 0; i < parameters.size(); i++) {
-                CommandParameter commandParameter = parameters.get(i);
+            ImmutableList<CommandParameter> builtParameters = this.parameters.build();
+            for (int i = 0; i < builtParameters.size(); i++) {
+                CommandParameter commandParameter = builtParameters.get(i);
                 Preconditions.checkState(
-                    !commandParameter.remainder() || i == parameters.size() - 1,
+                    !commandParameter.remainder() || i == builtParameters.size() - 1,
                     "Parameter %s of Command %s cannot be remainder only the final parameter can be remainder",
                     commandParameter.name(),
                     name
@@ -206,8 +206,8 @@ public class Command {
             }
 
             Signature commandSignature = new Signature(
-                !parameters.isEmpty() && parameters.get(parameters.size() - 1).remainder(),
-                parameters.stream()
+                !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder(),
+                builtParameters.stream()
                     .map(CommandParameter::type)
                     .map(Class::toString)
                     .collect(Collectors.joining(";"))
@@ -215,10 +215,10 @@ public class Command {
 
             return new Command(
                 name,
-                aliases,
+                builtAliases,
                 Optional.ofNullable(description),
                 commandCallback,
-                parameters,
+                builtParameters,
                 preconditions.build(),
                 commandSignature,
                 module,
@@ -226,7 +226,7 @@ public class Command {
         }
 
         private static boolean isValidAliases(ImmutableSet<String> commandAliases, ImmutableSet<String> moduleGroups) {
-            return commandAliases.size() > 0 || moduleGroups.size() > 0;
+            return !commandAliases.isEmpty() || !moduleGroups.isEmpty();
         }
     }
 
