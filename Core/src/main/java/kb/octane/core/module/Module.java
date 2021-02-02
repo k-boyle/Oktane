@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Represents a command module.
+ */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class Module {
     private final String name;
@@ -49,7 +52,12 @@ public class Module {
         return new Builder();
     }
 
-    PreconditionResult runPreconditions(CommandContext context) {
+    /**
+     * Runs the preconditions that belong to this module.
+     * @param context The context to pass to the preconditions.
+     * @return The result of executing the preconditions.
+     */
+    public PreconditionResult runPreconditions(CommandContext context) {
         if (preconditions.isEmpty()) {
             return SuccessfulPreconditionResult.get();
         }
@@ -71,35 +79,56 @@ public class Module {
             : SuccessfulPreconditionResult.get();
     }
 
+    /**
+     * @return The module's name.
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * @return The module's groups.
+     */
     public ImmutableSet<String> groups() {
         return groups;
     }
 
+    /**
+     * @return The module's commands.
+     */
     public ImmutableList<Command> commands() {
         return commands;
     }
 
+    /**
+     * @return The module's description.
+     */
     public Optional<String> description() {
         return description;
     }
 
+    /**
+     * @return The types of the beans that this module requires.
+     */
     public ImmutableList<Class<?>> beans() {
         return beans;
     }
 
+    /**
+     * @return Whether the module is a singleton or not.
+     */
     public boolean singleton() {
         return singleton;
     }
 
+    /**
+     * @return Whether the all of the commands that belong to this module are synchronised.
+     */
     public boolean synchronised() {
         return synchronised;
     }
 
-    public static class Builder {
+    static class Builder {
         private static final String SPACE = " ";
 
         private final ImmutableSet.Builder<String> groups;

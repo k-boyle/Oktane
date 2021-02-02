@@ -86,43 +86,64 @@ public class Command {
     }
 
     /**
-     * @return The commands name.
+     * @return The command's name.
      */
     public String name() {
         return name;
     }
 
     /**
-     * @return The commands aliases.
+     * @return The command's aliases.
      */
     public ImmutableSet<String> aliases() {
         return aliases;
     }
 
+    /**
+     * @return The command's description.
+     */
     public Optional<String> description() {
         return description;
     }
 
+    /**
+     * @return The method of the command.
+     */
     public CommandCallback commandCallback() {
         return commandCallback;
     }
 
+    /**
+     * @return The command's parameters.
+     */
     public ImmutableList<CommandParameter> parameters() {
         return parameters;
     }
 
+    /**
+     * @return The command's preconditions.
+     */
     public ImmutableList<Precondition> preconditions() {
         return preconditions;
     }
 
+    /**
+     * @return The command's signature that's used to determine uniqueness.
+     */
     public Signature signature() {
         return signature;
     }
 
+    /**
+     * @return The Module that this command belongs to.
+     */
     public Module module() {
         return module;
     }
 
+    /**
+     * @return Whether the execution of the command is synchronised or not.
+     */
     public boolean synchronised() {
         return synchronised;
     }
@@ -134,7 +155,7 @@ public class Command {
             .toString();
     }
 
-    public static class Builder {
+    static class Builder {
         private static final String SPACE = " ";
 
         private final ImmutableSet.Builder<String> aliases;

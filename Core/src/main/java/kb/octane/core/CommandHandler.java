@@ -62,7 +62,7 @@ public class CommandHandler<T extends CommandContext> {
     }
 
     /**
-     * Attempts to executes a command based on the given input.
+     * Attempts to execute a command based on the given input.
      * @param input The input to parse.
      * @param context The context for the command invocation.
      * @return A Mono holding the result of the execution.
@@ -243,9 +243,9 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
-         * Sets the ArgumentParser that will be used, if none if specified then the default will be used.
+         * Sets the ArgumentParser that will be used, if none is specified then the default will be used.
          * @param argumentParser The argument parser.
-         * @return The bulder.
+         * @return The builder.
          */
         public Builder<T> withArgumentParser(ArgumentParser argumentParser) {
             Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");

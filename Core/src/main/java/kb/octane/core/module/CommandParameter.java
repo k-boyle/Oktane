@@ -42,7 +42,7 @@ public final class CommandParameter {
         return remainder;
     }
 
-    public static class Builder {
+    static class Builder {
         private Class<?> type;
         private String description;
         private String name;
