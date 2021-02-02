@@ -14,6 +14,18 @@
         <module>Discord4J</module>
     </modules>
 
+    <name>Oktane</name>
+    <description>A high performance Java command framework</description>
+    <url>https://github.com/k-boyle/Oktane</url>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
@@ -102,5 +114,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <scm>
+        <connection>scm:git:github.com:k-boyle/Oktane.git</connection>
+        <developerConnection>scm:git:github.com:k-boyle/Oktane.git</developerConnection>
+        <url>https://github.com/k-boyle/Oktane/tree/master</url>
+        <tag>master</tag>
+    </scm>
 
 </project>
