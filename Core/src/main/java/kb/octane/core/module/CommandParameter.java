@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 
 import java.util.Optional;
 
+/**
+ * Represents a parameter of a command.
+ */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class CommandParameter {
     private final Class<?> type;
@@ -22,27 +25,39 @@ public final class CommandParameter {
         this.remainder = remainder;
     }
 
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * @return The underlying type of the parameter.
+     */
     public Class<?> type() {
         return type;
     }
 
+    /**
+     * @return The parameter's description.
+     */
     public Optional<String> description() {
         return description;
     }
 
+    /**
+     * @return The parameter's name.
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * @return Whether or not this parameter is a remainder.
+     */
     public boolean remainder() {
         return remainder;
     }
 
-    public static class Builder {
+    static class Builder {
         private Class<?> type;
         private String description;
         private String name;
