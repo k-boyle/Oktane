@@ -168,9 +168,6 @@
                         <goals>
                             <goal>sign</goal>
                         </goals>
-                        <configuration>
-                            <gpgArguments>--pinentry-mode gpgArguments</gpgArguments>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

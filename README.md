@@ -22,7 +22,7 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 
 **Context Creation**
 
-Your command context is a standard pojo used to pass contextual data into your commands. BeanProvider is a service container with the interface providing a default implementation.
+Your command context is a standard pojo used to pass contextual data into your commands. `BeanProvider` is a service container with the interface providing a default implementation.
 ```java
 public class OktaneCommandContext extends CommandContext {
     private final String user;
@@ -40,8 +40,8 @@ public class OktaneCommandContext extends CommandContext {
 
 **Module Creation**
 
-To define a class as a module the class just needs to extend CommandModuleBase&lt;T&gt;. Any methods in the class that are annotated with the CommandDescription
-annotation and return Mono&lt;CommandResult&gt; 
+To define a class as a module the class just needs to extend `CommandModuleBase<T>`. Any methods in the class that are annotated with the CommandDescription
+annotation and return `Mono<CommandResult>`; 
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
     @CommandDescription(aliases = {"echo", "e"})
@@ -108,8 +108,8 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
 
 **Type Parsing**
 
-Oktane supports parsing all the primitive types, see PrimitiveTypeParser, and allowing a user to define their own.
-Type parsers are added during the CommandHandler building stage using the withTypeParser method.
+Oktane supports parsing all the primitive types, see `PrimitiveTypeParser`, and allowing a user to define their own.
+Type parsers are added during the `CommandHandler` building stage using the withTypeParser method.
 ```java
 public class PrimitiveTypeParser<User> implements TypeParser<User> {
     @Override
@@ -126,7 +126,7 @@ public class PrimitiveTypeParser<User> implements TypeParser<User> {
 
 **Preconditions**
 
-Preconditions can be used to add permissions to your commands. Preconditions will be fetched from the BeanProvider.
+Preconditions can be used to add permissions to your commands. Preconditions will be fetched from the `BeanProvider`.
 ```java
 public class RequireOwnerPrecondition implements Precondition {
     public PreconditionResult run(CommandContext c) {
@@ -142,7 +142,7 @@ public class RequireOwnerPrecondition implements Precondition {
 
 **Dependency Injection**
 
-Beans can be injected into module using the BeanProvider, any constructor arguments will be passed into the module on instantiation, the CommandHandler 
+Beans can be injected into module using the `BeanProvider`, any constructor arguments will be passed into the module on instantiation, the `CommandHandler`
 will inject itself and does not need to be added to a provider.
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
