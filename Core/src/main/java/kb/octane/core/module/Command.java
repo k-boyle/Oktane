@@ -13,6 +13,9 @@ import kb.octane.core.results.precondition.SuccessfulPreconditionResult;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a command.
+ */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class Command {
     private final String name;
@@ -25,7 +28,7 @@ public class Command {
     private final Module module;
     private final boolean synchronised;
 
-    public Command(
+    Command(
             String name,
             ImmutableSet<String> aliases,
             Optional<String> description,
@@ -46,10 +49,15 @@ public class Command {
         this.synchronised = synchronised;
     }
 
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Runs the preconditions that belong to this command.
+     * @param context The context to pass to the preconditions.
+     * @return The result of executing the preconditions.
+     */
     public PreconditionResult runPreconditions(CommandContext context) {
         PreconditionResult moduleResult = module.runPreconditions(context);
 
@@ -77,38 +85,65 @@ public class Command {
             : SuccessfulPreconditionResult.get();
     }
 
+    /**
+     * @return The command's name.
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * @return The command's aliases.
+     */
     public ImmutableSet<String> aliases() {
         return aliases;
     }
 
+    /**
+     * @return The command's description.
+     */
     public Optional<String> description() {
         return description;
     }
 
+    /**
+     * @return The method of the command.
+     */
     public CommandCallback commandCallback() {
         return commandCallback;
     }
 
+    /**
+     * @return The command's parameters.
+     */
     public ImmutableList<CommandParameter> parameters() {
         return parameters;
     }
 
+    /**
+     * @return The command's preconditions.
+     */
     public ImmutableList<Precondition> preconditions() {
         return preconditions;
     }
 
+    /**
+     * @return The command's signature that's used to determine uniqueness.
+     */
     public Signature signature() {
         return signature;
     }
 
+    /**
+     * @return The Module that this command belongs to.
+     */
     public Module module() {
         return module;
     }
 
+    /**
+     * @return Whether the execution of the command is synchronised or not.
+     */
     public boolean synchronised() {
         return synchronised;
     }
@@ -120,7 +155,7 @@ public class Command {
             .toString();
     }
 
-    public static class Builder {
+    static class Builder {
         private static final String SPACE = " ";
 
         private final ImmutableSet.Builder<String> aliases;
