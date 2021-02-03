@@ -167,11 +167,10 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>sign</goal>
-                          </goals>
-                          <configuration>
-                            <arg>--pinentry-mode</arg>
-                            <arg>loopback</arg>
-                          </configuration>
+                        </goals>
+                        <configuration>
+                            <gpgArguments>--pinentry-mode gpgArguments</gpgArguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
