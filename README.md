@@ -8,14 +8,14 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 
 **Performance Benchmarks**
 
-| Benchmark                   | Mode | Cnt  | Score     |  Error  | Units   |
-| --------------------------- | ---- | ---- | --------- | ------- | ------- |
-| commandFiveParameters       | avgt |  5   | 269.236 ± |  4.315  | ns/op   |
-| commandIntParameter         | avgt |  5   | 172.706 ± |  1.491  | ns/op   |
-| commandNoParameters         | avgt |  5   | 103.287 ± |  2.052  | ns/op   |
-| commandNotFound             | avgt |  5   |  12.609 ± |  0.119  | ns/op   |
-| commandOneParameter         | avgt |  5   | 166.109 ± |  3.101  | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 147.749 ± | 15.468  | ns/op   |
+| Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
+| --------------------------- | ---- | ---- | -------- | --------- | ------- |
+| commandFiveParameters       | avgt |  5   | 269.236  |  ± 4.315  | ns/op   |
+| commandIntParameter         | avgt |  5   | 172.706  |  ± 1.491  | ns/op   |
+| commandNoParameters         | avgt |  5   | 103.287  |  ± 2.052  | ns/op   |
+| commandNotFound             | avgt |  5   |  12.609  |  ± 0.119  | ns/op   |
+| commandOneParameter         | avgt |  5   | 166.109  |  ± 3.101  | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 147.749  |  ± 15.468 | ns/op   |
 
 
 # Usage #
