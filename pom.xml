@@ -44,7 +44,7 @@
 
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
 
-        <staging-plugin.version>1.6.7</staging-plugin.version>
+        <staging-plugin.version>1.6.8</staging-plugin.version>
     </properties>
 
     <dependencyManagement>
