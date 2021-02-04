@@ -165,5 +165,5 @@ The Oktane ArgumentParser can be overridden using the withArgumentParser method,
 
 **How Oktane Works**
 
-Oktane uses a few sprinkles of magic, when building a CommandHandler Oktane uses reflection to get all the command methods, then during run time
+Oktane uses a few sprinkles of magic, when building a CommandHandler it uses reflection to get all the command methods, then 
 classes are generated, compiled, and loaded in that are then used to invoke the commands and handle any module instantiation.
