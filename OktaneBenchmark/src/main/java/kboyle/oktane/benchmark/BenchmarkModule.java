@@ -1,34 +1,33 @@
 package kboyle.oktane.benchmark;
 
-import kboyle.octane.core.module.CommandModuleBase;
-import kboyle.octane.core.module.annotations.CommandDescription;
-import kboyle.octane.core.module.annotations.ParameterDescription;
-import kboyle.octane.core.results.command.CommandResult;
-import reactor.core.publisher.Mono;
+import kboyle.oktane.core.module.CommandModuleBase;
+import kboyle.oktane.core.module.annotations.CommandDescription;
+import kboyle.oktane.core.module.annotations.ParameterDescription;
+import kboyle.oktane.core.results.command.CommandResult;
 
 public class BenchmarkModule extends CommandModuleBase<BenchmarkCommandContext> {
     @CommandDescription(aliases = "a")
-    public Mono<CommandResult> a() {
-        return Mono.empty();
+    public CommandResult a() {
+        return nop();
     }
 
     @CommandDescription(aliases = "b")
-    public Mono<CommandResult> b(String arg1) {
-        return Mono.empty();
+    public CommandResult b(String arg1) {
+        return nop();
     }
 
     @CommandDescription(aliases = "c")
-    public Mono<CommandResult> c(@ParameterDescription(remainder = true) String arg1) {
-        return Mono.empty();
+    public CommandResult c(@ParameterDescription(remainder = true) String arg1) {
+        return nop();
     }
 
     @CommandDescription(aliases = "e")
-    public Mono<CommandResult> e(int arg1) {
-        return Mono.empty();
+    public CommandResult e(int arg1) {
+        return nop();
     }
 
     @CommandDescription(aliases = "f")
-    public Mono<CommandResult> f(String one, String two, String three, String four, String five) {
-        return Mono.empty();
+    public CommandResult f(String one, String two, String three, String four, String five) {
+        return nop();
     }
 }
