@@ -1,12 +1,12 @@
 package kboyle.oktane.benchmark;
 
-import kboyle.octane.core.BeanProvider;
-import kboyle.octane.core.module.Command;
-import kboyle.octane.core.module.CommandModuleFactory;
-import kboyle.octane.core.module.Module;
-import kboyle.octane.core.parsers.DefaultArgumentParser;
-import kboyle.octane.core.parsers.PrimitiveTypeParser;
-import kboyle.octane.core.results.Result;
+import kboyle.oktane.core.BeanProvider;
+import kboyle.oktane.core.module.Command;
+import kboyle.oktane.core.module.CommandModuleFactory;
+import kboyle.oktane.core.module.Module;
+import kboyle.oktane.core.parsers.DefaultArgumentParser;
+import kboyle.oktane.core.parsers.PrimitiveTypeParser;
+import kboyle.oktane.core.results.Result;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;

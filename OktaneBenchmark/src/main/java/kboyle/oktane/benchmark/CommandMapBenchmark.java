@@ -1,10 +1,10 @@
 package kboyle.oktane.benchmark;
 
 import com.google.common.collect.ImmutableList;
-import kboyle.octane.core.BeanProvider;
-import kboyle.octane.core.mapping.CommandMap;
-import kboyle.octane.core.mapping.CommandSearchResult;
-import kboyle.octane.core.module.CommandModuleFactory;
+import kboyle.oktane.core.BeanProvider;
+import kboyle.oktane.core.mapping.CommandMap;
+import kboyle.oktane.core.mapping.CommandSearchResult;
+import kboyle.oktane.core.module.CommandModuleFactory;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
