@@ -16,6 +16,7 @@ import java.util.StringJoiner;
 public class ClassGenerator implements Generator {
     private static final String IMPORT_TEMPLATE = "import %s.%s;";
     private static final String GENERIC_TEMPLATE = "%s<%s>";
+    private static final String FIELD_TEMPLATE = "%s final %s %s;";
 
     private final Set<Type> imports;
     private final Set<Type> interfaces;
@@ -100,8 +101,29 @@ public class ClassGenerator implements Generator {
         classBuilder.append("\n");
 
 
+        StringJoiner fieldDeclarations = new StringJoiner("\n\t", "\t", "");
 
+        for (FieldMetaData field : fields.values()) {
+            fieldDeclarations.add(String.format(
+                FIELD_TEMPLATE,
+                field.access().declaration(),
+                field.type().getTypeName(),
+                field.name()
+            ));
+        }
 
+        classBuilder.append(fieldDeclarations.toString());
+
+        classBuilder.append("\n");
+
+        classBuilder.append(constructorGenerator.generate());
+
+        classBuilder.append("\n");
+
+        for (MethodGenerator method : methods) {
+            classBuilder.append(method.generate());
+            classBuilder.append("\n\n");
+        }
 
         classBuilder.append("\n");
         classBuilder.append("}");
