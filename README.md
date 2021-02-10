@@ -41,11 +41,11 @@ public class OktaneCommandContext extends CommandContext {
 **Module Creation**
 
 To define a class as a module the class just needs to extend `CommandModuleBase<T>`. Any methods in the class that are annotated with the CommandDescription
-annotation and return `Mono<CommandResult>`; 
+annotation and return `CommandResult`; 
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
     @CommandDescription(aliases = {"echo", "e"})
-    public Mono<CommandResult> pingPong(@ParameterDescription(remainder = true) String input) {
+    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
         return reply(context().user() + " said: " + input);
     }
 }
@@ -67,7 +67,7 @@ public CommandHandler<OktaneCommandContext> commandHandler() {
 To invoke a command you simply call to call `excute` on the command handler, pass it your command context, and the string input to parse.
 ```java
 OktaneCommandContext context = new OktaneCommandContext("Kieran", BeanProvider.get());
-Mono<Result> result = commandHandlder.execute("echo Oktane is really cool :)", context);
+Result result = commandHandlder.execute("echo Oktane is really cool :)", context);
 ```
 
 **Granular Configuration**
@@ -90,9 +90,9 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
         description = "Echos input",                    // Can be used in help displays
         aliases = {"echo", "e"},                        // Defines the different aliases that can invoke the command
         preconditions = ChannelPrecondition.class,      // The preconditions to run to determine whether the command is executable
-        synchronised = true                             // Makes it so that the command is locally synchronised (public Mono<CommandResult> synchronised ...)
+        synchronised = true                             // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
     )
-    public Mono<CommandResult> pingPong(
+    public CommandResult pingPong(
             @ParameterDescription(
                 name = "User Input",                    // Can be used in help displays       
                 description = "The input to echo",      // Can be used in help displays
@@ -153,7 +153,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
     }
     
     @CommandDescription(aliases = {"echo", "e"})
-    public Mono<CommandResult> pingPong(@ParameterDescription(remainder = true) String input) {
+    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
         return reply(context().user() + " said: " + input);
     }
 }
