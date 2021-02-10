@@ -1,18 +1,16 @@
-package kboyle.octane.core.generation;
+package kboyle.oktane.core.generation;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import static kboyle.oktane.core.generation.GenerationUtil.formatType;
+
 public class ConstructorGenerator implements Generator {
-    private static final String CTOR_TEMPLATE = """
-        %1$s %2$s(%3$s) {
-            %4$s
-        }
-        """;
+    private static final String CTOR_TEMPLATE = "%1$s %2$s(%3$s) {%4$s}";
 
     private final ClassGenerator parent;
     private final Set<Type> imports;
@@ -23,7 +21,7 @@ public class ConstructorGenerator implements Generator {
     public ConstructorGenerator(ClassGenerator parent) {
         this.parent = parent;
         this.imports = new HashSet<>();
-        this.parameters = new HashMap<>();
+        this.parameters = new LinkedHashMap<>();
         this.accessModifier = AccessModifier.PUBLIC;
     }
 
@@ -36,11 +34,11 @@ public class ConstructorGenerator implements Generator {
     @Override
     public String generate() {
         StringJoiner constructorParameters = new StringJoiner(", ");
-        StringJoiner fieldAssignments = new StringJoiner(";\n\t");
+        StringJoiner fieldAssignments = new StringJoiner(";", "", ";");
 
         parameters.forEach((name, parameter) -> {
-            constructorParameters.add(parameter.type().getTypeName() + " " + name);
-            fieldAssignments.add("this." + name + " ="  + name);
+            constructorParameters.add(formatType(parameter.type()) + " " + name);
+            fieldAssignments.add("this." + name + " = "  + name);
         });
 
         return String.format(

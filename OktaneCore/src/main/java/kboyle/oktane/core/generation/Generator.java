@@ -1,4 +1,4 @@
-package kboyle.octane.core.generation;
+package kboyle.oktane.core.generation;
 
 import java.lang.reflect.Type;
 import java.util.Set;

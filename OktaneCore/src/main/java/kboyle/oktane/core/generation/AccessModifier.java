@@ -1,4 +1,4 @@
-package kboyle.octane.core.generation;
+package kboyle.oktane.core.generation;
 
 public enum AccessModifier {
     PRIVATE("private"),

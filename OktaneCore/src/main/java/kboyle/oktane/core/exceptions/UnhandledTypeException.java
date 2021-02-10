@@ -1,4 +1,4 @@
-package kboyle.octane.core.exceptions;
+package kboyle.oktane.core.exceptions;
 
 import java.lang.reflect.Type;
 

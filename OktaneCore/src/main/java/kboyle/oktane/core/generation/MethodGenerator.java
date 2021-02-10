@@ -1,13 +1,15 @@
-package kboyle.octane.core.generation;
+package kboyle.oktane.core.generation;
 
 import com.google.common.base.Strings;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+
+import static kboyle.oktane.core.generation.GenerationUtil.formatType;
 
 public class MethodGenerator implements Generator {
     private static int methodCounter = 0;
@@ -24,7 +26,7 @@ public class MethodGenerator implements Generator {
 
     public MethodGenerator() {
         this.imports = new HashSet<>();
-        this.parameters = new HashMap<>();
+        this.parameters = new LinkedHashMap<>();
         this.accessModifier = AccessModifier.PUBLIC;
     }
 
@@ -43,7 +45,7 @@ public class MethodGenerator implements Generator {
         }
 
         if (returnType != null) {
-            methodSignature.add(returnType.getTypeName());
+            methodSignature.add(formatType(returnType));
         } else {
             methodSignature.add("void");
         }
@@ -56,17 +58,10 @@ public class MethodGenerator implements Generator {
 
         StringJoiner methodArguments = new StringJoiner(", ", "(", ")");
 
-        parameters.forEach((name, parameter) -> methodArguments.add(parameter.type().getTypeName() + " name"));
+        parameters.forEach((name, parameter) -> methodArguments.add(formatType(parameter.type()) + " " + parameter.name()));
 
         methodSignature.add(methodArguments.toString());
-
-        StringJoiner formattedBody = new StringJoiner("\n\t\t", "\n{", "\n}");
-
-        for (String loc : body.split("\n")) {
-            formattedBody.add(loc);
-        }
-
-        return methodSignature.toString() + formattedBody.toString();
+        return methodSignature.toString() + "{" + body + "}";
     }
 
     public MethodGenerator withName(String name) {

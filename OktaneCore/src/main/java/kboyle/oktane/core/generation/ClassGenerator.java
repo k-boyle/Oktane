@@ -1,21 +1,22 @@
-package kboyle.octane.core.generation;
+package kboyle.oktane.core.generation;
 
 import com.google.common.base.Preconditions;
-import kboyle.octane.core.exceptions.UnhandledTypeException;
+import kboyle.oktane.core.exceptions.UnhandledTypeException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import static kboyle.oktane.core.generation.GenerationUtil.formatType;
+
 public class ClassGenerator implements Generator {
     private static final String IMPORT_TEMPLATE = "import %s.%s;";
-    private static final String GENERIC_TEMPLATE = "%s<%s>";
     private static final String FIELD_TEMPLATE = "%s final %s %s;";
 
     private final Set<Type> imports;
@@ -32,7 +33,7 @@ public class ClassGenerator implements Generator {
     public ClassGenerator() {
         this.imports = new HashSet<>();
         this.interfaces = new HashSet<>();
-        this.fields = new HashMap<>();
+        this.fields = new LinkedHashMap<>();
         this.accessModifier = AccessModifier.PUBLIC;
         this.constructorGenerator = new ConstructorGenerator(this);
         this.methods = new ArrayList<>();
@@ -54,29 +55,19 @@ public class ClassGenerator implements Generator {
 
     @Override
     public String generate() {
-        StringBuilder classBuilder = new StringBuilder();
-        classBuilder.append(clazzPackage);
-        classBuilder.append("\n");
+        StringBuilder classBuilder = new StringBuilder()
+            .append("package ")
+            .append(clazzPackage)
+            .append(";");
 
-        StringJoiner importStatements = new StringJoiner("\n");
+        StringBuilder importStatements = new StringBuilder();
 
         Set<Type> imports = imports();
         for (Type type : imports) {
-            if (type instanceof ParameterizedType parameterizedType) {
-                handleParameterizedType(importStatements, imports, parameterizedType);
-            } else if (type instanceof Class<?> clazz) {
-                if (clazz.isPrimitive()) {
-                    continue;
-                }
-
-                importStatements.add(importClazz(clazz));
-            } else {
-                throw new UnhandledTypeException(type);
-            }
+            importClazzes(importStatements, imports, type);
         }
 
         classBuilder.append(importStatements.toString());
-        classBuilder.append("\n");
 
         StringJoiner classSignature = new StringJoiner(" ");
         classSignature.add(accessModifier.declaration());
@@ -98,80 +89,69 @@ public class ClassGenerator implements Generator {
         classSignature.add("{");
 
         classBuilder.append(classSignature.toString());
-        classBuilder.append("\n");
 
 
-        StringJoiner fieldDeclarations = new StringJoiner("\n\t", "\t", "");
+        StringBuilder fieldDeclarations = new StringBuilder();
 
         for (FieldMetaData field : fields.values()) {
-            fieldDeclarations.add(String.format(
+            fieldDeclarations.append(String.format(
                 FIELD_TEMPLATE,
                 field.access().declaration(),
-                field.type().getTypeName(),
+                formatType(field.type()),
                 field.name()
             ));
         }
 
         classBuilder.append(fieldDeclarations.toString());
-
-        classBuilder.append("\n");
-
         classBuilder.append(constructorGenerator.generate());
-
-        classBuilder.append("\n");
 
         for (MethodGenerator method : methods) {
             classBuilder.append(method.generate());
-            classBuilder.append("\n\n");
         }
 
-        classBuilder.append("\n");
         classBuilder.append("}");
         return classBuilder.toString();
     }
 
-    private void handleParameterizedType(StringJoiner importStatements, Set<Type> imports, ParameterizedType parameterizedType) {
+    private void handleParameterizedType(StringBuilder importStatements, Set<Type> imports, ParameterizedType parameterizedType) {
         Type rawType = parameterizedType.getRawType();
         if (!imports.contains(rawType)) {
-            if (rawType instanceof Class<?> clazz) {
-                importStatements.add(importClazz(clazz));
-            } else {
-                throw new UnhandledTypeException(rawType);
-            }
+            importClazzes(importStatements, rawType);
         }
 
         for (Type typeArgument : parameterizedType.getActualTypeArguments()) {
             if (!imports.contains(typeArgument)) {
-                if (typeArgument instanceof ParameterizedType argumentParameterizedType) {
-                    handleParameterizedType(importStatements, imports, argumentParameterizedType);
-                } else if (typeArgument instanceof Class<?> clazz) {
-                    importStatements.add(importClazz(clazz));
-                } else {
-                    throw new UnhandledTypeException(typeArgument);
-                }
+                importClazzes(importStatements, imports, typeArgument);
             }
+        }
+    }
+
+    private void importClazzes(StringBuilder importStatements, Set<Type> imports, Type typeArgument) {
+        if (typeArgument instanceof ParameterizedType argumentParameterizedType) {
+            handleParameterizedType(importStatements, imports, argumentParameterizedType);
+        } else {
+            importClazzes(importStatements, typeArgument);
+        }
+    }
+
+    private void importClazzes(StringBuilder importStatements, Type typeArgument) {
+        if (typeArgument instanceof Class<?> clazz) {
+            if (clazz.isPrimitive()) {
+                return;
+            }
+
+            if (clazz.isArray()) {
+                importStatements.append(importClazz(clazz.getComponentType()));
+            } else {
+                importStatements.append(importClazz(clazz));
+            }
+        } else {
+            throw new UnhandledTypeException(typeArgument);
         }
     }
 
     private String importClazz(Class<?> clazz) {
         return String.format(IMPORT_TEMPLATE, clazz.getPackageName(), clazz.getSimpleName());
-    }
-
-    private String formatType(Type type) {
-        if (type instanceof Class<?> clazz) {
-            return clazz.getSimpleName();
-        } else if (type instanceof ParameterizedType parameterizedType) {
-            StringJoiner generics = new StringJoiner(", ");
-            Type[] typeArguments = parameterizedType.getActualTypeArguments();
-            for (Type typeArgument : typeArguments) {
-                generics.add(formatType(typeArgument));
-            }
-
-            Type rawType = parameterizedType.getRawType();
-            return String.format(GENERIC_TEMPLATE, rawType.getTypeName(), generics.toString());
-        } else {
-            throw new UnhandledTypeException(type);
-        }
     }
 
     public ClassGenerator withName(String name) {
@@ -210,25 +190,3 @@ public class ClassGenerator implements Generator {
         return this;
     }
 }
-
-
-/*
-
-package p;
-
-imports;
-
-public class n extends e implements x, y, z {
-    private final Something something;
-
-    public n(Something something) {
-        this.something = something;
-    }
-
-    public synchronized T m(String arg1, int arg2) {
-
-    }
-}
-
-
- */
