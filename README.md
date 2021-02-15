@@ -13,7 +13,7 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 | commandFiveParameters       | avgt |  5   | 269.236  |  ± 4.315  | ns/op   |
 | commandIntParameter         | avgt |  5   | 135.796  |  ± 1.491  | ns/op   |
 | commandNoParameters         | avgt |  5   | 70.334   |  ± 2.052  | ns/op   |
-| commandNotFound             | avgt |  5   | 111.882  |  ± 0.119  | ns/op   |
+| commandNotFound             | avgt |  5   | 11.882   |  ± 0.119  | ns/op   |
 | commandOneParameter         | avgt |  5   | 115.318  |  ± 3.101  | ns/op   |
 | commandRemainderParameter   | avgt |  5   | 114.413  |  ± 15.468 | ns/op   |
 
