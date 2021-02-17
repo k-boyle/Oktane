@@ -21,7 +21,7 @@ jobs:
         with:
           java-version: 15
       - name: Build with Maven
-        run: mvn clean compile test -Dgpg.skip
+        run: mvn clean compile test
 
   sonar:
     name: Sonar Analysis
