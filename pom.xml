@@ -122,6 +122,14 @@
         <url>https://github.com/k-boyle/Oktane/tree/master</url>
     </scm>
 
+    <developers>
+        <developer>
+            <name>Kieran Boyle</name>
+            <email>kayrenhi@gmail.com</email>
+            <organizationUrl>https://github.com/k-boyle</organizationUrl>
+        </developer>
+    </developers>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
