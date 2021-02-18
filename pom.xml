@@ -7,7 +7,7 @@
     <groupId>com.github.k-boyle</groupId>
     <artifactId>Oktane</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-RELEASE-TEST-SNAPSHOT</version>
+    <version>${revision}</version>
     <modules>
         <module>OktaneCore</module>
         <module>OktaneBenchmark</module>
@@ -27,6 +27,8 @@
     </licenses>
 
     <properties>
+        <revision>0-SNAPSHOT</revision>
+
         <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
