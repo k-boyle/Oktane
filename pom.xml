@@ -27,7 +27,7 @@
     </licenses>
 
     <properties>
-        <revision>0-SNAPSHOT</revision>
+        <revision>0.1.0</revision>
 
         <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
