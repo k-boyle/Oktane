@@ -26,7 +26,6 @@ public class ConstructorGenerator implements Generator {
         return imports;
     }
 
-    // todo return stream of lines
     @Override
     public String generate() {
         StringJoiner constructorParameters = new StringJoiner(", ");
