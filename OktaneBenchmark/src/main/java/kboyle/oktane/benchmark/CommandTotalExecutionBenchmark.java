@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 @Fork(1)
 public class CommandTotalExecutionBenchmark {
-    private final CommandHandler<BenchmarkCommandContext> commandHandler = CommandHandler.builder()
+    private final CommandHandler<BenchmarkCommandContext> commandHandler = CommandHandler.<BenchmarkCommandContext>builder()
         .withBeanProvider(BeanProvider.get())
         .withModule(BenchmarkModule.class)
         .build();
