@@ -58,7 +58,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
 The command handler is your interface for interacting with your commands.
 ```java
 public CommandHandler<OktaneCommandContext> commandHandler() {
-    return CommandHandler.builderForContext(OktaneCommandContext.class)
+    return CommandHandler.<OktaneCommandContext>builder()
         .withModule(OktaneCommandModule.class)
         .build();
 }    
