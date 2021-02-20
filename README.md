@@ -8,14 +8,16 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 
 **Performance Benchmarks**
 
+Benchmarks ran on a Ryzen 5600x @ 4.6GHz
+
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 269.236  |  ± 4.315  | ns/op   |
-| commandIntParameter         | avgt |  5   | 135.796  |  ± 1.491  | ns/op   |
-| commandNoParameters         | avgt |  5   | 70.334   |  ± 2.052  | ns/op   |
-| commandNotFound             | avgt |  5   | 11.882   |  ± 0.119  | ns/op   |
-| commandOneParameter         | avgt |  5   | 115.318  |  ± 3.101  | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 114.413  |  ± 15.468 | ns/op   |
+| commandFiveParameters       | avgt |  5   | 149.608  |  ± 6.872  | ns/op   |
+| commandIntParameter         | avgt |  5   | 82.963   |  ± 4.290  | ns/op   |
+| commandNoParameters         | avgt |  5   | 47.385   |  ± 0.777  | ns/op   |
+| commandNotFound             | avgt |  5   | 8.137    |  ± 0.379  | ns/op   |
+| commandOneParameter         | avgt |  5   | 71.866   |  ± 2.769  | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 66.715   |  ± 2.237  | ns/op   |
 
 
 # Usage #

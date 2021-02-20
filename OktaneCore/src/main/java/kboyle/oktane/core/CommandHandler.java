@@ -51,13 +51,10 @@ public class CommandHandler<T extends CommandContext> {
 
     /**
      * Creates a new builder for the CommandHandler.
-     * @param contextClazz The class representing the type of your context.
-     * @param <T> The type of context that's used in commands.
      * @return A new CommandHandler builder.
      */
-    public static <T extends CommandContext> Builder<T> builderForContext(Class<T> contextClazz) {
-        Preconditions.checkNotNull(contextClazz, "contextClazz cannot be null");
-        return new Builder<>(contextClazz);
+    public static <T extends CommandContext> Builder<T> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -188,7 +185,6 @@ public class CommandHandler<T extends CommandContext> {
      * @param <T> The type of context that's used in commands.
      */
     public static class Builder<T extends CommandContext> {
-        private final Class<T> contextClazz;
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<Class<? extends CommandModuleBase<T>>> commandModules;
@@ -196,8 +192,7 @@ public class CommandHandler<T extends CommandContext> {
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
 
-        private Builder(Class<T> contextClazz) {
-            this.contextClazz = contextClazz;
+        private Builder() {
             this.typeParserByClass = new HashMap<>(PrimitiveTypeParser.DEFAULT_PARSERS);
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
@@ -259,7 +254,7 @@ public class CommandHandler<T extends CommandContext> {
         public CommandHandler<T> build() {
             List<Module> modules = new ArrayList<>();
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = CommandModuleFactory.create(contextClazz, moduleClazz, beanProvider);
+                Module module = CommandModuleFactory.create(moduleClazz, beanProvider);
                 modules.add(module);
                 commandMap.map(module);
             }

@@ -15,6 +15,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import static java.lang.reflect.Modifier.isStatic;
+
 public final class CommandModuleFactory {
     private static final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
 
@@ -24,10 +26,7 @@ public final class CommandModuleFactory {
     }
 
     // todo this has gotten very messy
-    public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(
-            Class<S> contextClazz,
-            Class<T> moduleClazz,
-            BeanProvider beanProvider) {
+    public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz, BeanProvider beanProvider) {
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
 
         CommandCallbackFactory callbackFactory = new CommandCallbackFactory();
@@ -47,7 +46,7 @@ public final class CommandModuleFactory {
 
         ModuleDescription moduleDescriptionAnnotation = moduleClazz.getAnnotation(ModuleDescription.class);
         boolean singleton = false;
-        boolean moduleSynchronised = false;
+        boolean moduleSynchronised;
         Object moduleLock = null;
         if (moduleDescriptionAnnotation != null) {
             singleton = moduleDescriptionAnnotation.singleton();
@@ -108,7 +107,6 @@ public final class CommandModuleFactory {
                 .withName(method.getName())
                 .withSynchronised(commandSynchronised)
                 .withCallback(callbackFactory.createCommandCallback(
-                    contextClazz,
                     moduleClazz,
                     singleton,
                     moduleLock,
@@ -165,7 +163,7 @@ public final class CommandModuleFactory {
     }
 
     private static boolean isValidCommandSignature(Method method) {
-        return method.getReturnType().equals(CommandResult.class);
+        return !isStatic(method.getModifiers()) && method.getReturnType().equals(CommandResult.class);
     }
 
     private static boolean isValidAliases(
