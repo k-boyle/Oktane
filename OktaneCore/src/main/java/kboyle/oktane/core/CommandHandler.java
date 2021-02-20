@@ -259,7 +259,7 @@ public class CommandHandler<T extends CommandContext> {
         public CommandHandler<T> build() {
             List<Module> modules = new ArrayList<>();
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = CommandModuleFactory.create(contextClazz, moduleClazz, beanProvider);
+                Module module = CommandModuleFactory.create(moduleClazz, beanProvider);
                 modules.add(module);
                 commandMap.map(module);
             }

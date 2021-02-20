@@ -13,20 +13,17 @@ import kboyle.oktane.core.results.command.CommandResult;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CommandCallbackFactory {
     private static final String CAST_TEMPLATE = "(%s)%s[%d]";
 
+    @SuppressWarnings("unchecked")
     public <T extends CommandContext> CommandCallback createCommandCallback(
-            Class<T> concreteCommandContextClazz,
             Class<? extends CommandModuleBase<T>> moduleClazz,
             boolean singleton,
             Object moduleLock,
@@ -35,6 +32,9 @@ public class CommandCallbackFactory {
             BeanProvider beanProvider) {
         Constructor<?>[] constructors = moduleClazz.getConstructors();
         Preconditions.checkState(constructors.length == 1, "There must be only 1 public constructor");
+
+        ParameterizedType moduleTypeParameterized = (ParameterizedType) moduleClazz.getGenericSuperclass();
+        Class<T> concreteCommandContextClazz = (Class<T>) moduleTypeParameterized.getActualTypeArguments()[0];
 
         String generatedName = moduleClazz.getSimpleName() + method.getName() + System.nanoTime();
         ClassGenerator classGenerator = new ClassGenerator()

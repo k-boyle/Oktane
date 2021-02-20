@@ -7,13 +7,7 @@ import kboyle.oktane.core.module.Module;
 import kboyle.oktane.core.parsers.DefaultArgumentParser;
 import kboyle.oktane.core.parsers.PrimitiveTypeParser;
 import kboyle.oktane.core.results.Result;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +22,6 @@ public class ArgumentParserBenchmark {
     private final DefaultArgumentParser argumentParser = new DefaultArgumentParser(PrimitiveTypeParser.DEFAULT_PARSERS);
 
     private final Module module = CommandModuleFactory.create(
-        BenchmarkCommandContext.class,
         BenchmarkModule.class,
         BeanProvider.get()
     );
