@@ -46,7 +46,7 @@ public final class CommandModuleFactory {
 
         ModuleDescription moduleDescriptionAnnotation = moduleClazz.getAnnotation(ModuleDescription.class);
         boolean singleton = false;
-        boolean moduleSynchronised = false;
+        boolean moduleSynchronised;
         Object moduleLock = null;
         if (moduleDescriptionAnnotation != null) {
             singleton = moduleDescriptionAnnotation.singleton();
