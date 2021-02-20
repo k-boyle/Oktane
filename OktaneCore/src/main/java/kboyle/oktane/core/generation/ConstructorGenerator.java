@@ -1,25 +1,21 @@
 package kboyle.oktane.core.generation;
 
 import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 import static kboyle.oktane.core.generation.GenerationUtil.formatType;
 
 public class ConstructorGenerator implements Generator {
     private static final String CTOR_TEMPLATE = "%1$s %2$s(%3$s) {%4$s}";
 
-    private final ClassGenerator parent;
+    private final String name;
     private final Set<Type> imports;
     private final Map<String, ConstructorParameter> parameters;
 
     private AccessModifier accessModifier;
 
-    public ConstructorGenerator(ClassGenerator parent) {
-        this.parent = parent;
+    public ConstructorGenerator(String name) {
+        this.name = name;
         this.imports = new HashSet<>();
         this.parameters = new LinkedHashMap<>();
         this.accessModifier = AccessModifier.PUBLIC;
@@ -44,7 +40,7 @@ public class ConstructorGenerator implements Generator {
         return String.format(
             CTOR_TEMPLATE,
             accessModifier.declaration(),
-            parent.name,
+            name,
             constructorParameters.toString(),
             fieldAssignments.toString()
         );

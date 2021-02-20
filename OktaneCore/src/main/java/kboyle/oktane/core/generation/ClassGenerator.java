@@ -5,13 +5,7 @@ import kboyle.oktane.core.exceptions.UnhandledTypeException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 import static kboyle.oktane.core.generation.GenerationUtil.formatType;
 
@@ -22,10 +16,10 @@ public class ClassGenerator implements Generator {
     private final Set<Type> imports;
     private final Set<Type> interfaces;
     private final Map<String, FieldMetaData> fields;
-    private final ConstructorGenerator constructorGenerator;
     private final List<MethodGenerator> methods;
 
-    String name;
+    private ConstructorGenerator constructorGenerator;
+    private String name;
     private String clazzPackage;
     private AccessModifier accessModifier;
     private Type baseClazz;
@@ -35,7 +29,6 @@ public class ClassGenerator implements Generator {
         this.interfaces = new HashSet<>();
         this.fields = new LinkedHashMap<>();
         this.accessModifier = AccessModifier.PUBLIC;
-        this.constructorGenerator = new ConstructorGenerator(this);
         this.methods = new ArrayList<>();
     }
 
@@ -48,7 +41,7 @@ public class ClassGenerator implements Generator {
     public Set<Type> imports() {
         Set<Type> aggregatedTypes = new HashSet<>(imports);
         fields.values().stream().map(FieldMetaData::type).forEach(aggregatedTypes::add);
-        aggregatedTypes.addAll(constructorGenerator.imports());
+        aggregatedTypes.addAll(constructorGenerator().imports());
         methods.stream().map(MethodGenerator::imports).forEach(aggregatedTypes::addAll);
         return aggregatedTypes;
     }
@@ -103,7 +96,7 @@ public class ClassGenerator implements Generator {
         }
 
         classBuilder.append(fieldDeclarations.toString());
-        classBuilder.append(constructorGenerator.generate());
+        classBuilder.append(constructorGenerator().generate());
 
         for (MethodGenerator method : methods) {
             classBuilder.append(method.generate());
@@ -181,12 +174,17 @@ public class ClassGenerator implements Generator {
         this.imports.add(type);
         FieldMetaData field = new FieldMetaData(type, name, access, isFinal);
         this.fields.put(name, field);
-        this.constructorGenerator.withParameter(field);
+        constructorGenerator().withParameter(field);
         return this;
     }
 
     public ClassGenerator withMethod(MethodGenerator method) {
         this.methods.add(method);
         return this;
+    }
+
+    private ConstructorGenerator constructorGenerator() {
+        Preconditions.checkNotNull(name, "Name must be set before accessing the constructor");
+        return constructorGenerator == null ? constructorGenerator = new ConstructorGenerator(name) : constructorGenerator;
     }
 }
