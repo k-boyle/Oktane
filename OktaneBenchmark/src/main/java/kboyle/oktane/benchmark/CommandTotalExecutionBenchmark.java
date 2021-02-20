@@ -3,13 +3,7 @@ package kboyle.oktane.benchmark;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandHandler;
 import kboyle.oktane.core.results.Result;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 @Fork(1)
 public class CommandTotalExecutionBenchmark {
-    private final CommandHandler<BenchmarkCommandContext> commandHandler = CommandHandler.builderForContext(BenchmarkCommandContext.class)
+    private final CommandHandler<BenchmarkCommandContext> commandHandler = CommandHandler.builder()
         .withBeanProvider(BeanProvider.get())
         .withModule(BenchmarkModule.class)
         .build();

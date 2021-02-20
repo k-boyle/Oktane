@@ -5,13 +5,7 @@ import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandSearchResult;
 import kboyle.oktane.core.module.CommandModuleFactory;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 public class CommandMapBenchmark {
     private final CommandMap commandMap = CommandMap.builder()
-        .map(CommandModuleFactory.create(BenchmarkCommandContext.class, BenchmarkModule.class, BeanProvider.get()))
+        .map(CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.get()))
         .build();
 
     @Benchmark
