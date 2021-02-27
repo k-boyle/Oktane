@@ -31,15 +31,18 @@ public @interface ModuleDescription {
     /**
      * @return The preconditions of the module.
      */
+    @Deprecated
     Class<? extends Precondition>[] preconditions() default {};
 
     /**
      * @return Whether or not the module is a singleton.
      */
+    @Deprecated
     boolean singleton() default false;
 
     /**
      * @return Whether or not the module is synchronised.
      */
+    @Deprecated
     boolean synchronised() default false;
 }

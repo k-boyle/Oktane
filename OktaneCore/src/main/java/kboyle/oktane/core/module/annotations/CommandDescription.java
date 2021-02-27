@@ -31,10 +31,12 @@ public @interface CommandDescription {
     /**
      * @return The preconditions of the command.
      */
+    @Deprecated
     Class<? extends Precondition>[] preconditions() default {};
 
     /**
      * @return Whether or not the command is synchronised.
      */
+    @Deprecated
     boolean synchronised() default false;
 }

@@ -24,5 +24,6 @@ public @interface ParameterDescription {
     /**
      * @return Whether the parameter is a remainder or not.
      */
+    @Deprecated
     boolean remainder() default false;
 }

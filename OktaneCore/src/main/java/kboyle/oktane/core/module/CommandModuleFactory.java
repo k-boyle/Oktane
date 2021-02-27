@@ -2,11 +2,11 @@ package kboyle.oktane.core.module;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Streams;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.module.annotations.CommandDescription;
-import kboyle.oktane.core.module.annotations.ModuleDescription;
-import kboyle.oktane.core.module.annotations.ParameterDescription;
+import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
+import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
 
@@ -25,7 +27,6 @@ public final class CommandModuleFactory {
     private CommandModuleFactory() {
     }
 
-    // todo this has gotten very messy
     public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz, BeanProvider beanProvider) {
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
 
@@ -49,10 +50,10 @@ public final class CommandModuleFactory {
         boolean moduleSynchronised;
         Object moduleLock = null;
         if (moduleDescriptionAnnotation != null) {
-            singleton = moduleDescriptionAnnotation.singleton();
+            singleton = moduleDescriptionAnnotation.singleton() || moduleClazz.getAnnotation(Singleton.class) != null;
             moduleBuilder.withSingleton(singleton);
 
-            moduleSynchronised = moduleDescriptionAnnotation.synchronised();
+            moduleSynchronised = moduleDescriptionAnnotation.synchronised() || moduleClazz.getAnnotation(Synchronised.class) != null;
             moduleBuilder.withSynchronised(moduleSynchronised);
 
             if (moduleSynchronised) {
@@ -71,15 +72,8 @@ public final class CommandModuleFactory {
                moduleBuilder.withGroup(group);
             }
 
-            Class<? extends Precondition>[] preconditionClazzes = moduleDescriptionAnnotation.preconditions();
-            for (Class<? extends Precondition> preconditionClazz : preconditionClazzes) {
-                Precondition precondition = Preconditions.checkNotNull(
-                    beanProvider.getBean(preconditionClazz),
-                    "A precondition of type %s must be added to the bean provider",
-                    preconditionClazz
-                );
-                moduleBuilder.withPrecondition(precondition);
-            }
+            getPreconditions(moduleClazz, moduleDescriptionAnnotation, beanProvider)
+                .forEach(moduleBuilder::withPrecondition);
         }
 
         Method[] methods = moduleClazz.getMethods();
@@ -101,7 +95,7 @@ public final class CommandModuleFactory {
                 "A command must have aliases if the module has no groups"
             );
 
-            boolean commandSynchronised = commandDescriptionAnnotation.synchronised();
+            boolean commandSynchronised = commandDescriptionAnnotation.synchronised() || method.getAnnotation(Synchronised.class) != null;
 
             Command.Builder commandBuilder = Command.builder()
                 .withName(method.getName())
@@ -127,15 +121,9 @@ public final class CommandModuleFactory {
                 commandBuilder.withDescription(commandDescriptionAnnotation.description());
             }
 
-            Class<? extends Precondition>[] preconditionClazzes = commandDescriptionAnnotation.preconditions();
-            for (Class<? extends Precondition> preconditionClazz : preconditionClazzes) {
-                Precondition precondition = Preconditions.checkNotNull(
-                    beanProvider.getBean(preconditionClazz),
-                    "A precondition of type %s must be added to the bean provider",
-                    preconditionClazz
-                );
-                commandBuilder.withPrecondition(precondition);
-            }
+
+            getPreconditions(method, commandDescriptionAnnotation, beanProvider)
+                .forEach(commandBuilder::withPrecondition);
 
             Parameter[] parameters = method.getParameters();
             for (Parameter parameter : parameters) {
@@ -176,5 +164,52 @@ public final class CommandModuleFactory {
         return commandDescriptionAnnotation.aliases().length > 0
             || moduleDescriptionAnnotation != null
             && moduleDescriptionAnnotation.groups().length > 0;
+    }
+
+    private static Stream<Precondition> getPreconditions(
+            Class<?> clazz,
+            ModuleDescription description,
+            BeanProvider beanProvider) {
+        return getPreconditions(description.preconditions(), clazz.getAnnotationsByType(Requires.class), beanProvider);
+    }
+
+    private static Stream<Precondition> getPreconditions(
+            Method method,
+            CommandDescription description,
+            BeanProvider beanProvider) {
+        return getPreconditions(description.preconditions(), method.getAnnotationsByType(Requires.class), beanProvider);
+    }
+
+    private static Stream<Precondition> getPreconditions(
+            Class<? extends Precondition>[] preconditions,
+            Requires[] requires,
+            BeanProvider beanProvider) {
+        Stream<Precondition> oldStyle = Arrays.stream(preconditions)
+            .map(precondition -> Preconditions.checkNotNull(
+                beanProvider.getBean(precondition),
+                "A precondition of type %s must be added to the bean provider",
+                precondition
+            ));
+
+        Stream<Precondition> newStyle = Arrays.stream(requires)
+            .map(CommandModuleFactory::initPrecondition);
+
+        return Streams.concat(oldStyle, newStyle);
+    }
+
+    private static Precondition initPrecondition(Requires requirement) {
+        Class<? extends Precondition> clazz = requirement.precondition();
+        String[] arguments = requirement.arguments();
+        Constructor<?> validConstructor = Arrays.stream(clazz.getConstructors())
+            .filter(constructor -> constructor.getParameters().length == arguments.length)
+            .reduce((single, other) -> {
+                throw new RuntimeException("add a proper exception");
+            })
+            .orElseThrow(() -> new RuntimeException("exception fool"));
+        try {
+            return (Precondition) validConstructor.newInstance((Object[]) arguments);
+        } catch (Exception ex) {
+            throw new FailedToInstantiatePreconditionException(clazz, ex);
+        }
     }
 }
