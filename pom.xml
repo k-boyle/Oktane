@@ -7,7 +7,7 @@
     <groupId>com.github.k-boyle</groupId>
     <artifactId>Oktane</artifactId>
     <packaging>pom</packaging>
-    <version>${revision}</version>
+    <version>0-SNAPSHOT</version>
     <modules>
         <module>OktaneCore</module>
         <module>OktaneBenchmark</module>
@@ -27,8 +27,6 @@
     </licenses>
 
     <properties>
-        <revision>0.1.0</revision>
-
         <sonar.projectKey>k-boyle_Oktane</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -40,6 +38,7 @@
         <maven-source.version>3.2.1</maven-source.version>
         <maven-javadoc.version>3.2.0</maven-javadoc.version>
         <maven-gpg.version>1.6</maven-gpg.version>
+        <maven-versions.version>2.8.1</maven-versions.version>
 
         <guava.version>30.1-jre</guava.version>
 
@@ -212,6 +211,11 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <version>${maven-versions.version}</version>
                     </plugin>
                 </plugins>
             </build>
