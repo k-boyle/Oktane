@@ -2,7 +2,6 @@ package kboyle.oktane.core.modules;
 
 import kboyle.oktane.core.module.CommandModuleBase;
 import kboyle.oktane.core.module.TestCommandContext;
-import kboyle.oktane.core.module.annotations.CommandDescription;
 import kboyle.oktane.core.results.command.CommandResult;
 
 import java.lang.reflect.Method;
@@ -14,7 +13,6 @@ public class TestModuleTwo extends CommandModuleBase<TestCommandContext> {
         this.a = a;
     }
 
-    @CommandDescription(aliases = "a")
     public CommandResult a(String str) {
         return message(str);
     }

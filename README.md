@@ -48,7 +48,7 @@ annotation and return `CommandResult`;
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
     @CommandDescription(aliases = {"echo", "e"})
     public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
-        return reply(context().user() + " said: " + input);
+        return message(context().user() + " said: " + input);
     }
 }
 ```
@@ -103,7 +103,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
                                                         // must be the last parameter
             ) 
             String input) {
-        return reply(context().user() + " said: " + input);
+        return message(context().user() + " said: " + input);
     }
 }
 ```
@@ -156,7 +156,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
     
     @CommandDescription(aliases = {"echo", "e"})
     public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
-        return reply(context().user() + " said: " + input);
+        return message(context().user() + " said: " + input);
     }
 }
 ```

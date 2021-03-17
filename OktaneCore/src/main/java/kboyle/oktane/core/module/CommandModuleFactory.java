@@ -2,10 +2,10 @@ package kboyle.oktane.core.module;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Streams;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
+import kboyle.oktane.core.exceptions.InvalidConstructorException;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
@@ -21,8 +21,6 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public final class CommandModuleFactory {
     private static final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
-
-    private static final String SPACE = " ";
 
     private CommandModuleFactory() {
     }
@@ -45,104 +43,51 @@ public final class CommandModuleFactory {
             moduleBuilder.withBean(parameterType);
         }
 
-        ModuleDescription moduleDescriptionAnnotation = moduleClazz.getAnnotation(ModuleDescription.class);
-        boolean singleton = false;
-        boolean moduleSynchronised;
-        Object moduleLock = null;
-        if (moduleDescriptionAnnotation != null) {
-            singleton = moduleDescriptionAnnotation.singleton() || moduleClazz.getAnnotation(Singleton.class) != null;
-            moduleBuilder.withSingleton(singleton);
-
-            moduleSynchronised = moduleDescriptionAnnotation.synchronised() || moduleClazz.getAnnotation(Synchronised.class) != null;
-            moduleBuilder.withSynchronised(moduleSynchronised);
-
-            if (moduleSynchronised) {
-                moduleLock = new Object();
+        Aliases moduleGroups = moduleClazz.getAnnotation(Aliases.class);
+        if (moduleGroups != null) {
+            for (String group : moduleGroups.value()) {
+                moduleBuilder.withGroup(group);
             }
+        }
 
-            if (!Strings.isNullOrEmpty(moduleDescriptionAnnotation.name())) {
-                moduleBuilder.withName(moduleDescriptionAnnotation.name());
-            }
+        boolean singleton = moduleClazz.getAnnotation(Singleton.class) != null;
+        boolean moduleSynchronised = moduleClazz.getAnnotation(Synchronised.class) != null;
+        moduleBuilder.withSingleton(singleton);
+        moduleBuilder.withSynchronised(moduleSynchronised);
+        Object moduleLock = moduleSynchronised ? new Object() : null;
 
-            if (!Strings.isNullOrEmpty(moduleDescriptionAnnotation.description())) {
-                moduleBuilder.withDescription(moduleDescriptionAnnotation.description());
-            }
+        Description moduleDescription = moduleClazz.getAnnotation(Description.class);
+        if (moduleDescription != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(moduleDescription.value()), "A module description must be non-empty.");
+            moduleBuilder.withDescription(moduleDescription.value());
+        }
 
-            for (String group : moduleDescriptionAnnotation.groups()) {
-               moduleBuilder.withGroup(group);
-            }
+        createPreconditions(moduleClazz).forEach(moduleBuilder::withPrecondition);
 
-            getPreconditions(moduleClazz, moduleDescriptionAnnotation, beanProvider)
-                .forEach(moduleBuilder::withPrecondition);
+        Name moduleName = moduleClazz.getAnnotation(Name.class);
+        if (moduleName != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(moduleName.value()), "A module name must be non-empty.");
+            moduleBuilder.withName(moduleName.value());
         }
 
         Method[] methods = moduleClazz.getMethods();
         for (Method method : methods) {
-            CommandDescription commandDescriptionAnnotation = method.getAnnotation(CommandDescription.class);
-            if (commandDescriptionAnnotation == null) {
+            if (!isValidCommandSignature(method)) {
                 continue;
             }
 
             logger.trace("Creating command from {}", method.getName());
 
-            Preconditions.checkState(
-                isValidCommandSignature(method),
-                "Method %s has invalid signature",
+            createCommand(
+                moduleClazz,
+                beanProvider,
+                callbackFactory,
+                moduleBuilder,
+                moduleGroups,
+                singleton,
+                moduleLock,
                 method
             );
-            Preconditions.checkState(
-                isValidAliases(moduleDescriptionAnnotation, commandDescriptionAnnotation),
-                "A command must have aliases if the module has no groups"
-            );
-
-            boolean commandSynchronised = commandDescriptionAnnotation.synchronised() || method.getAnnotation(Synchronised.class) != null;
-
-            Command.Builder commandBuilder = Command.builder()
-                .withName(method.getName())
-                .withSynchronised(commandSynchronised)
-                .withCallback(callbackFactory.createCommandCallback(
-                    moduleClazz,
-                    singleton,
-                    moduleLock,
-                    commandSynchronised,
-                    method,
-                    beanProvider
-                ));
-
-            for (String alias : commandDescriptionAnnotation.aliases()) {
-                commandBuilder.withAliases(alias);
-            }
-
-            if (!Strings.isNullOrEmpty(commandDescriptionAnnotation.name())) {
-                commandBuilder.withName(commandDescriptionAnnotation.name());
-            }
-
-            if (!Strings.isNullOrEmpty(commandDescriptionAnnotation.description())) {
-                commandBuilder.withDescription(commandDescriptionAnnotation.description());
-            }
-
-
-            getPreconditions(method, commandDescriptionAnnotation, beanProvider)
-                .forEach(commandBuilder::withPrecondition);
-
-            Parameter[] parameters = method.getParameters();
-            for (Parameter parameter : parameters) {
-                Class<?> parameterType = parameter.getType();
-                CommandParameter.Builder commandParameterBuilder = CommandParameter.builder()
-                    .withType(parameterType)
-                    .withName(parameter.getName());
-
-                ParameterDescription parameterDescriptionAnnotation = parameter.getAnnotation(ParameterDescription.class);
-                if (parameterDescriptionAnnotation != null) {
-                    commandParameterBuilder.withDescription(parameterDescriptionAnnotation.description())
-                        .withRemainder(parameterDescriptionAnnotation.remainder())
-                        .withName(parameterDescriptionAnnotation.name());
-                }
-
-                commandBuilder.withParameter(commandParameterBuilder.build());
-            }
-
-            moduleBuilder.withCommand(commandBuilder);
         }
 
         logger.trace("Created module {}", moduleClazz.getSimpleName());
@@ -150,66 +95,126 @@ public final class CommandModuleFactory {
         return moduleBuilder.build();
     }
 
-    private static boolean isValidCommandSignature(Method method) {
-        return !isStatic(method.getModifiers()) && method.getReturnType().equals(CommandResult.class);
-    }
+    private static <S extends CommandContext, T extends CommandModuleBase<S>> void createCommand(
+            Class<T> moduleClazz,
+            BeanProvider beanProvider,
+            CommandCallbackFactory callbackFactory,
+            Module.Builder moduleBuilder,
+            Aliases moduleGroups,
+            boolean singleton,
+            Object moduleLock,
+            Method method) {
+        Aliases commandAliases = method.getAnnotation(Aliases.class);
+        Preconditions.checkState(
+            isValidAliases(moduleGroups, commandAliases),
+            "A command must have aliases if the module has no groups"
+        );
 
-    private static boolean isValidAliases(
-            ModuleDescription moduleDescriptionAnnotation,
-            CommandDescription commandDescriptionAnnotation) {
-        for (String alias : commandDescriptionAnnotation.aliases()) {
-            Preconditions.checkState(!alias.contains(SPACE), "Alias %s contains a space", alias);
-        }
+        boolean commandSynchronised = method.getAnnotation(Synchronised.class) != null;
 
-        return commandDescriptionAnnotation.aliases().length > 0
-            || moduleDescriptionAnnotation != null
-            && moduleDescriptionAnnotation.groups().length > 0;
-    }
-
-    private static Stream<Precondition> getPreconditions(
-            Class<?> clazz,
-            ModuleDescription description,
-            BeanProvider beanProvider) {
-        return getPreconditions(description.preconditions(), clazz.getAnnotationsByType(Requires.class), beanProvider);
-    }
-
-    private static Stream<Precondition> getPreconditions(
-            Method method,
-            CommandDescription description,
-            BeanProvider beanProvider) {
-        return getPreconditions(description.preconditions(), method.getAnnotationsByType(Requires.class), beanProvider);
-    }
-
-    private static Stream<Precondition> getPreconditions(
-            Class<? extends Precondition>[] preconditions,
-            Requires[] requires,
-            BeanProvider beanProvider) {
-        Stream<Precondition> oldStyle = Arrays.stream(preconditions)
-            .map(precondition -> Preconditions.checkNotNull(
-                beanProvider.getBean(precondition),
-                "A precondition of type %s must be added to the bean provider",
-                precondition
+        Command.Builder commandBuilder = Command.builder()
+            .withName(method.getName())
+            .withSynchronised(commandSynchronised)
+            .withCallback(callbackFactory.createCommandCallback(
+                moduleClazz,
+                singleton,
+                moduleLock,
+                commandSynchronised,
+                method,
+                beanProvider
             ));
 
-        Stream<Precondition> newStyle = Arrays.stream(requires)
-            .map(CommandModuleFactory::initPrecondition);
+        if (commandAliases != null) {
+            for (String alias : commandAliases.value()) {
+                commandBuilder.withAlias(alias);
+            }
+        }
 
-        return Streams.concat(oldStyle, newStyle);
+        Name commandName = method.getAnnotation(Name.class);
+        if (commandName != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(commandName.value()), "A command name must be non-empty.");
+            commandBuilder.withName(commandName.value());
+        }
+
+        Description commandDescription = method.getAnnotation(Description.class);
+        if (commandDescription != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(commandDescription.value()), "A command description must be non-empty.");
+            commandBuilder.withDescription(commandDescription.value());
+        }
+
+        createPreconditions(method).forEach(commandBuilder::withPrecondition);
+
+        Parameter[] parameters = method.getParameters();
+        for (Parameter parameter : parameters) {
+            createParameter(method, commandBuilder, parameter);
+        }
+
+        moduleBuilder.withCommand(commandBuilder);
     }
 
-    private static Precondition initPrecondition(Requires requirement) {
+    private static void createParameter(Method method, Command.Builder commandBuilder, Parameter parameter) {
+        Class<?> parameterType = parameter.getType();
+        CommandParameter.Builder parameterBuilder = CommandParameter.builder()
+            .withType(parameterType)
+            .withName(parameter.getName())
+            .withRemainder(parameter.getAnnotation(Remainder.class) != null);
+
+        Description parameterDescription = method.getAnnotation(Description.class);
+        if (parameterDescription != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(parameterDescription.value()), "A parameter description must be non-empty.");
+            parameterBuilder.withDescription(parameterDescription.value());
+        }
+
+        Name parameterName = parameter.getAnnotation(Name.class);
+        if (parameterName != null) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(parameterName.value()), "A parameter name must be non-empty.");
+            parameterBuilder.withName(parameterName.value());
+        }
+
+        commandBuilder.withParameter(parameterBuilder.build());
+    }
+
+    private static boolean isValidCommandSignature(Method method) {
+        return !isStatic(method.getModifiers())
+            && method.getReturnType().equals(CommandResult.class)
+            && method.getAnnotation(Disabled.class) == null;
+    }
+
+    private static boolean isValidAliases(Aliases moduleAliases, Aliases commandAliases) {
+        return commandAliases != null && commandAliases.value().length > 0
+            || moduleAliases != null && moduleAliases.value().length > 0;
+    }
+
+    private static Stream<Precondition> createPreconditions(Class<?> clazz) {
+        return createPreconditions(clazz.getAnnotationsByType(Require.class));
+    }
+
+    private static Stream<Precondition> createPreconditions(Method method) {
+        return createPreconditions(method.getAnnotationsByType(Require.class));
+    }
+
+    private static Stream<Precondition> createPreconditions(Require[] requires) {
+        return Arrays.stream(requires).map(CommandModuleFactory::initPrecondition);
+    }
+
+    private static Precondition initPrecondition(Require requirement) {
         Class<? extends Precondition> clazz = requirement.precondition();
         String[] arguments = requirement.arguments();
         Constructor<?> validConstructor = Arrays.stream(clazz.getConstructors())
-            .filter(constructor -> constructor.getParameters().length == arguments.length)
+            .filter(CommandModuleFactory::isValidConstructor)
             .reduce((single, other) -> {
-                throw new RuntimeException("add a proper exception");
+                throw new InvalidConstructorException("Expected only a single constructor");
             })
-            .orElseThrow(() -> new RuntimeException("exception fool"));
+            .orElseThrow(() -> new InvalidConstructorException("Expected at least one valid constructor"));
         try {
-            return (Precondition) validConstructor.newInstance((Object[]) arguments);
+            return (Precondition) validConstructor.newInstance((Object) arguments);
         } catch (Exception ex) {
             throw new FailedToInstantiatePreconditionException(clazz, ex);
         }
+    }
+
+    private static boolean isValidConstructor(Constructor<?> constructor) {
+        Parameter[] parameters = constructor.getParameters();
+        return parameters.length == 0 || parameters.length == 1 && parameters[0].getType().equals(String[].class);
     }
 }

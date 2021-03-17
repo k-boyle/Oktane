@@ -4,11 +4,11 @@ import kboyle.oktane.core.module.Command;
 
 public class TestCommandContext extends CommandContext {
     public TestCommandContext() {
-        super(BeanProvider.get());
+        super(BeanProvider.empty());
     }
 
     public TestCommandContext(Command command) {
-        super(BeanProvider.get());
+        super(BeanProvider.empty());
         super.command = command;
     }
 }

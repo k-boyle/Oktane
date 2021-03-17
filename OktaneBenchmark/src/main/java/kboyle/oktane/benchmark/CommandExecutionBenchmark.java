@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @State(Scope.Benchmark)
 @Fork(1)
 public class CommandExecutionBenchmark {
-    private final Module module = CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.get());
+    private final Module module = CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.empty());
     private final Map<String, Command> commands = module.commands().stream()
         .collect(Collectors.toMap(Command::name, Function.identity()));
 

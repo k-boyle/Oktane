@@ -196,7 +196,7 @@ public class CommandHandler<T extends CommandContext> {
             this.typeParserByClass = new HashMap<>(PrimitiveTypeParser.DEFAULT_PARSERS);
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
-            this.beanProvider = BeanProvider.get();
+            this.beanProvider = BeanProvider.empty();
         }
 
         /**
