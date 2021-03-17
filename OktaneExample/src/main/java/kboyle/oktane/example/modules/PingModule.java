@@ -18,9 +18,9 @@ public class PingModule extends CommandModuleBase<ExampleCommandContext> {
     @Name("Ping Two")
     @Aliases("ping")
     @Description("Adds the two numbers")
-    @Disabled(reason = "Currently there's an issue with overload handling causing this command to not be executed")
+    @Priority(1)
     public CommandResult ping(int a, int b) {
-        return message("pong: " + a + b);
+        return message("pong: " + (a + b));
     }
 
     @Name("Ping Echo")

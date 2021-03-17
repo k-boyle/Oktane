@@ -10,6 +10,7 @@ import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
 import kboyle.oktane.core.results.precondition.SuccessfulPreconditionResult;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ public class Module {
         this.groups = groups;
         this.commands = commands.stream()
             .map(command -> command.build(this))
+            .sorted(Comparator.comparingInt(Command::priority).reversed())
             .collect(ImmutableList.toImmutableList());
         this.preconditions = preconditions;
         this.description = description;

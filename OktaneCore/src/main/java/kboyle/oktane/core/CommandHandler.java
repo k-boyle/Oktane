@@ -106,7 +106,6 @@ public class CommandHandler<T extends CommandContext> {
                 return new ExecutionErrorResult(command, ex);
             }
 
-
             try {
                 Result argumentParserResult = argumentParser.parse(context, searchResult.input(), searchResult.offset());
                 Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");

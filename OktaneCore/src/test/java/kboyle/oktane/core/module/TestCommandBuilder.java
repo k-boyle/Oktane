@@ -25,7 +25,7 @@ public class TestCommandBuilder {
             ImmutableList.of(),
             null,
             null,
-            false
-        );
+            false,
+            0);
     }
 }
