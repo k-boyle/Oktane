@@ -38,10 +38,8 @@ public class DefaultArgumentParser implements ArgumentParser {
         }
 
         if (parameters.isEmpty()) {
-            if (input.length() != 0 && input.length() - 1 != index) {
-                if (noneWhitespaceRemains(input, index)) {
-                    return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
-                }
+            if (input.length() != 0 && input.length() - 1 != index && noneWhitespaceRemains(input, index)) {
+                return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
             }
             return SuccessfulArgumentParserResult.empty();
         }
