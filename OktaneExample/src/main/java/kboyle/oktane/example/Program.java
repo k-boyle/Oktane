@@ -11,7 +11,6 @@ import kboyle.oktane.example.results.KillAppCommandResult;
 import java.util.Random;
 import java.util.Scanner;
 
-// TODO update README
 public class Program {
     public static void main(String[] args) {
         CommandHandler<ExampleCommandContext> commandHandler = CommandHandler.<ExampleCommandContext>builder()
