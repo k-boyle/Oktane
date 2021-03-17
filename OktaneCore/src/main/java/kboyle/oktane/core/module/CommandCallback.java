@@ -5,5 +5,5 @@ import kboyle.oktane.core.results.command.CommandResult;
 
 @FunctionalInterface
 public interface CommandCallback {
-     CommandResult execute(CommandContext context, Object[] services, Object[] parameters);
+     CommandResult execute(CommandContext context, Object[] beans, Object[] parameters);
 }

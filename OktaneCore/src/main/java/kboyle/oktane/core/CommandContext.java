@@ -11,6 +11,10 @@ public abstract class CommandContext {
         this.beanProvider = beanProvider;
     }
 
+    protected CommandContext() {
+        this(BeanProvider.empty());
+    }
+
     public BeanProvider beanProvider() {
         return beanProvider;
     }

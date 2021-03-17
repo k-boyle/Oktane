@@ -146,6 +146,21 @@ public class DefaultArgumentParserTests {
                 COMMAND_NO_PARAMETERS,
                 "",
                 new SuccessfulArgumentParserResult(new Object[0])
+            ),
+            Arguments.of(
+                COMMAND_NO_PARAMETERS,
+                "          ",
+                new SuccessfulArgumentParserResult(new Object[0])
+            ),
+            Arguments.of(
+                COMMAND_INT_ARG_NOT_REMAINDER,
+                "10                   ",
+                new SuccessfulArgumentParserResult(new Object[]{ 10 })
+            ),
+            Arguments.of(
+                COMMAND_INT_ARG_NOT_REMAINDER,
+                "     10         ",
+                new SuccessfulArgumentParserResult(new Object[]{ 10 })
             )
         );
     }
