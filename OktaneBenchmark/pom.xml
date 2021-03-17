@@ -20,7 +20,7 @@
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
 
-        <jmh.version>1.27</jmh.version>
+        <jmh.version>1.28</jmh.version>
     </properties>
 
     <dependencies>
