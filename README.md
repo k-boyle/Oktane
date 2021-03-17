@@ -46,8 +46,8 @@ To define a class as a module the class just needs to extend `CommandModuleBase<
 annotation and return `CommandResult`; 
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    @CommandDescription(aliases = {"echo", "e"})
-    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
+    @Aliases({"echo", "e"})
+    public CommandResult pingPong(@Remainder String input) {
         return message(context().user() + " said: " + input);
     }
 }
@@ -75,33 +75,28 @@ Result result = commandHandlder.execute("echo Oktane is really cool :)", context
 **Granular Configuration**
 
 Modules and commands can be configured a fair amount.
+
 ```java
-@ModuleDescription(
-    name = "My Module",                                 // Can be used in help displays, all the modules and commands can be accessed via
-                                                        // CommandHandler#module, and CommandHandler#commands 
-    description = "This is a command module",           // Can be used in help displays
-    groups = {"a", "b"},                                // Used to group commands together,
-                                                        // commands inside a group must have the group prefix to execute, e.g. "a echo"
-    preconditions = RequireOwnerPrecondition.class,     // The preconditions to run to determine whether a module is executable or not
-    singleton = true,                                   // Makes the module a singleton (transient by default)
-    synchronised = true                                 // Makes it so that all commands in the module are synchronised on a shared lock
-)
+@Name("My Module")                                      // Can be used in help displays, all the modules and commands can be accessed via
+                                                        // CommandHandler#modules, and CommandHandler#commands 
+@Description("This is a command module")                // Can be used in help displays
+@Aliases({"a", "b"})                                    // commands inside a group must have the group prefix to execute, e.g. "a echo"
+@Require(precondition = RequireOwnerPrecondition.class) // The preconditions to run to determine whether a module is executable or not
+@Singleton                                              // Makes the module a singleton (transient by default)
+@Synchronised                                           // Makes it so that all commands in the module are synchronised on a shared lock
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    @CommandDescription(
-        name = "Echo Command",                          // Can be used in help displays
-        description = "Echos input",                    // Can be used in help displays
-        aliases = {"echo", "e"},                        // Defines the different aliases that can invoke the command
-        preconditions = ChannelPrecondition.class,      // The preconditions to run to determine whether the command is executable
-        synchronised = true                             // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
-    )
+    
+    @Name("Echo Command")                                                     // Can be used in help displays
+    @Description("Echos input")                                               // Can be used in help displays
+    @Aliases({"echo", "e"})                                                   // Defines the different aliases that can invoke the command
+    @Require(precondition = ChannelPrecondition.class, arguments = "general") // The preconditions to run to determine whether the command is executable
+    @Synchronised                                                             // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
     public CommandResult pingPong(
-            @ParameterDescription(
-                name = "User Input",                    // Can be used in help displays       
-                description = "The input to echo",      // Can be used in help displays
-                remainder = true                        // Denotes the parameter as a remainder, so all the remaining text left to parse
-                                                        // will be passed into this parameter. There can only be one remainder, and it
-                                                        // must be the last parameter
-            ) 
+            @Name("User Input")               // Can be used in help displays       
+            @Description("The input to echo") // Can be used in help displays
+            @Remainder                        // Denotes the parameter as a remainder, so all the remaining text left to parse
+                                              // will be passed into this parameter. There can only be one remainder, and it
+                                              // must be the last parameter
             String input) {
         return message(context().user() + " said: " + input);
     }
@@ -113,7 +108,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
 Oktane supports parsing all the primitive types, see `PrimitiveTypeParser`, and allowing a user to define their own.
 Type parsers are added during the `CommandHandler` building stage using the withTypeParser method.
 ```java
-public class PrimitiveTypeParser<User> implements TypeParser<User> {
+public class UserTypeParser implements TypeParser<User> {
     @Override
     public TypeParserResult parse(CommandContext context, String input) {
         User user = User.parseFromInput(input);
