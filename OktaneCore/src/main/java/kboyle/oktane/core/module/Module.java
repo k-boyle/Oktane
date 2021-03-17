@@ -40,6 +40,7 @@ public class Module {
         this.groups = groups;
         this.commands = commands.stream()
             .map(command -> command.build(this))
+            .sorted((left, right) -> Integer.compare(right.priority(), left.priority()))
             .collect(ImmutableList.toImmutableList());
         this.preconditions = preconditions;
         this.description = description;

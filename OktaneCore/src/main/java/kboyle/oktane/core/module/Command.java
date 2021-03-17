@@ -27,6 +27,7 @@ public class Command {
     private final Signature signature;
     private final Module module;
     private final boolean synchronised;
+    private final int priority;
 
     Command(
             String name,
@@ -37,7 +38,8 @@ public class Command {
             ImmutableList<Precondition> preconditions,
             Signature signature,
             Module module,
-            boolean synchronised) {
+            boolean synchronised,
+            int priority) {
         this.name = name;
         this.aliases = aliases;
         this.description = description;
@@ -47,6 +49,7 @@ public class Command {
         this.signature = signature;
         this.module = module;
         this.synchronised = synchronised;
+        this.priority = priority;
     }
 
     static Builder builder() {
@@ -148,6 +151,13 @@ public class Command {
         return synchronised;
     }
 
+    /**
+     * @return The commands priority within a given module.
+     */
+    public int priority() {
+        return priority;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -166,6 +176,7 @@ public class Command {
         private String description;
         private CommandCallback commandCallback;
         private boolean synchronised;
+        private int priority;
 
         private Builder() {
             this.aliases = ImmutableSet.builder();
@@ -219,6 +230,11 @@ public class Command {
             return this;
         }
 
+        public Builder withPriority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+
         Command build(Module module) {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
@@ -257,7 +273,8 @@ public class Command {
                 preconditions.build(),
                 commandSignature,
                 module,
-                synchronised);
+                synchronised,
+                priority);
         }
 
         private static boolean isValidAliases(ImmutableSet<String> commandAliases, ImmutableSet<String> moduleGroups) {

@@ -142,6 +142,11 @@ public final class CommandModuleFactory {
             commandBuilder.withDescription(commandDescription.value());
         }
 
+        Priority priority = method.getAnnotation(Priority.class);
+        if (priority != null) {
+            commandBuilder.withPriority(priority.value());
+        }
+
         createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
         Parameter[] parameters = method.getParameters();
