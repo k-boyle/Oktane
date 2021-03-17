@@ -1,6 +1,5 @@
 package kboyle.oktane.benchmark;
 
-import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -13,7 +12,7 @@ class BenchmarkRunner {
             .include(CommandTotalExecutionBenchmark.class.getSimpleName())
 //            .include(CommandMapBenchmark.class.getSimpleName())
 //            .include(ArgumentParserBenchmark.class.getSimpleName())
-            .addProfiler(GCProfiler.class)
+//            .addProfiler(GCProfiler.class)
             .forks(1)
             .build();
 
