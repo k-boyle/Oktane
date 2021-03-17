@@ -118,7 +118,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
 
             Result parseResult = parse(type, context, currentParameter);
-            if (parseResult instanceof SuccessfulTypeParserResult success) {
+            if (parseResult instanceof SuccessfulTypeParserResult<?> success) {
                 if (parsedArguments == null) {
                     parsedArguments = new Object[parameters.size()];
                 }
