@@ -38,11 +38,10 @@ public class DefaultArgumentParser implements ArgumentParser {
         }
 
         if (parameters.isEmpty()) {
-            if (input.length() == 0 || input.length() - 1 == index) {
-                return SuccessfulArgumentParserResult.empty();
-            } else {
+            if (input.length() != 0 && input.length() - 1 != index && noneWhitespaceRemains(input, index)) {
                 return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
             }
+            return SuccessfulArgumentParserResult.empty();
         }
 
         Object[] parsedArguments = null;
@@ -117,7 +116,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
 
             Result parseResult = parse(type, context, currentParameter);
-            if (parseResult instanceof SuccessfulTypeParserResult success) {
+            if (parseResult instanceof SuccessfulTypeParserResult<?> success) {
                 if (parsedArguments == null) {
                     parsedArguments = new Object[parameters.size()];
                 }
@@ -129,7 +128,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
         }
 
-        if (index != input.length()) {
+        if (index != input.length() && noneWhitespaceRemains(input, index)) {
             return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
         }
 
@@ -148,5 +147,15 @@ public class DefaultArgumentParser implements ArgumentParser {
         }catch (Exception ex) {
             return new ExecutionErrorResult(context.command(), ex);
         }
+    }
+
+    private static boolean noneWhitespaceRemains(String input, int index) {
+        for (; index < input.length(); index++) {
+            if (!Character.isSpaceChar(input.charAt(index))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

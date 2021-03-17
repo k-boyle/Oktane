@@ -1,32 +1,31 @@
 package kboyle.oktane.benchmark;
 
 import kboyle.oktane.core.module.CommandModuleBase;
-import kboyle.oktane.core.module.annotations.CommandDescription;
-import kboyle.oktane.core.module.annotations.ParameterDescription;
+import kboyle.oktane.core.module.annotations.Aliases;
 import kboyle.oktane.core.results.command.CommandResult;
 
 public class BenchmarkModule extends CommandModuleBase<BenchmarkCommandContext> {
-    @CommandDescription(aliases = "a")
+    @Aliases("a")
     public CommandResult a() {
         return nop();
     }
 
-    @CommandDescription(aliases = "b")
+    @Aliases("b")
     public CommandResult b(String arg1) {
         return nop();
     }
 
-    @CommandDescription(aliases = "c")
-    public CommandResult c(@ParameterDescription(remainder = true) String arg1) {
+    @Aliases("c")
+    public CommandResult c(String arg1) {
         return nop();
     }
 
-    @CommandDescription(aliases = "e")
+    @Aliases("e")
     public CommandResult e(int arg1) {
         return nop();
     }
 
-    @CommandDescription(aliases = "f")
+    @Aliases("f")
     public CommandResult f(String one, String two, String three, String four, String five) {
         return nop();
     }

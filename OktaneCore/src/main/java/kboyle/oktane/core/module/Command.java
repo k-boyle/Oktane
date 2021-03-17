@@ -179,7 +179,7 @@ public class Command {
             return this;
         }
 
-        public Builder withAliases(String alias) {
+        public Builder withAlias(String alias) {
             Preconditions.checkNotNull(alias, "alias cannot be null");
             Preconditions.checkState(!alias.contains(SPACE), "Alias %s contains a space", alias);
             this.aliases.add(alias);

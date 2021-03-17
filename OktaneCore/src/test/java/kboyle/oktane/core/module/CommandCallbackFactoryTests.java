@@ -21,7 +21,7 @@ public class CommandCallbackFactoryTests {
             null,
             false,
             TestModuleOne.get("a"),
-            BeanProvider.get()
+            BeanProvider.empty()
         );
         CommandResult result = commandCallback.execute(new TestCommandContext(), new Object[0], new Object[0]);
         assertTrue(result instanceof NOP);
@@ -36,7 +36,7 @@ public class CommandCallbackFactoryTests {
             null,
             false,
             TestModuleOne.get("b"),
-            BeanProvider.get()
+            BeanProvider.empty()
         );
         CommandResult result = commandCallback.execute(new TestCommandContext(), new Object[0], new Object[0]);
         assertTrue(result instanceof CommandMessageResult msg && msg.message().equals("hi"));
@@ -51,7 +51,7 @@ public class CommandCallbackFactoryTests {
             null,
             false,
             TestModuleOne.get("b"),
-            BeanProvider.get()
+            BeanProvider.empty()
         ));
     }
 
@@ -66,7 +66,7 @@ public class CommandCallbackFactoryTests {
                 new Object(),
                 true,
                 TestModuleTwo.get("a"),
-                BeanProvider.get()
+                BeanProvider.empty()
             )
         );
     }

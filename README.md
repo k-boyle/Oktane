@@ -6,19 +6,29 @@ Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
 Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/snapshots), find the latest snapshot release [here](https://oss.sonatype.org/#nexus-search;quick~oktane).
 
-**Performance Benchmarks**
+# Performance Benchmarks #
 
-Benchmarks ran on a Ryzen 5600x @ 4.6GHz
+**Benchmarks ran on a Ryzen 5600x @ 4.6GHz**
 
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 149.608  |  ± 6.872  | ns/op   |
-| commandIntParameter         | avgt |  5   | 82.963   |  ± 4.290  | ns/op   |
-| commandNoParameters         | avgt |  5   | 47.385   |  ± 0.777  | ns/op   |
-| commandNotFound             | avgt |  5   | 8.137    |  ± 0.379  | ns/op   |
-| commandOneParameter         | avgt |  5   | 71.866   |  ± 2.769  | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 66.715   |  ± 2.237  | ns/op   |
+| commandFiveParameters       | avgt |  5   | 149.608  | ± 6.872   | ns/op   |
+| commandIntParameter         | avgt |  5   | 82.963   | ± 4.290   | ns/op   |
+| commandNoParameters         | avgt |  5   | 47.385   | ± 0.777   | ns/op   |
+| commandNotFound             | avgt |  5   | 8.137    | ± 0.379   | ns/op   |
+| commandOneParameter         | avgt |  5   | 71.866   | ± 2.769   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 66.715   | ± 2.237   | ns/op   |
 
+**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ**
+
+| Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
+| --------------------------- | ---- | ---- | -------- | --------- | ------- |
+| commandFiveParameters       | avgt |  5   | 245.235  | ± 8.549   | ns/op   |
+| commandIntParameter         | avgt |  5   | 126.463  | ± 0.727   | ns/op   |
+| commandNoParameters         | avgt |  5   | 61.077   | ± 0.973   | ns/op   |
+| commandNotFound             | avgt |  5   | 10.687   | ± 0.071   | ns/op   |
+| commandOneParameter         | avgt |  5   | 107.434  | ± 0.866   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 101.537  | ± 0.979   | ns/op   |
 
 # Usage #
 
@@ -46,9 +56,9 @@ To define a class as a module the class just needs to extend `CommandModuleBase<
 annotation and return `CommandResult`; 
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    @CommandDescription(aliases = {"echo", "e"})
-    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
-        return reply(context().user() + " said: " + input);
+    @Aliases({"echo", "e"})
+    public CommandResult pingPong(@Remainder String input) {
+        return message(context().user() + " said: " + input);
     }
 }
 ```
@@ -75,35 +85,30 @@ Result result = commandHandlder.execute("echo Oktane is really cool :)", context
 **Granular Configuration**
 
 Modules and commands can be configured a fair amount.
+
 ```java
-@ModuleDescription(
-    name = "My Module",                                 // Can be used in help displays, all the modules and commands can be accessed via
-                                                        // CommandHandler#module, and CommandHandler#commands 
-    description = "This is a command module",           // Can be used in help displays
-    groups = {"a", "b"},                                // Used to group commands together,
-                                                        // commands inside a group must have the group prefix to execute, e.g. "a echo"
-    preconditions = RequireOwnerPrecondition.class,     // The preconditions to run to determine whether a module is executable or not
-    singleton = true,                                   // Makes the module a singleton (transient by default)
-    synchronised = true                                 // Makes it so that all commands in the module are synchronised on a shared lock
-)
+@Name("My Module")                                      // Can be used in help displays, all the modules and commands can be accessed via
+                                                        // CommandHandler#modules, and CommandHandler#commands 
+@Description("This is a command module")                // Can be used in help displays
+@Aliases({"a", "b"})                                    // commands inside a group must have the group prefix to execute, e.g. "a echo"
+@Require(precondition = RequireOwnerPrecondition.class) // The preconditions to run to determine whether a module is executable or not
+@Singleton                                              // Makes the module a singleton (transient by default)
+@Synchronised                                           // Makes it so that all commands in the module are synchronised on a shared lock
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    @CommandDescription(
-        name = "Echo Command",                          // Can be used in help displays
-        description = "Echos input",                    // Can be used in help displays
-        aliases = {"echo", "e"},                        // Defines the different aliases that can invoke the command
-        preconditions = ChannelPrecondition.class,      // The preconditions to run to determine whether the command is executable
-        synchronised = true                             // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
-    )
+    
+    @Name("Echo Command")                                                     // Can be used in help displays
+    @Description("Echos input")                                               // Can be used in help displays
+    @Aliases({"echo", "e"})                                                   // Defines the different aliases that can invoke the command
+    @Require(precondition = ChannelPrecondition.class, arguments = "general") // The preconditions to run to determine whether the command is executable
+    @Synchronised                                                             // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
     public CommandResult pingPong(
-            @ParameterDescription(
-                name = "User Input",                    // Can be used in help displays       
-                description = "The input to echo",      // Can be used in help displays
-                remainder = true                        // Denotes the parameter as a remainder, so all the remaining text left to parse
-                                                        // will be passed into this parameter. There can only be one remainder, and it
-                                                        // must be the last parameter
-            ) 
+            @Name("User Input")               // Can be used in help displays       
+            @Description("The input to echo") // Can be used in help displays
+            @Remainder                        // Denotes the parameter as a remainder, so all the remaining text left to parse
+                                              // will be passed into this parameter. There can only be one remainder, and it
+                                              // must be the last parameter
             String input) {
-        return reply(context().user() + " said: " + input);
+        return message(context().user() + " said: " + input);
     }
 }
 ```
@@ -113,7 +118,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
 Oktane supports parsing all the primitive types, see `PrimitiveTypeParser`, and allowing a user to define their own.
 Type parsers are added during the `CommandHandler` building stage using the withTypeParser method.
 ```java
-public class PrimitiveTypeParser<User> implements TypeParser<User> {
+public class UserTypeParser implements TypeParser<User> {
     @Override
     public TypeParserResult parse(CommandContext context, String input) {
         User user = User.parseFromInput(input);
@@ -156,7 +161,7 @@ public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext>
     
     @CommandDescription(aliases = {"echo", "e"})
     public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
-        return reply(context().user() + " said: " + input);
+        return message(context().user() + " said: " + input);
     }
 }
 ```

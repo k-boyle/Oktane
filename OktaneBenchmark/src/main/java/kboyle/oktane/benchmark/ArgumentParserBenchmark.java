@@ -23,7 +23,7 @@ public class ArgumentParserBenchmark {
 
     private final Module module = CommandModuleFactory.create(
         BenchmarkModule.class,
-        BeanProvider.get()
+        BeanProvider.empty()
     );
 
     private final Map<String, Command> commands = module.commands().stream()

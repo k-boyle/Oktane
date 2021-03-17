@@ -5,6 +5,6 @@ import kboyle.oktane.core.CommandContext;
 
 public class BenchmarkCommandContext extends CommandContext {
     public BenchmarkCommandContext() {
-        super(BeanProvider.get());
+        super(BeanProvider.empty());
     }
 }

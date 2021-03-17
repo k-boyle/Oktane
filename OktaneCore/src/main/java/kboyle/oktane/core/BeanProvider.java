@@ -1,11 +1,14 @@
 package kboyle.oktane.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @FunctionalInterface
 public interface BeanProvider {
-     class EmptyBeanProvider implements BeanProvider {
-        private static final BeanProvider INSTANCE = new EmptyBeanProvider();
+     class Empty implements BeanProvider {
+        private static final Empty INSTANCE = new Empty();
 
-        private EmptyBeanProvider() {
+        private Empty() {
         }
 
         @Override
@@ -14,8 +17,31 @@ public interface BeanProvider {
         }
     }
 
-    static BeanProvider get() {
-        return EmptyBeanProvider.INSTANCE;
+    class Simple implements BeanProvider {
+         private final Map<Class<?>, Object> beanByClass;
+
+        private Simple() {
+            beanByClass = new HashMap<>();
+        }
+
+        public <T> Simple add(Class<T> clazz, T bean) {
+            beanByClass.put(clazz, bean);
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T getBean(Class<T> clazz) {
+            return (T) beanByClass.get(clazz);
+        }
+    }
+
+    static Empty empty() {
+        return Empty.INSTANCE;
+    }
+
+    static Simple simple() {
+         return new Simple();
     }
 
     <T> T getBean(Class<T> clazz);

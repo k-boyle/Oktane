@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 public class CommandMapBenchmark {
     private final CommandMap commandMap = CommandMap.builder()
-        .map(CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.get()))
+        .map(CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.empty()))
         .build();
 
     @Benchmark
