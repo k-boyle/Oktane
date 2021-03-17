@@ -6,19 +6,29 @@ Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
 Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/snapshots), find the latest snapshot release [here](https://oss.sonatype.org/#nexus-search;quick~oktane).
 
-**Performance Benchmarks**
+# Performance Benchmarks #
 
-Benchmarks ran on a Ryzen 5600x @ 4.6GHz
+**Benchmarks ran on a Ryzen 5600x @ 4.6GHz**
 
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 149.608  |  ± 6.872  | ns/op   |
-| commandIntParameter         | avgt |  5   | 82.963   |  ± 4.290  | ns/op   |
-| commandNoParameters         | avgt |  5   | 47.385   |  ± 0.777  | ns/op   |
-| commandNotFound             | avgt |  5   | 8.137    |  ± 0.379  | ns/op   |
-| commandOneParameter         | avgt |  5   | 71.866   |  ± 2.769  | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 66.715   |  ± 2.237  | ns/op   |
+| commandFiveParameters       | avgt |  5   | 149.608  | ± 6.872   | ns/op   |
+| commandIntParameter         | avgt |  5   | 82.963   | ± 4.290   | ns/op   |
+| commandNoParameters         | avgt |  5   | 47.385   | ± 0.777   | ns/op   |
+| commandNotFound             | avgt |  5   | 8.137    | ± 0.379   | ns/op   |
+| commandOneParameter         | avgt |  5   | 71.866   | ± 2.769   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 66.715   | ± 2.237   | ns/op   |
 
+**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ**
+
+| Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
+| --------------------------- | ---- | ---- | -------- | --------- | ------- |
+| commandFiveParameters       | avgt |  5   | 245.235  | ± 8.549   | ns/op   |
+| commandIntParameter         | avgt |  5   | 126.463  | ± 0.727   | ns/op   |
+| commandNoParameters         | avgt |  5   | 61.077   | ± 0.973   | ns/op   |
+| commandNotFound             | avgt |  5   | 10.687   | ± 0.071   | ns/op   |
+| commandOneParameter         | avgt |  5   | 107.434  | ± 0.866   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 101.537  | ± 0.979   | ns/op   |
 
 # Usage #
 
