@@ -38,11 +38,12 @@ public class DefaultArgumentParser implements ArgumentParser {
         }
 
         if (parameters.isEmpty()) {
-            if (input.length() == 0 || input.length() - 1 == index) {
-                return SuccessfulArgumentParserResult.empty();
-            } else {
-                return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
+            if (input.length() != 0 && input.length() - 1 != index) {
+                if (!onlyWhitespaceRemains(input, index)) {
+                    return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
+                }
             }
+            return SuccessfulArgumentParserResult.empty();
         }
 
         Object[] parsedArguments = null;
@@ -129,7 +130,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
         }
 
-        if (index != input.length()) {
+        if (index != input.length() && !onlyWhitespaceRemains(input, index)) {
             return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
         }
 
@@ -148,5 +149,15 @@ public class DefaultArgumentParser implements ArgumentParser {
         }catch (Exception ex) {
             return new ExecutionErrorResult(context.command(), ex);
         }
+    }
+
+    private static boolean onlyWhitespaceRemains(String input, int index) {
+        for (; index < input.length(); index++) {
+            if (!Character.isSpaceChar(input.charAt(index))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
