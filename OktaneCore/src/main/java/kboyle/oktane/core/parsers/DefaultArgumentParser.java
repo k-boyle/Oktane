@@ -39,7 +39,7 @@ public class DefaultArgumentParser implements ArgumentParser {
 
         if (parameters.isEmpty()) {
             if (input.length() != 0 && input.length() - 1 != index) {
-                if (!onlyWhitespaceRemains(input, index)) {
+                if (noneWhitespaceRemains(input, index)) {
                     return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
                 }
             }
@@ -130,7 +130,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
         }
 
-        if (index != input.length() && !onlyWhitespaceRemains(input, index)) {
+        if (index != input.length() && noneWhitespaceRemains(input, index)) {
             return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
         }
 
@@ -151,13 +151,13 @@ public class DefaultArgumentParser implements ArgumentParser {
         }
     }
 
-    private static boolean onlyWhitespaceRemains(String input, int index) {
+    private static boolean noneWhitespaceRemains(String input, int index) {
         for (; index < input.length(); index++) {
             if (!Character.isSpaceChar(input.charAt(index))) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 }
