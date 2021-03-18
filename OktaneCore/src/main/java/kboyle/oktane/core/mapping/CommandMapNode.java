@@ -20,9 +20,12 @@ class CommandMapNode {
         this.nodeByAlias = ImmutableMap.copyOf(nodeByAlias);
     }
 
-    public ImmutableList<CommandSearchResult> findCommands(String input) {
+    public ImmutableList<CommandSearchResult> findCommands(String input, int index) {
         ImmutableList.Builder<CommandSearchResult> results = ImmutableList.builder();
-        findCommands(results, 0, input, 0);
+        while (Character.isSpaceChar(input.charAt(index))) {
+            index++;
+        }
+        findCommands(results, 0, input, index);
         return results.build();
     }
 

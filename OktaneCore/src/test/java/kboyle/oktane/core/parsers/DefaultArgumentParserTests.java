@@ -3,14 +3,15 @@ package kboyle.oktane.core.parsers;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.TestCommandContext;
-import kboyle.oktane.core.exceptions.InvalidResultException;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.TestCommandBuilder;
-import kboyle.oktane.core.results.ExecutionErrorResult;
+import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.FailedArgumentParserResult;
-import kboyle.oktane.core.results.argumentparser.SuccessfulArgumentParserResult;
-import kboyle.oktane.core.results.typeparser.FailedTypeParserResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserExceptionResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserFailedResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserFailedToParseArgumentResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
+import kboyle.oktane.core.results.typeparser.TypeParserFailedResult;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -59,15 +60,6 @@ public class DefaultArgumentParserTests {
         );
     }
 
-    @Test
-    public void testArgumentParserThrowsOnBadResult() {
-        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.of(int.class, new BadResultParser()));
-        Assertions.assertThrows(
-            InvalidResultException.class,
-            () -> argumentParser.parse(new TestCommandContext(COMMAND_INT_ARG_NOT_REMAINDER), "string", 0)
-        );
-    }
-
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     public void argumentParserTest(Command command, String arguments, Result expectedResult) {
@@ -93,10 +85,15 @@ public class DefaultArgumentParserTests {
         }
     }
 
-    private static class BadResult implements TypeParserResult {
+    private static class BadResult implements TypeParserResult, FailedResult {
         @Override
-        public boolean isSuccess() {
-            return true;
+        public String reason() {
+            return null;
+        }
+
+        @Override
+        public Object value() {
+            return null;
         }
     }
 
@@ -105,62 +102,62 @@ public class DefaultArgumentParserTests {
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "100",
-                new SuccessfulArgumentParserResult(new Object[]{ 100 })
+                new ArgumentParserSuccessfulResult(new Object[]{ 100 })
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "100 200",
-                new FailedArgumentParserResult(COMMAND_INT_ARG_NOT_REMAINDER, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS,  3)
+                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_MANY_ARGUMENTS,  3)
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "",
-                new FailedArgumentParserResult(COMMAND_INT_ARG_NOT_REMAINDER, FailedArgumentParserResult.Reason.TOO_FEW_ARGUMENTS, 0)
+                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_FEW_ARGUMENTS, 0)
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "string",
-                new FailedTypeParserResult(String.format("Failed to parse %s as %s", "string", int.class))
+                new ArgumentParserFailedToParseArgumentResult(new TypeParserFailedResult(String.format("Failed to parse %s as %s", "string", int.class)))
             ),
             Arguments.of(
                 COMMAND_LONG_ARG_NOT_REMAINDER,
                 "100" ,
-                new ExecutionErrorResult(COMMAND_LONG_ARG_NOT_REMAINDER,  new RuntimeException("Bad Parse"))
+                new ArgumentParserExceptionResult(COMMAND_LONG_ARG_NOT_REMAINDER,  new RuntimeException("Bad Parse"))
             ),
             Arguments.of(
                 COMMAND_STRING_NOT_ARG_REMAINDER,
                 "string",
-                new SuccessfulArgumentParserResult(new Object[]{ "string" })
+                new ArgumentParserSuccessfulResult(new Object[]{ "string" })
             ),
             Arguments.of(
                 COMMAND_STRING_ARG_REMAINDER,
                 "string 123" ,
-                new SuccessfulArgumentParserResult(new Object[]{ "string 123" })
+                new ArgumentParserSuccessfulResult(new Object[]{ "string 123" })
             ),
             Arguments.of(
                 COMMAND_STRING_STRING_ARG_REMAINDER,
                 "string 123 456",
-                new SuccessfulArgumentParserResult(new Object[]{ "string", "123 456" })
+                new ArgumentParserSuccessfulResult(new Object[]{ "string", "123 456" })
             ),
             Arguments.of(
                 COMMAND_NO_PARAMETERS,
                 "",
-                new SuccessfulArgumentParserResult(new Object[0])
+                new ArgumentParserSuccessfulResult(new Object[0])
             ),
             Arguments.of(
                 COMMAND_NO_PARAMETERS,
                 "          ",
-                new SuccessfulArgumentParserResult(new Object[0])
+                new ArgumentParserSuccessfulResult(new Object[0])
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "10                   ",
-                new SuccessfulArgumentParserResult(new Object[]{ 10 })
+                new ArgumentParserSuccessfulResult(new Object[]{ 10 })
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "     10         ",
-                new SuccessfulArgumentParserResult(new Object[]{ 10 })
+                new ArgumentParserSuccessfulResult(new Object[]{ 10 })
             )
         );
     }

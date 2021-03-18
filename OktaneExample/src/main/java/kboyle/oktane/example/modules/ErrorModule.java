@@ -10,7 +10,7 @@ import kboyle.oktane.example.preconditions.FailurePrecondition;
 public class ErrorModule extends CommandModuleBase<ExampleCommandContext> {
     @Aliases("error")
     public CommandResult error() {
-        return error(new RuntimeException("Handled exception"));
+        return exception(new RuntimeException("Handled exception"));
     }
 
     @Aliases("throw")

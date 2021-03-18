@@ -1,27 +1,27 @@
-package kboyle.oktane.core.results;
+package kboyle.oktane.core.results.argumentparser;
 
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
+import kboyle.oktane.core.results.ExceptionResult;
+import kboyle.oktane.core.results.FailedResult;
 
 import java.util.Objects;
 
-public record ExecutionErrorResult(Command command, Exception exception) implements ArgumentParserResult, FailedResult {
+public record ArgumentParserExceptionResult(Command command, Exception exception) implements FailedResult, ExceptionResult, ArgumentParserResult {
     @Override
     public String reason() {
         return String.format("An exception was thrown whilst trying to execute %s", command.name());
     }
 
     @Override
-    public boolean isSuccess() {
-        return false;
+    public Object[] parsedArguments() {
+        return null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ExecutionErrorResult that = (ExecutionErrorResult) o;
-        return Objects.equals(command, that.command)
+        return this == o
+            || o instanceof ArgumentParserExceptionResult that
+            && Objects.equals(command, that.command)
             && Objects.equals(exception.getClass(), that.exception.getClass())
             && Objects.equals(exception.getMessage(), that.exception.getMessage());
     }

@@ -6,7 +6,7 @@ import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
 import kboyle.oktane.core.parsers.DefaultArgumentParser;
 import kboyle.oktane.core.parsers.PrimitiveTypeParser;
-import kboyle.oktane.core.results.Result;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.Map;
@@ -30,22 +30,22 @@ public class ArgumentParserBenchmark {
         .collect(Collectors.toMap(Command::name, Function.identity()));
 
     @Benchmark
-    public Result commandNotParameters() {
+    public ArgumentParserResult commandNotParameters() {
         return argumentParser.parse(new BenchmarkCommandContext(), commands.get("a"), "", 0);
     }
 
     @Benchmark
-    public Result commandOneParameter() {
+    public ArgumentParserResult commandOneParameter() {
         return argumentParser.parse(new BenchmarkCommandContext(), commands.get("b"), "abc", 0);
     }
 
     @Benchmark
-    public Result commandRemainderParameter() {
+    public ArgumentParserResult commandRemainderParameter() {
         return argumentParser.parse(new BenchmarkCommandContext(), commands.get("c"), "abc def ghi", 0);
     }
 
     @Benchmark
-    public Result commandFiveParameters() {
+    public ArgumentParserResult commandFiveParameters() {
         return argumentParser.parse(new BenchmarkCommandContext(), commands.get("f"), "abc def ghi jkl mno", 0);
     }
 }
