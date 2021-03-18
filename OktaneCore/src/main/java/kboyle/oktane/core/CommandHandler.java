@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.mapping.CommandMap;
-import kboyle.oktane.core.mapping.CommandSearchResult;
+import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModuleBase;
 import kboyle.oktane.core.module.CommandModuleFactory;
@@ -65,9 +65,13 @@ public class CommandHandler<T extends CommandContext> {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
+        if (input.isEmpty()) {
+            return CommandNotFoundResult.get();
+        }
+
         logger.trace("Finding command to execute from {}", input);
 
-        ImmutableList<CommandSearchResult> searchResults = commandMap.findCommands(input);
+        ImmutableList<CommandMatch> searchResults = commandMap.findCommands(input);
 
         if (searchResults.isEmpty()) {
             return CommandNotFoundResult.get();
@@ -77,7 +81,7 @@ public class CommandHandler<T extends CommandContext> {
 
         ImmutableList.Builder<Result> failedResults = null;
 
-        for (CommandSearchResult searchResult : searchResults) {
+        for (CommandMatch searchResult : searchResults) {
             if (searchResult.pathLength() < pathLength) {
                 continue;
             }
@@ -106,7 +110,7 @@ public class CommandHandler<T extends CommandContext> {
 
             ArgumentParserResult argumentParserResult;
             try {
-                argumentParserResult = argumentParser.parse(context, searchResult.input(), searchResult.offset());
+                argumentParserResult = argumentParser.parse(context, input, searchResult.offset());
                 Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");
 
                 if (!argumentParserResult.success()) {
@@ -124,7 +128,7 @@ public class CommandHandler<T extends CommandContext> {
                 return new ExecutionExceptionResult(command, ex, ExecutionStep.ARGUMENT_PARSING);
             }
 
-            Preconditions.checkNotNull(argumentParserResult.parsedArguments(), "Argument parser must return parsed argument on success");
+            Preconditions.checkNotNull(argumentParserResult.parsedArguments(), "Argument parser must return parsed arguments on success");
 
             ImmutableList<Class<?>> beanClazzes = command.module().beans();
             Object[] beans = getBeans(context, beanClazzes);

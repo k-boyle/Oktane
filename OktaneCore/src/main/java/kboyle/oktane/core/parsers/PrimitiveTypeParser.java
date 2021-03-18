@@ -48,7 +48,7 @@ public class PrimitiveTypeParser<T> implements TypeParser<T> {
     }
 
     @Override
-    public TypeParserResult parse(CommandContext context, String input) {
+    public TypeParserResult<T> parse(CommandContext context, String input) {
         try {
             T value = parseFunction.apply(input);
             return success(value);

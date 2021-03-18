@@ -16,7 +16,7 @@ public class CommandMap {
         this.rootNode = rootNode;
     }
 
-    public ImmutableList<CommandSearchResult> findCommands(String input) {
+    public ImmutableList<CommandMatch> findCommands(String input) {
         return rootNode.findCommands(input, 0);
     }
 
