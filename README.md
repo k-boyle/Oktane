@@ -23,12 +23,12 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 
 | Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 245.235  | ± 8.549   | ns/op   |
-| commandIntParameter         | avgt |  5   | 126.463  | ± 0.727   | ns/op   |
-| commandNoParameters         | avgt |  5   | 61.077   | ± 0.973   | ns/op   |
-| commandNotFound             | avgt |  5   | 10.687   | ± 0.071   | ns/op   |
-| commandOneParameter         | avgt |  5   | 107.434  | ± 0.866   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 101.537  | ± 0.979   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 222.652  | ± 5.412   | ns/op   |
+| commandIntParameter         | avgt |  5   | 109.562  | ± 01.629  | ns/op   |
+| commandNoParameters         | avgt |  5   | 33.418   | ± 0.442   | ns/op   |
+| commandNotFound             | avgt |  5   | 11.863   | ± 0.132   | ns/op   |
+| commandOneParameter         | avgt |  5   | 86.111   | ± 2.251   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 87.937   | ± 2.196   | ns/op   |
 
 # Usage #
 
