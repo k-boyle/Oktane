@@ -5,7 +5,6 @@ import kboyle.oktane.core.CommandHandler;
 import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.command.CommandMessageResult;
-import kboyle.oktane.example.modules.*;
 import kboyle.oktane.example.results.KillAppCommandResult;
 
 import java.util.Random;
@@ -14,11 +13,7 @@ import java.util.Scanner;
 public class Program {
     public static void main(String[] args) {
         CommandHandler<ExampleCommandContext> commandHandler = CommandHandler.<ExampleCommandContext>builder()
-            .withModule(PingModule.class)
-            .withModule(GroupModule.class)
-            .withModule(ErrorModule.class)
-            .withModule(HelpModule.class)
-            .withModule(DiceModule.class)
+            .withModules(ExampleCommandContext.class)
             .build();
 
         BeanProvider.Simple beanProvider = BeanProvider.simple()

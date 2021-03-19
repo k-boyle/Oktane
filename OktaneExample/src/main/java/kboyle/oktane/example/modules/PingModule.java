@@ -1,13 +1,11 @@
 package kboyle.oktane.example.modules;
 
-import kboyle.oktane.core.module.CommandModuleBase;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.results.command.CommandResult;
-import kboyle.oktane.example.ExampleCommandContext;
 
 @Name("Ping Module")
 @Description("A module with various... useful... ping commands")
-public class PingModule extends CommandModuleBase<ExampleCommandContext> {
+public class PingModule extends ExampleModuleBase {
     @Name("Ping")
     @Aliases("ping")
     @Description("Replies with pong")
