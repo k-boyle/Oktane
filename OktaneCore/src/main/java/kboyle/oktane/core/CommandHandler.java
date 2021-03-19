@@ -134,6 +134,7 @@ public class CommandHandler<T extends CommandContext> {
             Object[] beans = getBeans(context, beanClazzes);
 
             try {
+                logger.trace("Found command match, executing {}", command);
                 return command.commandCallback().execute(context, beans, argumentParserResult.parsedArguments());
             } catch (Exception ex) {
                 return new ExecutionExceptionResult(command, ex, ExecutionStep.COMMAND_EXECUTION);
