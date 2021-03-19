@@ -1,9 +1,9 @@
 package kboyle.oktane.core.module;
 
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.preconditions.PreconditionFailedResult;
-import kboyle.oktane.core.results.preconditions.PreconditionResult;
-import kboyle.oktane.core.results.preconditions.PreconditionSuccessfulResult;
+import kboyle.oktane.core.results.precondition.PreconditionFailedResult;
+import kboyle.oktane.core.results.precondition.PreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
 
 @FunctionalInterface
 public interface Precondition {

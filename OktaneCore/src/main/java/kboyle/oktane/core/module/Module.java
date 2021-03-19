@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.preconditions.PreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionResult;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -16,7 +16,7 @@ import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.execution.ExecutionExceptionResult;
-import kboyle.oktane.core.results.preconditions.PreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.core.results.search.CommandNotFoundResult;
 import org.slf4j.Logger;

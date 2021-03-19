@@ -1,4 +1,4 @@
-package kboyle.oktane.core.results.preconditions;
+package kboyle.oktane.core.results.precondition;
 
 import kboyle.oktane.core.results.Result;
 

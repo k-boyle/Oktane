@@ -3,9 +3,9 @@ package kboyle.oktane.core.module;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.preconditions.PreconditionResult;
-import kboyle.oktane.core.results.preconditions.PreconditionSuccessfulResult;
-import kboyle.oktane.core.results.preconditions.PreconditionsFailedResult;
+import kboyle.oktane.core.results.precondition.PreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
+import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
 
 public final class CommandUtil {
     private CommandUtil() {

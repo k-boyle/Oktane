@@ -2,7 +2,7 @@ package kboyle.oktane.example.preconditions;
 
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.Precondition;
-import kboyle.oktane.core.results.preconditions.PreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionResult;
 
 public class FailurePrecondition implements Precondition {
     private final int a;

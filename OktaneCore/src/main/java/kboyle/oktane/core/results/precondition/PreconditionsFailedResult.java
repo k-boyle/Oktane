@@ -1,4 +1,4 @@
-package kboyle.oktane.core.results.preconditions;
+package kboyle.oktane.core.results.precondition;
 
 import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.results.FailedResult;
