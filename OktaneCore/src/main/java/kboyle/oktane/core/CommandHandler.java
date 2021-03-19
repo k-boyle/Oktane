@@ -3,6 +3,8 @@ package kboyle.oktane.core;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.ClassPath;
+import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
@@ -22,11 +24,14 @@ import kboyle.oktane.core.results.search.CommandNotFoundResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static kboyle.oktane.core.ReflectionUtil.isValidModuleClass;
 
 /**
  * The entry point for executing commands.
@@ -225,6 +230,36 @@ public class CommandHandler<T extends CommandContext> {
             Preconditions.checkNotNull(moduleClazz, "moduleClazz cannot be null");
             this.commandModules.add(moduleClazz);
             return this;
+        }
+
+        /**
+         * Adds all the modules in the same package as the contextClazz.
+         * @param contextClazz The class representing the type of context used for the CommandHandler.
+         * @return The builder.
+         */
+        public Builder<T> withModules(Class<T> contextClazz) {
+            return withModules(contextClazz, contextClazz.getPackageName());
+        }
+
+        /**
+         * Adds all the modules in the specified package.
+         * @param contextClazz The class representing the type of context used for the CommandHandler.
+         * @param packageName The package name to search in.
+         * @return The builder.
+         */
+        @SuppressWarnings("UnstableApiUsage")
+        public Builder<T> withModules(Class<T> contextClazz, String packageName) {
+            try {
+                ClassPath.from(contextClazz.getClassLoader()).getTopLevelClassesRecursive(packageName)
+                    .stream()
+                    .map(ClassPath.ClassInfo::load)
+                    .filter(clazz -> isValidModuleClass(contextClazz, clazz))
+                    .forEach(clazz -> withModule(clazz.asSubclass(CommandModuleBase.class)));
+
+                return this;
+            } catch (IOException exception) {
+                throw new RuntimeIOException(exception);
+            }
         }
 
         /**

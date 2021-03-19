@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static kboyle.oktane.core.ReflectionUtil.unwrap;
+
 public class CommandCallbackFactory {
     private static final String CAST_TEMPLATE = "(%s)%s[%d]";
 
@@ -33,7 +35,7 @@ public class CommandCallbackFactory {
         Constructor<?>[] constructors = moduleClazz.getConstructors();
         Preconditions.checkState(constructors.length == 1, "There must be only 1 public constructor");
 
-        ParameterizedType moduleTypeParameterized = (ParameterizedType) moduleClazz.getGenericSuperclass();
+        ParameterizedType moduleTypeParameterized = unwrap(moduleClazz);
         Class<T> concreteCommandContextClazz = (Class<T>) moduleTypeParameterized.getActualTypeArguments()[0];
 
         String generatedName = moduleClazz.getSimpleName() + method.getName() + System.nanoTime();

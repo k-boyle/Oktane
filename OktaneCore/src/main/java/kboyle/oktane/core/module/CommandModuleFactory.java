@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -26,6 +27,8 @@ public final class CommandModuleFactory {
     }
 
     public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz, BeanProvider beanProvider) {
+        Preconditions.checkState(!Modifier.isAbstract(moduleClazz.getModifiers()), "A module cannot be abstract");
+
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
 
         CommandCallbackFactory callbackFactory = new CommandCallbackFactory();
