@@ -1,19 +1,19 @@
 package kboyle.oktane.core.module;
 
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.precondition.FailurePreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionFailedResult;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
-import kboyle.oktane.core.results.precondition.SuccessfulPreconditionResult;
+import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
 
 @FunctionalInterface
 public interface Precondition {
     PreconditionResult run(CommandContext context);
 
-    default SuccessfulPreconditionResult success() {
-        return SuccessfulPreconditionResult.get();
+    default PreconditionSuccessfulResult success() {
+        return PreconditionSuccessfulResult.get();
     }
 
-    default FailurePreconditionResult failure(String reason, Object... args) {
-        return new FailurePreconditionResult(String.format(reason, args));
+    default PreconditionFailedResult failure(String reason, Object... args) {
+        return new PreconditionFailedResult(String.format(reason, args));
     }
 }

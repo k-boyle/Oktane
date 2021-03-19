@@ -20,13 +20,16 @@ class CommandMapNode {
         this.nodeByAlias = ImmutableMap.copyOf(nodeByAlias);
     }
 
-    public ImmutableList<CommandSearchResult> findCommands(String input) {
-        ImmutableList.Builder<CommandSearchResult> results = ImmutableList.builder();
-        findCommands(results, 0, input, 0);
+    public ImmutableList<CommandMatch> findCommands(String input, int index) {
+        ImmutableList.Builder<CommandMatch> results = ImmutableList.builder();
+        while (Character.isSpaceChar(input.charAt(index))) {
+            index++;
+        }
+        findCommands(results, 0, input, index);
         return results.build();
     }
 
-    private void findCommands(ImmutableList.Builder<CommandSearchResult> results, int pathLength, String input, int index) {
+    private void findCommands(ImmutableList.Builder<CommandMatch> results, int pathLength, String input, int index) {
         if (input.length() == 0 || index == input.length()) {
             return;
         }
@@ -35,10 +38,10 @@ class CommandMapNode {
 
         if (nextSpace == -1) {
             String segment = index == 0 ? input : input.substring(index);
-            handleSegmentAsAlias(results, segment, input, pathLength, input.length() - 1);
+            handleSegmentAsAlias(results, segment, pathLength, input.length() - 1);
         } else {
             String segment = input.substring(index, nextSpace);
-            handleSegmentAsAlias(results, segment, input, pathLength, nextSpace + 1);
+            handleSegmentAsAlias(results, segment, pathLength, nextSpace + 1);
 
             CommandMapNode commandMapNode = nodeByAlias.get(segment);
             if (commandMapNode != null) {
@@ -48,12 +51,12 @@ class CommandMapNode {
         }
     }
 
-    private void handleSegmentAsAlias(ImmutableList.Builder<CommandSearchResult> results, String segment, String input, int pathLength, int index) {
+    private void handleSegmentAsAlias(ImmutableList.Builder<CommandMatch> results, String segment, int pathLength, int index) {
         List<Command> commands = commandsByAlias.get(segment);
         if (commands != null) {
             pathLength++;
             for (Command command : commands) {
-                results.add(new CommandSearchResult(command, pathLength, input, index));
+                results.add(new CommandMatch(command, pathLength, index));
             }
         }
     }

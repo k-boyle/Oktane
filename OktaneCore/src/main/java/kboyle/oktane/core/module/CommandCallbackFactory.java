@@ -8,7 +8,7 @@ import kboyle.oktane.core.generation.AccessModifier;
 import kboyle.oktane.core.generation.ClassGenerator;
 import kboyle.oktane.core.generation.MethodGenerator;
 import kboyle.oktane.core.generation.RuntimeClassFactory;
-import kboyle.oktane.core.results.command.CommandExecutionErrorResult;
+import kboyle.oktane.core.results.command.CommandExceptionResult;
 import kboyle.oktane.core.results.command.CommandResult;
 
 import java.lang.reflect.Constructor;
@@ -48,7 +48,7 @@ public class CommandCallbackFactory {
         Class<?>[] constructorParameterTypes = constructor.getParameterTypes();
         Set<Type> additionalImports = new HashSet<>(Arrays.asList(constructorParameterTypes));
         additionalImports.addAll(Arrays.asList(method.getParameterTypes()));
-        additionalImports.add(CommandExecutionErrorResult.class);
+        additionalImports.add(CommandExceptionResult.class);
         additionalImports.add(moduleClazz);
         additionalImports.add(concreteCommandContextClazz);
 
@@ -97,7 +97,7 @@ public class CommandCallbackFactory {
             .append(deconstruct(method.getParameterTypes(), "parameters"))
             .append(");")
             .append("} catch (Exception ex) {")
-            .append("return new CommandExecutionErrorResult(context.command(), ex);")
+            .append("return new CommandExceptionResult(context.command(), ex);")
             .append("}");
 
         if (moduleLock != null) {

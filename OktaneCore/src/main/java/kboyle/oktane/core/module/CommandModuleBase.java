@@ -1,10 +1,10 @@
 package kboyle.oktane.core.module;
 
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.command.CommandExecutionErrorResult;
+import kboyle.oktane.core.results.command.CommandExceptionResult;
 import kboyle.oktane.core.results.command.CommandMessageResult;
+import kboyle.oktane.core.results.command.CommandNOPResult;
 import kboyle.oktane.core.results.command.CommandResult;
-import kboyle.oktane.core.results.command.CommandSuccessfulResult;
 
 public abstract class CommandModuleBase<T extends CommandContext> {
     private T context;
@@ -19,14 +19,14 @@ public abstract class CommandModuleBase<T extends CommandContext> {
     }
 
     protected CommandResult message(String reply) {
-        return CommandMessageResult.from(context.command(), reply);
+        return new CommandMessageResult(context.command(), reply);
     }
 
     protected CommandResult nop() {
-        return new CommandSuccessfulResult.NOP(context.command());
+        return new CommandNOPResult(context.command());
     }
 
-    protected CommandResult error(Exception ex) {
-        return new CommandExecutionErrorResult(context.command(), ex);
+    protected CommandResult exception(Exception ex) {
+        return new CommandExceptionResult(context.command(), ex);
     }
 }

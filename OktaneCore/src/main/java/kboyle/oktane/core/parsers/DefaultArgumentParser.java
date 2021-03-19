@@ -4,15 +4,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.exceptions.InvalidResultException;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandParameter;
-import kboyle.oktane.core.results.ExecutionErrorResult;
-import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.FailedArgumentParserResult;
-import kboyle.oktane.core.results.argumentparser.SuccessfulArgumentParserResult;
-import kboyle.oktane.core.results.typeparser.SuccessfulTypeParserResult;
+import kboyle.oktane.core.results.argumentparser.*;
+import kboyle.oktane.core.results.typeparser.TypeParserResult;
 
 public class DefaultArgumentParser implements ArgumentParser {
     private static final char SPACE = ' ';
@@ -26,22 +22,22 @@ public class DefaultArgumentParser implements ArgumentParser {
     }
 
     @Override
-    public Result parse(CommandContext context, String input, int index) {
+    public ArgumentParserResult parse(CommandContext context, String input, int index) {
         return parse(context, context.command(), input, index);
     }
 
-    public Result parse(CommandContext context, Command command, String input, int index) {
+    public ArgumentParserResult parse(CommandContext context, Command command, String input, int index) {
         ImmutableList<CommandParameter> parameters = command.parameters();
 
         if (input.length() <= index && !parameters.isEmpty()) {
-            return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_FEW_ARGUMENTS, index);
+            return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
         }
 
         if (parameters.isEmpty()) {
             if (input.length() != 0 && input.length() - 1 != index && noneWhitespaceRemains(input, index)) {
-                return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
+                return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
             }
-            return SuccessfulArgumentParserResult.empty();
+            return ArgumentParserSuccessfulResult.empty();
         }
 
         Object[] parsedArguments = null;
@@ -61,7 +57,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
 
             if (index == input.length() - 1) {
-                return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_FEW_ARGUMENTS, index);
+                return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
             }
 
             if (parameter.remainder()) {
@@ -93,7 +89,7 @@ public class DefaultArgumentParser implements ArgumentParser {
                         }
 
                         if (index >= input.length() - 1) {
-                            return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.MISSING_QUOTE, index);
+                            return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
                         }
                     } else if (currentCharacter == SPACE) {
                         currentParameter = input.substring(paramStart, index);
@@ -116,23 +112,25 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
 
             Result parseResult = parse(type, context, currentParameter);
-            if (parseResult instanceof SuccessfulTypeParserResult<?> success) {
-                if (parsedArguments == null) {
-                    parsedArguments = new Object[parameters.size()];
+            if (parseResult instanceof TypeParserResult<?> typeParserResult) {
+                if (parseResult.success()) {
+                    if (parsedArguments == null) {
+                        parsedArguments = new Object[parameters.size()];
+                    }
+                    parsedArguments[p] = typeParserResult.value();
+                } else {
+                    return new ArgumentParserFailedToParseArgumentResult(typeParserResult);
                 }
-                parsedArguments[p] = success.value();
-            } else if (parseResult instanceof FailedResult failedResult) {
-                return failedResult;
             } else {
-                throw new InvalidResultException(SuccessfulTypeParserResult.class, parseResult.getClass());
+                return (ArgumentParserExceptionResult) parseResult;
             }
         }
 
         if (index != input.length() && noneWhitespaceRemains(input, index)) {
-            return new FailedArgumentParserResult(command, FailedArgumentParserResult.Reason.TOO_MANY_ARGUMENTS, index);
+            return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
         }
 
-        return new SuccessfulArgumentParserResult(parsedArguments);
+        return new ArgumentParserSuccessfulResult(parsedArguments);
     }
 
     private Result parse(Class<?> type, CommandContext context, String input) {
@@ -143,9 +141,9 @@ public class DefaultArgumentParser implements ArgumentParser {
         );
 
         try {
-            return typeParser.parse(context, input);
-        }catch (Exception ex) {
-            return new ExecutionErrorResult(context.command(), ex);
+            return Preconditions.checkNotNull(typeParser.parse(context, input), "A type parser cannot return null");
+        } catch (Exception ex) {
+            return new ArgumentParserExceptionResult(context.command(), ex);
         }
     }
 
