@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
-import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
-import kboyle.oktane.core.results.precondition.SuccessfulPreconditionResult;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -60,25 +57,7 @@ public class Module {
      * @return The result of executing the preconditions.
      */
     public PreconditionResult runPreconditions(CommandContext context) {
-        if (preconditions.isEmpty()) {
-            return SuccessfulPreconditionResult.get();
-        }
-
-        ImmutableList.Builder<FailedResult> failedResults = ImmutableList.builder();
-        boolean failedResult = false;
-
-        // todo get preconditions from context bean provider
-        for (Precondition precondition : preconditions) {
-            PreconditionResult result = precondition.run(context);
-            if (result instanceof FailedResult failed) {
-                failedResults.add(failed);
-                failedResult = true;
-            }
-        }
-
-        return failedResult
-            ? new PreconditionsFailedResult(failedResults.build())
-            : SuccessfulPreconditionResult.get();
+        return CommandUtil.runPreconditions(context, preconditions);
     }
 
     /**

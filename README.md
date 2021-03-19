@@ -12,23 +12,23 @@ Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/sna
 
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 149.608  | ± 6.872   | ns/op   |
-| commandIntParameter         | avgt |  5   | 82.963   | ± 4.290   | ns/op   |
-| commandNoParameters         | avgt |  5   | 47.385   | ± 0.777   | ns/op   |
-| commandNotFound             | avgt |  5   | 8.137    | ± 0.379   | ns/op   |
-| commandOneParameter         | avgt |  5   | 71.866   | ± 2.769   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 66.715   | ± 2.237   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 126.187  | ± 0.489   | ns/op   |
+| commandIntParameter         | avgt |  5   | 59.992   | ± 0.283   | ns/op   |
+| commandNoParameters         | avgt |  5   | 23.304   | ± 0.202   | ns/op   |
+| commandNotFound             | avgt |  5   | 8.817    | ± 0.084   | ns/op   |
+| commandOneParameter         | avgt |  5   | 50.439   | ± 0.177   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 50.201   | ± 0.224   | ns/op   |
 
 **Benchmarks ran on a Ryzen 2700x @ 3.6GHZ**
 
 | Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 245.235  | ± 8.549   | ns/op   |
-| commandIntParameter         | avgt |  5   | 126.463  | ± 0.727   | ns/op   |
-| commandNoParameters         | avgt |  5   | 61.077   | ± 0.973   | ns/op   |
-| commandNotFound             | avgt |  5   | 10.687   | ± 0.071   | ns/op   |
-| commandOneParameter         | avgt |  5   | 107.434  | ± 0.866   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 101.537  | ± 0.979   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 222.652  | ± 5.412   | ns/op   |
+| commandIntParameter         | avgt |  5   | 109.562  | ± 01.629  | ns/op   |
+| commandNoParameters         | avgt |  5   | 33.418   | ± 0.442   | ns/op   |
+| commandNotFound             | avgt |  5   | 11.863   | ± 0.132   | ns/op   |
+| commandOneParameter         | avgt |  5   | 86.111   | ± 2.251   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 87.937   | ± 2.196   | ns/op   |
 
 # Usage #
 

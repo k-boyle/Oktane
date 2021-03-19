@@ -3,9 +3,8 @@ package kboyle.oktane.core;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import kboyle.oktane.core.exceptions.InvalidResultException;
 import kboyle.oktane.core.mapping.CommandMap;
-import kboyle.oktane.core.mapping.CommandSearchResult;
+import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModuleBase;
 import kboyle.oktane.core.module.CommandModuleFactory;
@@ -14,10 +13,9 @@ import kboyle.oktane.core.parsers.ArgumentParser;
 import kboyle.oktane.core.parsers.DefaultArgumentParser;
 import kboyle.oktane.core.parsers.PrimitiveTypeParser;
 import kboyle.oktane.core.parsers.TypeParser;
-import kboyle.oktane.core.results.ExecutionErrorResult;
-import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.SuccessfulArgumentParserResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
+import kboyle.oktane.core.results.execution.ExecutionExceptionResult;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.core.results.search.CommandNotFoundResult;
@@ -67,9 +65,13 @@ public class CommandHandler<T extends CommandContext> {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
+        if (input.isEmpty()) {
+            return CommandNotFoundResult.get();
+        }
+
         logger.trace("Finding command to execute from {}", input);
 
-        ImmutableList<CommandSearchResult> searchResults = commandMap.findCommands(input);
+        ImmutableList<CommandMatch> searchResults = commandMap.findCommands(input);
 
         if (searchResults.isEmpty()) {
             return CommandNotFoundResult.get();
@@ -77,9 +79,9 @@ public class CommandHandler<T extends CommandContext> {
 
         int pathLength = searchResults.get(0).pathLength();
 
-        ImmutableList.Builder<FailedResult> failedResults = null;
+        ImmutableList.Builder<Result> failedResults = null;
 
-        for (CommandSearchResult searchResult : searchResults) {
+        for (CommandMatch searchResult : searchResults) {
             if (searchResult.pathLength() < pathLength) {
                 continue;
             }
@@ -91,50 +93,51 @@ public class CommandHandler<T extends CommandContext> {
 
             try {
                 PreconditionResult preconditionResult = command.runPreconditions(context);
-                if (preconditionResult instanceof FailedResult failedResult) {
+                if (!preconditionResult.success()) {
                     if (searchResults.size() == 1) {
-                        return failedResult;
+                        return preconditionResult;
                     }
 
                     if (failedResults == null) {
                         failedResults = ImmutableList.builder();
                     }
-                    failedResults.add(failedResult);
+                    failedResults.add(preconditionResult);
                     continue;
                 }
             } catch (Exception ex) {
-                return new ExecutionErrorResult(command, ex);
+                return new ExecutionExceptionResult(command, ex, ExecutionStep.PRECONDITIONS);
             }
 
+            ArgumentParserResult argumentParserResult;
             try {
-                Result argumentParserResult = argumentParser.parse(context, searchResult.input(), searchResult.offset());
+                argumentParserResult = argumentParser.parse(context, input, searchResult.offset());
                 Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");
 
-                if (argumentParserResult instanceof FailedResult failedResult) {
+                if (!argumentParserResult.success()) {
                     if (searchResults.size() == 1) {
-                        return failedResult;
+                        return argumentParserResult;
                     }
 
                     if (failedResults == null) {
                         failedResults = ImmutableList.builder();
                     }
-                    failedResults.add(failedResult);
+                    failedResults.add(argumentParserResult);
                     continue;
                 }
-
-                logger.trace("Found command match, executing {}", command);
-
-                if (argumentParserResult instanceof SuccessfulArgumentParserResult success) {
-                    ImmutableList<Class<?>> beanClazzes = command.module().beans();
-                    Object[] beans = getBeans(context, beanClazzes);
-                    return command.commandCallback().execute(context, beans, success.parsedArguments());
-                }
-
-                throw new InvalidResultException(SuccessfulArgumentParserResult.class, argumentParserResult.getClass());
-            } catch (InvalidResultException ir) {
-                throw ir;
             } catch (Exception ex) {
-                return new ExecutionErrorResult(command, ex);
+                return new ExecutionExceptionResult(command, ex, ExecutionStep.ARGUMENT_PARSING);
+            }
+
+            Preconditions.checkNotNull(argumentParserResult.parsedArguments(), "Argument parser must return parsed arguments on success");
+
+            ImmutableList<Class<?>> beanClazzes = command.module().beans();
+            Object[] beans = getBeans(context, beanClazzes);
+
+            try {
+                logger.trace("Found command match, executing {}", command);
+                return command.commandCallback().execute(context, beans, argumentParserResult.parsedArguments());
+            } catch (Exception ex) {
+                return new ExecutionExceptionResult(command, ex, ExecutionStep.COMMAND_EXECUTION);
             }
         }
 
@@ -152,7 +155,7 @@ public class CommandHandler<T extends CommandContext> {
     /**
      * @return All of the commands that belong to the CommandHandler.
      */
-    public Stream<Command> commands(){
+    public Stream<Command> commands() {
         return modules.stream().flatMap(module -> module.commands().stream());
     }
 

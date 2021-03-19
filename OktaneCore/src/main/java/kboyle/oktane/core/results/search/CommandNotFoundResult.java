@@ -1,17 +1,12 @@
 package kboyle.oktane.core.results.search;
 
-import kboyle.oktane.core.results.FailedResult;
-
-public class CommandNotFoundResult implements FailedResult {
+public record CommandNotFoundResult() implements CommandSearchResult {
     private static class SingletonHolder {
         private static final CommandNotFoundResult INSTANCE = new CommandNotFoundResult();
     }
 
     public static CommandNotFoundResult get() {
         return SingletonHolder.INSTANCE;
-    }
-
-    private CommandNotFoundResult() {
     }
 
     @Override

@@ -1,9 +1,10 @@
 package kboyle.oktane.core.results;
 
 public interface FailedResult extends Result {
-    default boolean isSuccess() {
+    String reason();
+
+    @Override
+    default boolean success() {
         return false;
     }
-
-    String reason();
 }

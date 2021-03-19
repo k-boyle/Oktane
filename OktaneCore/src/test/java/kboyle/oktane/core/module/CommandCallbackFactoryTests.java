@@ -4,8 +4,8 @@ import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.modules.TestModuleOne;
 import kboyle.oktane.core.modules.TestModuleTwo;
 import kboyle.oktane.core.results.command.CommandMessageResult;
+import kboyle.oktane.core.results.command.CommandNOPResult;
 import kboyle.oktane.core.results.command.CommandResult;
-import kboyle.oktane.core.results.command.CommandSuccessfulResult.NOP;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ public class CommandCallbackFactoryTests {
             BeanProvider.empty()
         );
         CommandResult result = commandCallback.execute(new TestCommandContext(), new Object[0], new Object[0]);
-        assertTrue(result instanceof NOP);
+        assertTrue(result instanceof CommandNOPResult);
     }
 
     @Test
