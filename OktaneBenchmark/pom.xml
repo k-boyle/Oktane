@@ -13,9 +13,7 @@
     <artifactId>OktaneBenchmark</artifactId>
 
     <properties>
-        <sonar.projectKey>k-boyle_OktaneBenchmark</sonar.projectKey>
-        <sonar.organization>k-boyle</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.skip>true</sonar.skip>
 
         <jmh.version>1.28</jmh.version>
     </properties>
