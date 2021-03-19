@@ -11,6 +11,10 @@
 
     <artifactId>OktaneExample</artifactId>
 
+    <properties>
+        <sonar.skip>true</sonar.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.k-boyle</groupId>
