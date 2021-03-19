@@ -1,10 +1,10 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=k-boyle_Oktane&metric=alert_status)](https://sonarcloud.io/dashboard?id=k-boyle_Oktane) [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=k-boyle_Oktane&metric=ncloc)](https://sonarcloud.io/dashboard?id=k-boyle_Oktane)
+[![Quality Gate Status](https://img.shields.io/sonar/quality_gate/k-boyle_Oktane?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge)](https://sonarcloud.io/dashboard?id=k-boyle_Oktane) 
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.k-boyle/Oktane?label=stable&style=for-the-badge)](https://search.maven.org/artifact/com.github.k-boyle/Oktane) 
+[![OSS Snapshot](https://img.shields.io/nexus/s/com.github.k-boyle/Oktane?label=snapshot&server=https%3A%2F%2Foss.sonatype.org%2F&style=for-the-badge)](https://oss.sonatype.org/#nexus-search;quick~oktane)
 
 Oktane is a high performance, highly configurable Java command framework used to map strings to methods, and execute them.
 
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
-
-Oktane is hosted on [Sonatype](https://oss.sonatype.org/content/repositories/snapshots), find the latest snapshot release [here](https://oss.sonatype.org/#nexus-search;quick~oktane).
 
 # Performance Benchmarks #
 
