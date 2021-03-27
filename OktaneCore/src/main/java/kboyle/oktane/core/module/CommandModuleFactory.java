@@ -7,6 +7,9 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.InvalidConstructorException;
 import kboyle.oktane.core.module.annotations.*;
+import kboyle.oktane.core.parsers.ArgumentParser;
+import kboyle.oktane.core.parsers.ArgumentParserFactory;
+import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,23 +18,38 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
 
-public final class CommandModuleFactory {
-    private static final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
+public class CommandModuleFactory {
+    private final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
 
-    private CommandModuleFactory() {
+    private final BeanProvider beanProvider;
+    private final Map<Class<?>, TypeParser<?>> typeParserByClass;
+    private final Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass;
+    private final CommandCallbackFactory callbackFactory;
+    private final ArgumentParserFactory argumentParserFactory;
+
+    public CommandModuleFactory(
+            BeanProvider beanProvider,
+            Map<Class<?>, TypeParser<?>> typeParserByClass,
+            Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass) {
+        this.beanProvider = beanProvider;
+        this.typeParserByClass = typeParserByClass;
+        this.argumentParserByClass = argumentParserByClass;
+        this.callbackFactory = new CommandCallbackFactory();
+        argumentParserFactory = new ArgumentParserFactory(typeParserByClass);
     }
 
-    public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz, BeanProvider beanProvider) {
+    public <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz) {
         Preconditions.checkState(!Modifier.isAbstract(moduleClazz.getModifiers()), "A module cannot be abstract");
 
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
-
-        CommandCallbackFactory callbackFactory = new CommandCallbackFactory();
 
         Module.Builder moduleBuilder = Module.builder()
             .withName(moduleClazz.getSimpleName());
@@ -73,6 +91,12 @@ public final class CommandModuleFactory {
             moduleBuilder.withName(moduleName.value());
         }
 
+        OverrideArgumentParser overrideArgumentParser = moduleClazz.getAnnotation(OverrideArgumentParser.class);
+        ArgumentParser moduleArgumentParser = null;
+        if (overrideArgumentParser != null) {
+            moduleArgumentParser = Preconditions.checkNotNull(argumentParserByClass.get(overrideArgumentParser.value()));
+        }
+
         Method[] methods = moduleClazz.getMethods();
         for (Method method : methods) {
             if (!isValidCommandSignature(method)) {
@@ -81,15 +105,16 @@ public final class CommandModuleFactory {
 
             logger.trace("Creating command from {}", method.getName());
 
-            createCommand(
-                moduleClazz,
-                beanProvider,
-                callbackFactory,
-                moduleBuilder,
-                moduleGroups,
-                singleton,
-                moduleLock,
-                method
+            moduleBuilder.withCommand(
+                createCommand(
+                    moduleClazz,
+                    callbackFactory,
+                    moduleGroups,
+                    singleton,
+                    moduleLock,
+                    method,
+                    moduleArgumentParser
+                )
             );
         }
 
@@ -98,15 +123,14 @@ public final class CommandModuleFactory {
         return moduleBuilder.build();
     }
 
-    private static <S extends CommandContext, T extends CommandModuleBase<S>> void createCommand(
+    private <S extends CommandContext, T extends CommandModuleBase<S>> Command.Builder createCommand(
             Class<T> moduleClazz,
-            BeanProvider beanProvider,
             CommandCallbackFactory callbackFactory,
-            Module.Builder moduleBuilder,
             Aliases moduleGroups,
             boolean singleton,
             Object moduleLock,
-            Method method) {
+            Method method,
+            ArgumentParser moduleArgumentParser) {
         Aliases commandAliases = method.getAnnotation(Aliases.class);
         Preconditions.checkState(
             isValidAliases(moduleGroups, commandAliases),
@@ -150,22 +174,38 @@ public final class CommandModuleFactory {
             commandBuilder.withPriority(priority.value());
         }
 
+        OverrideArgumentParser overrideArgumentParser = method.getAnnotation(OverrideArgumentParser.class);
+        ArgumentParser argumentParser = moduleArgumentParser;
+        if (overrideArgumentParser != null) {
+            argumentParser = argumentParserByClass.get(overrideArgumentParser.value());
+        }
+
         createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
         Parameter[] parameters = method.getParameters();
+        List<CommandParameter> commandParameters = new ArrayList<>();
         for (Parameter parameter : parameters) {
-            createParameter(method, commandBuilder, parameter);
+            CommandParameter commandParameter = createParameter(method, parameter);
+            commandParameters.add(commandParameter);
+            commandBuilder.withParameter(commandParameter);
         }
 
-        moduleBuilder.withCommand(commandBuilder);
+        if (argumentParser == null) {
+            argumentParser = argumentParserFactory.create(method, commandParameters);
+        }
+
+        commandBuilder.withArgumentParser(argumentParser);
+
+        return commandBuilder;
     }
 
-    private static void createParameter(Method method, Command.Builder commandBuilder, Parameter parameter) {
+    private CommandParameter createParameter(Method method, Parameter parameter) {
         Class<?> parameterType = parameter.getType();
         CommandParameter.Builder parameterBuilder = CommandParameter.builder()
             .withType(parameterType)
             .withName(parameter.getName())
-            .withRemainder(parameter.getAnnotation(Remainder.class) != null);
+            .withRemainder(parameter.getAnnotation(Remainder.class) != null)
+            .withParser(typeParserByClass.get(parameterType));
 
         Description parameterDescription = method.getAnnotation(Description.class);
         if (parameterDescription != null) {
@@ -179,7 +219,7 @@ public final class CommandModuleFactory {
             parameterBuilder.withName(parameterName.value());
         }
 
-        commandBuilder.withParameter(parameterBuilder.build());
+        return parameterBuilder.build();
     }
 
     private static boolean isValidCommandSignature(Method method) {

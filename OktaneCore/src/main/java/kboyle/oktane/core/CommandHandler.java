@@ -7,14 +7,9 @@ import com.google.common.reflect.ClassPath;
 import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandMatch;
-import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandModuleBase;
-import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
-import kboyle.oktane.core.parsers.ArgumentParser;
-import kboyle.oktane.core.parsers.DefaultArgumentParser;
-import kboyle.oktane.core.parsers.PrimitiveTypeParser;
-import kboyle.oktane.core.parsers.TypeParser;
+import kboyle.oktane.core.module.*;
+import kboyle.oktane.core.parsers.*;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.execution.ExecutionExceptionResult;
@@ -86,12 +81,13 @@ public class CommandHandler<T extends CommandContext> {
 
         ImmutableList.Builder<Result> failedResults = null;
 
-        for (CommandMatch searchResult : searchResults) {
-            if (searchResult.pathLength() < pathLength) {
+        for (int i = 0, searchResultsSize = searchResults.size(); i < searchResultsSize; i++) {
+            CommandMatch commandMatch = searchResults.get(i);
+            if (commandMatch.pathLength() < pathLength) {
                 continue;
             }
 
-            Command command = searchResult.command();
+            Command command = commandMatch.command();
             context.command = command;
 
             logger.trace("Attempting to execute {}", command);
@@ -115,7 +111,7 @@ public class CommandHandler<T extends CommandContext> {
 
             ArgumentParserResult argumentParserResult;
             try {
-                argumentParserResult = argumentParser.parse(context, input, searchResult.offset());
+                argumentParserResult = argumentParser.parse(context, commandMatch, input);
                 Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");
 
                 if (!argumentParserResult.success()) {
@@ -195,15 +191,17 @@ public class CommandHandler<T extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<Class<? extends CommandModuleBase<T>>> commandModules;
+        private final Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass;
 
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
 
         private Builder() {
-            this.typeParserByClass = new HashMap<>(PrimitiveTypeParser.DEFAULT_PARSERS);
+            this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.beanProvider = BeanProvider.empty();
+            this.argumentParserByClass = new HashMap<>();
         }
 
         /**
@@ -284,20 +282,37 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
+        // todo doc
+        public Builder<T> withArgumentParser0(ArgumentParser argumentParser) {
+            Preconditions.checkNotNull(argumentParser);
+            this.argumentParserByClass.put(argumentParser.getClass(), argumentParser);
+            return this;
+        }
+
         /**
          * Builds the CommandHandler.
          * @return The built CommandHandler.
          */
         public CommandHandler<T> build() {
             List<Module> modules = new ArrayList<>();
+            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass, argumentParserByClass);
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = CommandModuleFactory.create(moduleClazz, beanProvider);
+                Module module = moduleFactory.create(moduleClazz);
                 modules.add(module);
                 commandMap.map(module);
+
+                for (Command command : module.commands()) {
+                    for (CommandParameter parameter : command.parameters()) {
+                        if (parameter.type().isEnum()) {
+                            // todo figure out how to handle this prior assigning parsers to parameters
+                            typeParserByClass.computeIfAbsent(parameter.type(), clazz -> new EnumTypeParser(clazz));
+                        }
+                    }
+                }
             }
 
             if (argumentParser == null) {
-                argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
+                argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
             return new CommandHandler<>(commandMap.build(), argumentParser, ImmutableList.copyOf(modules));
