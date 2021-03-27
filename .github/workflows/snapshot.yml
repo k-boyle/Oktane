@@ -20,8 +20,8 @@ jobs:
 
       - name: Get Snapshot Version
         run: |
-          version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)
-          echo "New Snapshot Version: $version"
+          export SNAPSHOT_VERSION=$(python .scripts/auto_version.py com.github.k-boyle Oktane)
+          echo "New Snapshot Version: $SNAPSHOT_VERSION"
 
       - name: Set up JDK 15
         uses: actions/setup-java@v1
@@ -41,5 +41,5 @@ jobs:
           ossrh_pass: ${{ secrets.ossrh_pass }}
         run: |
           echo $version
-          mvn versions:set -DnewVersion=$version
+          mvn versions:set -DnewVersion="$SNAPSHOT_VERSION"
           mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am
