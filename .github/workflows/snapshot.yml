@@ -40,5 +40,6 @@ jobs:
           ossrh_login: ${{ secrets.ossrh_login }}
           ossrh_pass: ${{ secrets.ossrh_pass }}
         run: |
-          mvn versions:set -DnewVersion="$version"
+          echo $version
+          mvn versions:set -DnewVersion=$version
           mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am
