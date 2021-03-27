@@ -20,7 +20,8 @@ public class HelpModule extends CommandModuleBase<ExampleCommandContext> {
         String helpMessage = commandHandler.modules().stream()
             .map(module -> {
                 String formattedCommands = module.commands().stream()
-                    .map(command -> "- " + command.name())
+                    .flatMap(command -> command.aliases().stream())
+                    .map(alias -> "- " + alias)
                     .collect(Collectors.joining("\n"));
                 return module.name() + "\n" + formattedCommands;
             })

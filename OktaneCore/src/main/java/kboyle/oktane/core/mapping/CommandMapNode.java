@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class CommandMapNode {
+    private static final char SPACE = ' ';
+
     private final ImmutableMap<String, List<Command>> commandsByAlias;
     private final ImmutableMap<String, CommandMapNode> nodeByAlias;
 
@@ -22,7 +24,7 @@ class CommandMapNode {
 
     public ImmutableList<CommandMatch> findCommands(String input, int index) {
         ImmutableList.Builder<CommandMatch> results = ImmutableList.builder();
-        while (Character.isSpaceChar(input.charAt(index))) {
+        while (input.charAt(index) == SPACE) {
             index++;
         }
         findCommands(results, 0, input, index);
@@ -38,10 +40,11 @@ class CommandMapNode {
 
         if (nextSpace == -1) {
             String segment = index == 0 ? input : input.substring(index);
-            handleSegmentAsAlias(results, segment, pathLength, input.length() - 1);
+            int lastIndex = input.length() - 1;
+            handleSegmentAsAlias(results, segment, pathLength, lastIndex, lastIndex);
         } else {
             String segment = input.substring(index, nextSpace);
-            handleSegmentAsAlias(results, segment, pathLength, nextSpace + 1);
+            handleSegmentAsAlias(results, segment, pathLength, nextSpace - 1, nextSpace + 1);
 
             CommandMapNode commandMapNode = nodeByAlias.get(segment);
             if (commandMapNode != null) {
@@ -51,12 +54,18 @@ class CommandMapNode {
         }
     }
 
-    private void handleSegmentAsAlias(ImmutableList.Builder<CommandMatch> results, String segment, int pathLength, int index) {
+    private void handleSegmentAsAlias(
+            ImmutableList.Builder<CommandMatch> results,
+            String segment,
+            int pathLength,
+            int commandEnd,
+            int argumentStart) {
         List<Command> commands = commandsByAlias.get(segment);
         if (commands != null) {
             pathLength++;
-            for (Command command : commands) {
-                results.add(new CommandMatch(command, pathLength, index));
+            for (int i = 0, commandsSize = commands.size(); i < commandsSize; i++) {
+                Command command = commands.get(i);
+                results.add(new CommandMatch(command, pathLength, commandEnd, argumentStart));
             }
         }
     }

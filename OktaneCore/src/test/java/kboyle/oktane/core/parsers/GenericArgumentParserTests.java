@@ -3,6 +3,7 @@ package kboyle.oktane.core.parsers;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.TestCommandContext;
+import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.TestCommandBuilder;
 import kboyle.oktane.core.results.FailedResult;
@@ -22,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-public class DefaultArgumentParserTests {
+public class GenericArgumentParserTests {
     private static final Command COMMAND_INT_ARG_NOT_REMAINDER = new TestCommandBuilder()
         .addParameter(int.class, false)
         .build();
@@ -53,46 +54,51 @@ public class DefaultArgumentParserTests {
 
     @Test
     public void testArgumentParserThrowsOnMissingTypeParser() {
-        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(PrimitiveTypeParser.DEFAULT_PARSERS));
+        GenericArgumentParser argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(PrimitiveTypeParserFactory.create()));
         Assertions.assertThrows(
             NullPointerException.class,
-            () -> argumentParser.parse(new TestCommandContext(COMMAND_MISSING_PARAMETER_PARSER), "string", 0)
+            () -> argumentParser.parse(
+                new TestCommandContext(COMMAND_MISSING_PARAMETER_PARSER),
+                new CommandMatch(COMMAND_MISSING_PARAMETER_PARSER, 0, 5, 5),
+                "string"
+            )
         );
     }
 
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     public void argumentParserTest(Command command, String arguments, Result expectedResult) {
-        HashMap<Class<?>, TypeParser<?>> parsers = new HashMap<>(PrimitiveTypeParser.DEFAULT_PARSERS);
+        HashMap<Class<?>, TypeParser<?>> parsers = new HashMap<>(PrimitiveTypeParserFactory.create());
         parsers.put(Long.class, new BadParser());
 
-        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(parsers));
-        Result actualResult = argumentParser.parse(new TestCommandContext(command), arguments, 0);
+        GenericArgumentParser argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(parsers));
+//        Result actualResult = argumentParser.parse(new TestCommandContext(command), arguments, 0);
+        Result actualResult = argumentParser.parse(new TestCommandContext(command), new CommandMatch(command, 0, 0, 0), arguments);
         Assertions.assertEquals(expectedResult, actualResult);
     }
 
     public static class BadParser implements TypeParser<Long> {
         @Override
-        public TypeParserResult parse(CommandContext context, String input) {
+        public TypeParserResult<Long> parse(CommandContext context, String input) {
             throw new RuntimeException("Bad Parse");
         }
     }
 
     public static class BadResultParser implements TypeParser<Integer> {
         @Override
-        public TypeParserResult parse(CommandContext context, String input) {
-            return new BadResult();
+        public TypeParserResult<Integer> parse(CommandContext context, String input) {
+            return new BadResult<>();
         }
     }
 
-    private static class BadResult implements TypeParserResult, FailedResult {
+    private static class BadResult<T> implements TypeParserResult<T>, FailedResult {
         @Override
         public String reason() {
             return null;
         }
 
         @Override
-        public Object value() {
+        public T value() {
             return null;
         }
     }
@@ -117,7 +123,7 @@ public class DefaultArgumentParserTests {
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "string",
-                new ArgumentParserFailedToParseArgumentResult(new TypeParserFailedResult(String.format("Failed to parse %s as %s", "string", int.class)))
+                new ArgumentParserFailedToParseArgumentResult(new TypeParserFailedResult(String.format("Failed to parse %s as %s", "string", Integer.class)))
             ),
             Arguments.of(
                 COMMAND_LONG_ARG_NOT_REMAINDER,

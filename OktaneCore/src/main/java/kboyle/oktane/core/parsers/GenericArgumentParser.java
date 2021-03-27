@@ -4,50 +4,55 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.*;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 
-public class DefaultArgumentParser implements ArgumentParser {
+public class GenericArgumentParser implements ArgumentParser {
     private static final char SPACE = ' ';
     private static final char QUOTE = '"';
     private static final char ESCAPE = '\\';
+    private static final String EMPTY = "";
 
     private final ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass;
 
-    public DefaultArgumentParser(ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass) {
+    public GenericArgumentParser(ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass) {
         this.typeParserByClass = typeParserByClass;
     }
 
     @Override
-    public ArgumentParserResult parse(CommandContext context, String input, int index) {
-        return parse(context, context.command(), input, index);
-    }
-
-    public ArgumentParserResult parse(CommandContext context, Command command, String input, int index) {
+    public ArgumentParserResult parse(CommandContext context, CommandMatch commandMatch, String input) {
+        Command command = commandMatch.command();
+        int index = commandMatch.argumentStart();
+        int commandEnd = commandMatch.commandEnd();
         ImmutableList<CommandParameter> parameters = command.parameters();
 
-        if (input.length() <= index && !parameters.isEmpty()) {
+        boolean emptyParameters = parameters.isEmpty();
+        if (index == commandEnd && !emptyParameters) {
             return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
         }
 
-        if (parameters.isEmpty()) {
-            if (input.length() != 0 && input.length() - 1 != index && noneWhitespaceRemains(input, index)) {
+        if (emptyParameters) {
+            if (commandEnd != index && noneWhitespaceRemains(input, index)) {
                 return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
             }
+
             return ArgumentParserSuccessfulResult.empty();
         }
 
         Object[] parsedArguments = null;
-        for (int p = 0; p < parameters.size(); p++) {
+        int inputLength = input.length();
+        int parametersSize = parameters.size();
+        for (int p = 0; p < parametersSize; p++) {
             String currentParameter = null;
             CommandParameter parameter = parameters.get(p);
 
-            for (; index < input.length(); index++) {
+            for (; index < inputLength; index++) {
                 char currentCharacter = input.charAt(index);
-                if (Character.isSpaceChar(currentCharacter)) {
+                if (currentCharacter == SPACE) {
                     continue;
                 }
 
@@ -56,16 +61,17 @@ public class DefaultArgumentParser implements ArgumentParser {
                 }
             }
 
-            if (index == input.length() - 1) {
+            int inputLastIndex = inputLength - 1;
+            if (index == inputLastIndex && p < parametersSize - 1) {
                 return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
             }
 
             if (parameter.remainder()) {
                 currentParameter = input.substring(index);
-                index = input.length();
+                index = inputLength;
             } else {
                 int paramStart = index;
-                for (; index < input.length(); index++) {
+                for (; index < inputLength; index++) {
                     char currentCharacter = input.charAt(index);
 
                     if (currentCharacter == QUOTE) {
@@ -74,27 +80,40 @@ public class DefaultArgumentParser implements ArgumentParser {
                         }
 
                         index++;
-                        for (; index < input.length(); index++) {
+                        boolean outerbreak = false;
+                        for (; index < inputLength; index++) {
                             if (input.charAt(index) != QUOTE) {
                                 continue;
                             }
 
                             if (input.charAt(index - 1) != ESCAPE) {
                                 currentParameter = paramStart + 1 == index
-                                    ? ""
-                                    : input.substring(paramStart + 1, index + 1);
+                                    ? EMPTY
+                                    : input.substring(paramStart + 1, index);
 
+                                index++;
+                                outerbreak = true;
                                 break;
                             }
                         }
 
-                        if (index >= input.length() - 1) {
-                            return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
+                        if (outerbreak) {
+                            break;
+                        }
+
+                        if (index >= inputLastIndex) {
+                            if (input.charAt(index - 1) != QUOTE || input.charAt(index - 2) == ESCAPE) {
+                                return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
+                            }
+
+                            currentParameter = paramStart + 1 == index
+                                ? EMPTY
+                                : input.substring(paramStart + 1, index);
                         }
                     } else if (currentCharacter == SPACE) {
                         currentParameter = input.substring(paramStart, index);
                         break;
-                    } else if (index == input.length() - 1) {
+                    } else if (index == inputLastIndex) {
                         currentParameter = paramStart == 0 ? input : input.substring(paramStart);
                         index++;
                         break;
@@ -105,17 +124,17 @@ public class DefaultArgumentParser implements ArgumentParser {
             Class<?> type = parameter.type();
             if (type == String.class) {
                 if (parsedArguments == null) {
-                    parsedArguments = new Object[parameters.size()];
+                    parsedArguments = new Object[parametersSize];
                 }
                 parsedArguments[p] = currentParameter;
                 continue;
             }
 
-            Result parseResult = parse(type, context, currentParameter);
+            Result parseResult = parse(parameter, context, currentParameter);
             if (parseResult instanceof TypeParserResult<?> typeParserResult) {
                 if (parseResult.success()) {
                     if (parsedArguments == null) {
-                        parsedArguments = new Object[parameters.size()];
+                        parsedArguments = new Object[parametersSize];
                     }
                     parsedArguments[p] = typeParserResult.value();
                 } else {
@@ -126,22 +145,25 @@ public class DefaultArgumentParser implements ArgumentParser {
             }
         }
 
-        if (index != input.length() && noneWhitespaceRemains(input, index)) {
+        if (index != inputLength && noneWhitespaceRemains(input, index)) {
             return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
         }
 
         return new ArgumentParserSuccessfulResult(parsedArguments);
     }
 
-    private Result parse(Class<?> type, CommandContext context, String input) {
-        TypeParser<?> typeParser = Preconditions.checkNotNull(
-            typeParserByClass.get(type),
-            "Missing type parser for type %s",
-            type
-        );
+    private Result parse(CommandParameter parameter, CommandContext context, String input) {
+        TypeParser<?> parser = parameter.parser();
+        if (parser == null) {
+            parser = Preconditions.checkNotNull(
+                typeParserByClass.get(parameter.type()),
+                "Missing type parser for type %s",
+                parameter.type()
+            );
+        }
 
         try {
-            return Preconditions.checkNotNull(typeParser.parse(context, input), "A type parser cannot return null");
+            return Preconditions.checkNotNull(parser.parse(context, input), "A type parser cannot return null");
         } catch (Exception ex) {
             return new ArgumentParserExceptionResult(context.command(), ex);
         }
@@ -149,7 +171,7 @@ public class DefaultArgumentParser implements ArgumentParser {
 
     private static boolean noneWhitespaceRemains(String input, int index) {
         for (; index < input.length(); index++) {
-            if (!Character.isSpaceChar(input.charAt(index))) {
+            if (input.charAt(index) != SPACE) {
                 return true;
             }
         }

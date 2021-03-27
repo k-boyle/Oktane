@@ -11,7 +11,7 @@ public class TestCommandBuilder {
     private final List<CommandParameter> parameters = new ArrayList<>();
 
     public TestCommandBuilder addParameter(Class<?> type, boolean remainder) {
-        this.parameters.add(new CommandParameter(type, Optional.empty(), "", remainder));
+        this.parameters.add(new CommandParameter(type, Optional.empty(), "", remainder, null));
         return this;
     }
 
