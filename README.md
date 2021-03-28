@@ -6,6 +6,8 @@ Oktane is a high performance, highly configurable Java command framework used to
 
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
+Example usage can be seen in the OktaneExample module.
+
 # Performance Benchmarks #
 
 **Benchmarks ran on a Ryzen 5600x @ 4.6GHz**
@@ -120,7 +122,7 @@ Type parsers are added during the `CommandHandler` building stage using the with
 ```java
 public class UserTypeParser implements TypeParser<User> {
     @Override
-    public TypeParserResult parse(CommandContext context, String input) {
+    public TypeParserResult<User> parse(CommandContext context, String input) {
         User user = User.parseFromInput(input);
         if (user != null) {
             return success(user);
@@ -153,14 +155,14 @@ Beans can be injected into module using the `BeanProvider`, any constructor argu
 will inject itself and does not need to be added to a provider.
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    private final CommandHandler commandHandler;
+    private final CommandHandler<OktaneCommandContext> commandHandler;
     
-    public OktaneCommandModule(CommandHandler commandHandler) {
+    public OktaneCommandModule(CommandHandler<OktaneCommandContext> commandHandler) {
         this.commandHandler = commandHandler;
     }
     
-    @CommandDescription(aliases = {"echo", "e"})
-    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
+    @Aliases({"echo", "e"})
+    public CommandResult pingPong(@Remainder String input) {
         return message(context().user() + " said: " + input);
     }
 }

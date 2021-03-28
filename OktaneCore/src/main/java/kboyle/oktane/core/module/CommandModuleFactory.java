@@ -7,6 +7,7 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.InvalidConstructorException;
 import kboyle.oktane.core.module.annotations.*;
+import kboyle.oktane.core.parsers.EnumTypeParser;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
@@ -16,9 +17,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -162,10 +161,8 @@ public class CommandModuleFactory {
         createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
         Parameter[] parameters = method.getParameters();
-        List<CommandParameter> commandParameters = new ArrayList<>();
         for (Parameter parameter : parameters) {
             CommandParameter commandParameter = createParameter(method, parameter);
-            commandParameters.add(commandParameter);
             commandBuilder.withParameter(commandParameter);
         }
 
@@ -174,11 +171,17 @@ public class CommandModuleFactory {
 
     private CommandParameter createParameter(Method method, Parameter parameter) {
         Class<?> parameterType = parameter.getType();
+
+        TypeParser<?> parser = typeParserByClass.get(parameterType);
+        if (parser == null && parameterType.isEnum()) {
+            parser = new EnumTypeParser(parameterType);
+        }
+
         CommandParameter.Builder parameterBuilder = CommandParameter.builder()
             .withType(parameterType)
             .withName(parameter.getName())
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
-            .withParser(typeParserByClass.get(parameterType));
+            .withParser(parser);
 
         Description parameterDescription = method.getAnnotation(Description.class);
         if (parameterDescription != null) {

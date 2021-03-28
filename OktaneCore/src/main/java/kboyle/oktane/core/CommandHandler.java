@@ -7,9 +7,14 @@ import com.google.common.reflect.ClassPath;
 import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandMatch;
+import kboyle.oktane.core.module.Command;
+import kboyle.oktane.core.module.CommandModuleBase;
+import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
-import kboyle.oktane.core.module.*;
-import kboyle.oktane.core.parsers.*;
+import kboyle.oktane.core.parsers.ArgumentParser;
+import kboyle.oktane.core.parsers.DefaultArgumentParser;
+import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
+import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.execution.ExecutionExceptionResult;
@@ -291,15 +296,6 @@ public class CommandHandler<T extends CommandContext> {
                 Module module = moduleFactory.create(moduleClazz);
                 modules.add(module);
                 commandMap.map(module);
-
-                for (Command command : module.commands()) {
-                    for (CommandParameter parameter : command.parameters()) {
-                        if (parameter.type().isEnum()) {
-                            // todo figure out how to handle this prior assigning parsers to parameters
-                            typeParserByClass.computeIfAbsent(parameter.type(), clazz -> new EnumTypeParser(clazz));
-                        }
-                    }
-                }
             }
 
             if (argumentParser == null) {
