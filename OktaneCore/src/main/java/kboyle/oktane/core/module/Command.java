@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.parsers.ArgumentParser;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 
 import java.util.Optional;
@@ -26,7 +25,6 @@ public class Command {
     private final Module module;
     private final boolean synchronised;
     private final int priority;
-    private final ArgumentParser argumentParser;
 
     Command(
             String name,
@@ -38,8 +36,7 @@ public class Command {
             Signature signature,
             Module module,
             boolean synchronised,
-            int priority,
-            ArgumentParser argumentParser) {
+            int priority) {
         this.name = name;
         this.aliases = aliases;
         this.description = description;
@@ -50,7 +47,6 @@ public class Command {
         this.module = module;
         this.synchronised = synchronised;
         this.priority = priority;
-        this.argumentParser = argumentParser;
     }
 
     static Builder builder() {
@@ -142,11 +138,6 @@ public class Command {
         return priority;
     }
 
-    // todo doc
-    public ArgumentParser argumentParser() {
-        return argumentParser;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -166,7 +157,6 @@ public class Command {
         private CommandCallback commandCallback;
         private boolean synchronised;
         private int priority;
-        private ArgumentParser argumentParser;
 
         private Builder() {
             this.aliases = ImmutableSet.builder();
@@ -225,11 +215,6 @@ public class Command {
             return this;
         }
 
-        public Builder withArgumentParser(ArgumentParser argumentParser) {
-            this.argumentParser = Preconditions.checkNotNull(argumentParser, "ArgumentParser must not be null");
-            return this;
-        }
-
         Command build(Module module) {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
@@ -269,8 +254,7 @@ public class Command {
                 commandSignature,
                 module,
                 synchronised,
-                priority,
-                argumentParser);
+                priority);
         }
 
         private static boolean isValidAliases(ImmutableSet<String> commandAliases, ImmutableSet<String> moduleGroups) {

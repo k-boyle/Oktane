@@ -191,7 +191,6 @@ public class CommandHandler<T extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<Class<? extends CommandModuleBase<T>>> commandModules;
-        private final Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass;
 
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
@@ -201,7 +200,6 @@ public class CommandHandler<T extends CommandContext> {
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.beanProvider = BeanProvider.empty();
-            this.argumentParserByClass = new HashMap<>();
         }
 
         /**
@@ -282,20 +280,13 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
-        // todo doc
-        public Builder<T> withArgumentParser0(ArgumentParser argumentParser) {
-            Preconditions.checkNotNull(argumentParser);
-            this.argumentParserByClass.put(argumentParser.getClass(), argumentParser);
-            return this;
-        }
-
         /**
          * Builds the CommandHandler.
          * @return The built CommandHandler.
          */
         public CommandHandler<T> build() {
             List<Module> modules = new ArrayList<>();
-            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass, argumentParserByClass);
+            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass);
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
                 Module module = moduleFactory.create(moduleClazz);
                 modules.add(module);
@@ -312,7 +303,7 @@ public class CommandHandler<T extends CommandContext> {
             }
 
             if (argumentParser == null) {
-                argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(typeParserByClass));
+                argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
             return new CommandHandler<>(commandMap.build(), argumentParser, ImmutableList.copyOf(modules));

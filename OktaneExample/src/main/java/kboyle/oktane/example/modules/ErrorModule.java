@@ -20,7 +20,7 @@ public class ErrorModule extends CommandModuleBase<ExampleCommandContext> {
 
     @Aliases("precon")
     @Require(precondition = FailurePrecondition.class, arguments = "10")
-    @Require(precondition = FailurePrecondition.class, arguments = "10")
+    @Require(precondition = FailurePrecondition.class, arguments = "20")
     public CommandResult precon() {
         return nop();
     }

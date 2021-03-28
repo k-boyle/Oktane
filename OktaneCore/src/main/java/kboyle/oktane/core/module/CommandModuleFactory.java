@@ -7,8 +7,6 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.InvalidConstructorException;
 import kboyle.oktane.core.module.annotations.*;
-import kboyle.oktane.core.parsers.ArgumentParser;
-import kboyle.oktane.core.parsers.ArgumentParserFactory;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
@@ -31,19 +29,14 @@ public class CommandModuleFactory {
 
     private final BeanProvider beanProvider;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
-    private final Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass;
     private final CommandCallbackFactory callbackFactory;
-    private final ArgumentParserFactory argumentParserFactory;
 
     public CommandModuleFactory(
             BeanProvider beanProvider,
-            Map<Class<?>, TypeParser<?>> typeParserByClass,
-            Map<Class<? extends ArgumentParser>, ArgumentParser> argumentParserByClass) {
+            Map<Class<?>, TypeParser<?>> typeParserByClass) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
-        this.argumentParserByClass = argumentParserByClass;
         this.callbackFactory = new CommandCallbackFactory();
-        argumentParserFactory = new ArgumentParserFactory(typeParserByClass);
     }
 
     public <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz) {
@@ -91,12 +84,6 @@ public class CommandModuleFactory {
             moduleBuilder.withName(moduleName.value());
         }
 
-        OverrideArgumentParser overrideArgumentParser = moduleClazz.getAnnotation(OverrideArgumentParser.class);
-        ArgumentParser moduleArgumentParser = null;
-        if (overrideArgumentParser != null) {
-            moduleArgumentParser = Preconditions.checkNotNull(argumentParserByClass.get(overrideArgumentParser.value()));
-        }
-
         Method[] methods = moduleClazz.getMethods();
         for (Method method : methods) {
             if (!isValidCommandSignature(method)) {
@@ -112,8 +99,7 @@ public class CommandModuleFactory {
                     moduleGroups,
                     singleton,
                     moduleLock,
-                    method,
-                    moduleArgumentParser
+                    method
                 )
             );
         }
@@ -129,8 +115,7 @@ public class CommandModuleFactory {
             Aliases moduleGroups,
             boolean singleton,
             Object moduleLock,
-            Method method,
-            ArgumentParser moduleArgumentParser) {
+            Method method) {
         Aliases commandAliases = method.getAnnotation(Aliases.class);
         Preconditions.checkState(
             isValidAliases(moduleGroups, commandAliases),
@@ -174,12 +159,6 @@ public class CommandModuleFactory {
             commandBuilder.withPriority(priority.value());
         }
 
-        OverrideArgumentParser overrideArgumentParser = method.getAnnotation(OverrideArgumentParser.class);
-        ArgumentParser argumentParser = moduleArgumentParser;
-        if (overrideArgumentParser != null) {
-            argumentParser = argumentParserByClass.get(overrideArgumentParser.value());
-        }
-
         createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
         Parameter[] parameters = method.getParameters();
@@ -189,12 +168,6 @@ public class CommandModuleFactory {
             commandParameters.add(commandParameter);
             commandBuilder.withParameter(commandParameter);
         }
-
-        if (argumentParser == null) {
-            argumentParser = argumentParserFactory.create(method, commandParameters);
-        }
-
-        commandBuilder.withArgumentParser(argumentParser);
 
         return commandBuilder;
     }

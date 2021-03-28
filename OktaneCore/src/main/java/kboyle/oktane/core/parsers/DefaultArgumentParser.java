@@ -11,7 +11,7 @@ import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.*;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 
-public class GenericArgumentParser implements ArgumentParser {
+public class DefaultArgumentParser implements ArgumentParser {
     private static final char SPACE = ' ';
     private static final char QUOTE = '"';
     private static final char ESCAPE = '\\';
@@ -19,7 +19,7 @@ public class GenericArgumentParser implements ArgumentParser {
 
     private final ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass;
 
-    public GenericArgumentParser(ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass) {
+    public DefaultArgumentParser(ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass) {
         this.typeParserByClass = typeParserByClass;
     }
 

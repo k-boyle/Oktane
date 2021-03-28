@@ -5,7 +5,7 @@ import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
-import kboyle.oktane.core.parsers.GenericArgumentParser;
+import kboyle.oktane.core.parsers.DefaultArgumentParser;
 import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import org.openjdk.jmh.annotations.*;
@@ -20,13 +20,9 @@ import java.util.stream.Collectors;
 @State(Scope.Benchmark)
 @Fork(1)
 public class ArgumentParserBenchmark {
-    private final GenericArgumentParser argumentParser = new GenericArgumentParser(PrimitiveTypeParserFactory.create());
+    private final DefaultArgumentParser argumentParser = new DefaultArgumentParser(PrimitiveTypeParserFactory.create());
 
-    private final Module module = CommandModuleFactory.create(
-        BenchmarkModule.class,
-        BeanProvider.empty(),
-        PrimitiveTypeParserFactory.create(),
-        argumentParserByClass);
+    private final Module module = new CommandModuleFactory(BeanProvider.empty(), PrimitiveTypeParserFactory.create()).create(BenchmarkModule.class);
 
     private final Map<String, Command> commands = module.commands().stream()
         .collect(Collectors.toMap(Command::name, Function.identity()));

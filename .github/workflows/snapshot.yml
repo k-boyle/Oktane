@@ -1,3 +1,5 @@
+name: Snapshot Release
+
 on:
   push:
     branches: [ master ]
@@ -41,6 +43,5 @@ jobs:
           snapshot_version: ${{ env.snapshot_version }}
           
         run: |
-          echo $snapshot_version
           mvn versions:set -DnewVersion="$snapshot_version"
           mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am

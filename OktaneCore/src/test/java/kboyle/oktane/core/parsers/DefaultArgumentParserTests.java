@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-public class GenericArgumentParserTests {
+public class DefaultArgumentParserTests {
     private static final Command COMMAND_INT_ARG_NOT_REMAINDER = new TestCommandBuilder()
         .addParameter(int.class, false)
         .build();
@@ -54,7 +54,7 @@ public class GenericArgumentParserTests {
 
     @Test
     public void testArgumentParserThrowsOnMissingTypeParser() {
-        GenericArgumentParser argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(PrimitiveTypeParserFactory.create()));
+        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(PrimitiveTypeParserFactory.create()));
         Assertions.assertThrows(
             NullPointerException.class,
             () -> argumentParser.parse(
@@ -71,8 +71,7 @@ public class GenericArgumentParserTests {
         HashMap<Class<?>, TypeParser<?>> parsers = new HashMap<>(PrimitiveTypeParserFactory.create());
         parsers.put(Long.class, new BadParser());
 
-        GenericArgumentParser argumentParser = new GenericArgumentParser(ImmutableMap.copyOf(parsers));
-//        Result actualResult = argumentParser.parse(new TestCommandContext(command), arguments, 0);
+        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(parsers));
         Result actualResult = argumentParser.parse(new TestCommandContext(command), new CommandMatch(command, 0, 0, 0), arguments);
         Assertions.assertEquals(expectedResult, actualResult);
     }
