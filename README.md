@@ -10,27 +10,38 @@ Example usage can be seen in the OktaneExample module.
 
 # Performance Benchmarks #
 
-**Benchmarks ran on a Ryzen 5600x @ 4.6GHz**
+**Benchmarks ran on a Ryzen 5600x @ 4.6GHz, as of 2.1.4-SNAPSHOT**
 
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 132.332  | ± 3.001   | ns/op   |
-| commandIntParameter         | avgt |  5   | 60.476   | ± 1.730   | ns/op   |
-| commandNoParameters         | avgt |  5   | 24.627   | ± 0.772   | ns/op   |
-| commandNotFound             | avgt |  5   | 8.643    | ± 0.329   | ns/op   |
-| commandOneParameter         | avgt |  5   | 49.702   | ± 0.501   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 46.875   | ± 2.037   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 127.673  | ± 0.910   | ns/op   |
+| commandIntParameter         | avgt |  5   | 57.682   | ± 0.523   | ns/op   |
+| commandNoParameters         | avgt |  5   | 24.152   | ± 0.336   | ns/op   |
+| commandNotFound             | avgt |  5   | 8.542    | ± 0.012   | ns/op   |
+| commandOneParameter         | avgt |  5   | 48.747   | ± 0.218   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 47.546   | ± 0.450   | ns/op   |
 
-**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ**
+**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ, as of 2.1.4-SNAPSHOT**
 
 | Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 222.652  | ± 5.412   | ns/op   |
-| commandIntParameter         | avgt |  5   | 109.562  | ± 1.629   | ns/op   |
-| commandNoParameters         | avgt |  5   | 33.418   | ± 0.442   | ns/op   |
-| commandNotFound             | avgt |  5   | 11.863   | ± 0.132   | ns/op   |
-| commandOneParameter         | avgt |  5   | 86.111   | ± 2.251   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 87.937   | ± 2.196   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 239.477  | ± 5.330   | ns/op   |
+| commandIntParameter         | avgt |  5   | 100.668  | ± 1.390   | ns/op   |
+| commandNoParameters         | avgt |  5   | 34.057   | ± 0.446   | ns/op   |
+| commandNotFound             | avgt |  5   | 12.995   | ± 0.346   | ns/op   |
+| commandOneParameter         | avgt |  5   | 84.959   | ± 1.308   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 81.584   | ± 1.053   | ns/op   |
+
+**Benchmarks ran on a Xeon E5-2650L v3 (1 core vps) @ 1.80GHz, as of 2.1.4-SNAPSHOT**
+
+| Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
+| --------------------------- | ---- | ---- | -------- | --------- | ------- |
+| commandFiveParameters       | avgt |  5   | 350.029  | ± 4.436   | ns/op   |
+| commandIntParameter         | avgt |  5   | 177.304  | ± 8.751   | ns/op   |
+| commandNoParameters         | avgt |  5   | 66.973   | ± 0.887   | ns/op   |
+| commandNotFound             | avgt |  5   | 26.127   | ± 0.936   | ns/op   |
+| commandOneParameter         | avgt |  5   | 139.783  | ± 5.129   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 149.797  | ± 2.943   | ns/op   |
 
 # Usage #
 
