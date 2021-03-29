@@ -15,19 +15,21 @@ public final class CommandParameter {
     private final String name;
     private final boolean remainder;
     private final TypeParser<?> parser;
+    private final Command command;
 
-    // todo should prob have reference to the command
     CommandParameter(
             Class<?> type,
             Optional<String> description,
             String name,
             boolean remainder,
-            TypeParser<?> parser) {
+            TypeParser<?> parser,
+            Command command) {
         this.type = type;
         this.description = description;
         this.name = name;
         this.remainder = remainder;
         this.parser = parser;
+        this.command = command;
     }
 
     static Builder builder() {
@@ -69,6 +71,13 @@ public final class CommandParameter {
         return parser;
     }
 
+    /**
+     * @return The Command that this parameter belongs to.
+     */
+    public Command command() {
+        return command;
+    }
+
     static class Builder {
         private Class<?> type;
         private String description;
@@ -106,10 +115,10 @@ public final class CommandParameter {
             return this;
         }
 
-        public CommandParameter build() {
+        public CommandParameter build(Command command) {
             Preconditions.checkNotNull(type, "A parameter type must be specified");
             Preconditions.checkNotNull(name, "A parameter name must be specified");
-            return new CommandParameter(type, Optional.ofNullable(description), name, remainder, parser);
+            return new CommandParameter(type, Optional.ofNullable(description), name, remainder, parser, command);
         }
     }
 }

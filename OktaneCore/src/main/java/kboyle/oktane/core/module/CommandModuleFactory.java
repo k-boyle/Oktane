@@ -13,10 +13,7 @@ import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -30,9 +27,7 @@ public class CommandModuleFactory {
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
     private final CommandCallbackFactory callbackFactory;
 
-    public CommandModuleFactory(
-            BeanProvider beanProvider,
-            Map<Class<?>, TypeParser<?>> typeParserByClass) {
+    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, TypeParser<?>> typeParserByClass) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
         this.callbackFactory = new CommandCallbackFactory();
@@ -162,14 +157,14 @@ public class CommandModuleFactory {
 
         Parameter[] parameters = method.getParameters();
         for (Parameter parameter : parameters) {
-            CommandParameter commandParameter = createParameter(method, parameter);
+            CommandParameter.Builder commandParameter = createParameter(method, parameter);
             commandBuilder.withParameter(commandParameter);
         }
 
         return commandBuilder;
     }
 
-    private CommandParameter createParameter(Method method, Parameter parameter) {
+    private CommandParameter.Builder createParameter(Method method, Parameter parameter) {
         Class<?> parameterType = parameter.getType();
 
         TypeParser<?> parser = typeParserByClass.get(parameterType);
@@ -195,7 +190,7 @@ public class CommandModuleFactory {
             parameterBuilder.withName(parameterName.value());
         }
 
-        return parameterBuilder.build();
+        return parameterBuilder;
     }
 
     private static boolean isValidCommandSignature(Method method) {
@@ -209,16 +204,9 @@ public class CommandModuleFactory {
             || moduleAliases != null && moduleAliases.value().length > 0;
     }
 
-    private static Stream<Precondition> createPreconditions(Class<?> clazz) {
-        return createPreconditions(clazz.getAnnotationsByType(Require.class));
-    }
-
-    private static Stream<Precondition> createPreconditions(Method method) {
-        return createPreconditions(method.getAnnotationsByType(Require.class));
-    }
-
-    private static Stream<Precondition> createPreconditions(Require[] requires) {
-        return Arrays.stream(requires).map(CommandModuleFactory::initPrecondition);
+    private static Stream<Precondition> createPreconditions(AnnotatedElement element) {
+        return Arrays.stream(element.getAnnotationsByType(Require.class))
+            .map(CommandModuleFactory::initPrecondition);
     }
 
     private static Precondition initPrecondition(Require requirement) {
