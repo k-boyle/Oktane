@@ -174,7 +174,7 @@ public class CommandModuleFactory {
 
         TypeParser<?> parser = typeParserByClass.get(parameterType);
         if (parser == null && parameterType.isEnum()) {
-            parser = new EnumTypeParser(parameterType);
+            parser = typeParserByClass.computeIfAbsent(parameterType, type -> new EnumTypeParser(type));
         }
 
         CommandParameter.Builder parameterBuilder = CommandParameter.builder()

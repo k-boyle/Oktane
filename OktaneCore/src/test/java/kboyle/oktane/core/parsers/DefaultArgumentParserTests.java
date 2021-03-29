@@ -52,14 +52,21 @@ public class DefaultArgumentParserTests {
         .addParameter(String.class, true)
         .build();
 
+
+
+    private static final Command COMMAND_STRING_STRING_NOT_ARG_REMAINDER = new TestCommandBuilder()
+        .addParameter(String.class, false)
+        .addParameter(String.class, false)
+        .build();
+
     @Test
     public void testArgumentParserThrowsOnMissingTypeParser() {
-        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(PrimitiveTypeParserFactory.create()));
+        DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.of());
         Assertions.assertThrows(
             NullPointerException.class,
             () -> argumentParser.parse(
                 new TestCommandContext(COMMAND_MISSING_PARAMETER_PARSER),
-                new CommandMatch(COMMAND_MISSING_PARAMETER_PARSER, 0, 5, 5),
+                new CommandMatch(COMMAND_MISSING_PARAMETER_PARSER, 0,  -1, 5),
                 "string"
             )
         );
@@ -72,7 +79,7 @@ public class DefaultArgumentParserTests {
         parsers.put(Long.class, new BadParser());
 
         DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(parsers));
-        Result actualResult = argumentParser.parse(new TestCommandContext(command), new CommandMatch(command, 0, 0, 0), arguments);
+        Result actualResult = argumentParser.parse(new TestCommandContext(command), new CommandMatch(command, 0, 0, 1), arguments);
         Assertions.assertEquals(expectedResult, actualResult);
     }
 
@@ -106,47 +113,47 @@ public class DefaultArgumentParserTests {
         return Stream.of(
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
-                "100",
+                " 100",
                 new ArgumentParserSuccessfulResult(new Object[]{ 100 })
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
-                "100 200",
-                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_MANY_ARGUMENTS,  3)
+                " 100 200",
+                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_MANY_ARGUMENTS,  4)
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
-                "",
-                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_FEW_ARGUMENTS, 0)
+                " ",
+                new ArgumentParserFailedResult(COMMAND_INT_ARG_NOT_REMAINDER, ParserFailedReason.TOO_FEW_ARGUMENTS, 1)
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
-                "string",
-                new ArgumentParserFailedToParseArgumentResult(new TypeParserFailedResult(String.format("Failed to parse %s as %s", "string", Integer.class)))
+                " string",
+                new ArgumentParserFailedToParseArgumentResult(new TypeParserFailedResult<>(String.format("Failed to parse %s as %s", "string", Integer.class)))
             ),
             Arguments.of(
                 COMMAND_LONG_ARG_NOT_REMAINDER,
-                "100" ,
+                " 100" ,
                 new ArgumentParserExceptionResult(COMMAND_LONG_ARG_NOT_REMAINDER,  new RuntimeException("Bad Parse"))
             ),
             Arguments.of(
                 COMMAND_STRING_NOT_ARG_REMAINDER,
-                "string",
+                " string",
                 new ArgumentParserSuccessfulResult(new Object[]{ "string" })
             ),
             Arguments.of(
                 COMMAND_STRING_ARG_REMAINDER,
-                "string 123" ,
+                " string 123" ,
                 new ArgumentParserSuccessfulResult(new Object[]{ "string 123" })
             ),
             Arguments.of(
                 COMMAND_STRING_STRING_ARG_REMAINDER,
-                "string 123 456",
+                " string 123 456",
                 new ArgumentParserSuccessfulResult(new Object[]{ "string", "123 456" })
             ),
             Arguments.of(
                 COMMAND_NO_PARAMETERS,
-                "",
+                " ",
                 new ArgumentParserSuccessfulResult(new Object[0])
             ),
             Arguments.of(
@@ -156,13 +163,48 @@ public class DefaultArgumentParserTests {
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
-                "10                   ",
+                " 10                   ",
                 new ArgumentParserSuccessfulResult(new Object[]{ 10 })
             ),
             Arguments.of(
                 COMMAND_INT_ARG_NOT_REMAINDER,
                 "     10         ",
                 new ArgumentParserSuccessfulResult(new Object[]{ 10 })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " \"this is string one\" \"this is string two\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "this is string one", "this is string two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " \"this is string one\" two",
+                new ArgumentParserSuccessfulResult(new Object[] { "this is string one", "two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " one \"this is string two\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "one", "this is string two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " \"one\" \"two\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "one", "two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " \"one\"\"two\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "one", "two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                "                 \"one\"                    \"two\"                    ",
+                new ArgumentParserSuccessfulResult(new Object[] { "one", "two" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " \\\"one two\\\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "\"one", "two\"" })
             )
         );
     }

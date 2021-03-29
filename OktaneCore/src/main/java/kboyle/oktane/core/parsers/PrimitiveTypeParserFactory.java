@@ -39,7 +39,7 @@ public final class PrimitiveTypeParserFactory {
     @SuppressWarnings("unchecked")
     private static <T> TypeParser<T> createParser(Class<T> clazz, String parseMethod) {
         String code = String.format(TEMPLATE, clazz.getSimpleName(), parseMethod);
-        return (TypeParser<T>) RuntimeClassFactory.compile(TypeParser.class, clazz.getSimpleName(), code, new Object[] { clazz });
+        return RuntimeClassFactory.compile(TypeParser.class, clazz.getSimpleName(), code, new Object[] { clazz });
     }
 
     public static ImmutableMap<Class<?>, TypeParser<?>> create() {

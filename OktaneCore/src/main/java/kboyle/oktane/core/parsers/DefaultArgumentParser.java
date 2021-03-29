@@ -28,10 +28,12 @@ public class DefaultArgumentParser implements ArgumentParser {
         Command command = commandMatch.command();
         int index = commandMatch.argumentStart();
         int commandEnd = commandMatch.commandEnd();
+        int inputLength = input.length();
+        int inputLastIndex = inputLength - 1;
         ImmutableList<CommandParameter> parameters = command.parameters();
 
         boolean emptyParameters = parameters.isEmpty();
-        if (index == commandEnd && !emptyParameters) {
+        if ((index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
             return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
         }
 
@@ -44,7 +46,6 @@ public class DefaultArgumentParser implements ArgumentParser {
         }
 
         Object[] parsedArguments = null;
-        int inputLength = input.length();
         int parametersSize = parameters.size();
         for (int p = 0; p < parametersSize; p++) {
             String currentParameter = null;
@@ -61,7 +62,6 @@ public class DefaultArgumentParser implements ArgumentParser {
                 }
             }
 
-            int inputLastIndex = inputLength - 1;
             if (index == inputLastIndex && p < parametersSize - 1) {
                 return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
             }
@@ -76,6 +76,11 @@ public class DefaultArgumentParser implements ArgumentParser {
 
                     if (currentCharacter == QUOTE) {
                         if (input.charAt(index - 1) == ESCAPE) {
+                            if (index == inputLastIndex) {
+                                currentParameter = input.substring(paramStart, index++ - 1).concat("\"");
+                                break;
+                            }
+
                             continue;
                         }
 
