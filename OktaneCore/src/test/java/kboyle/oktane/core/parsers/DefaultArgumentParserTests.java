@@ -205,6 +205,31 @@ public class DefaultArgumentParserTests {
                 COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
                 " \\\"one two\\\"",
                 new ArgumentParserSuccessfulResult(new Object[] { "\"one", "two\"" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_NOT_ARG_REMAINDER,
+                " \"missing quote",
+                new ArgumentParserFailedResult(COMMAND_STRING_NOT_ARG_REMAINDER, ParserFailedReason.MISSING_QUOTE, 15)
+            ),
+            Arguments.of(
+                COMMAND_NO_PARAMETERS,
+                " string",
+                new ArgumentParserFailedResult(COMMAND_NO_PARAMETERS, ParserFailedReason.TOO_MANY_ARGUMENTS, 1)
+            ),
+            Arguments.of(
+                COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
+                " string ",
+                new ArgumentParserFailedResult(COMMAND_STRING_STRING_NOT_ARG_REMAINDER, ParserFailedReason.TOO_FEW_ARGUMENTS, 8)
+            ),
+            Arguments.of(
+                COMMAND_STRING_NOT_ARG_REMAINDER,
+                " \"\"",
+                new ArgumentParserSuccessfulResult(new Object[] { "" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_NOT_ARG_REMAINDER,
+                " \\\\",
+                new ArgumentParserSuccessfulResult(new Object[] { "\\" })
             )
         );
     }
