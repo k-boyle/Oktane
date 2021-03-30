@@ -204,7 +204,7 @@ public class DefaultArgumentParserTests {
             Arguments.of(
                 COMMAND_STRING_STRING_NOT_ARG_REMAINDER,
                 " \\\"one two\\\"",
-                new ArgumentParserSuccessfulResult(new Object[] { "\"one", "two\"" })
+                new ArgumentParserSuccessfulResult(new Object[] { "\"one", "two\\\"" })
             ),
             Arguments.of(
                 COMMAND_STRING_NOT_ARG_REMAINDER,
@@ -230,6 +230,11 @@ public class DefaultArgumentParserTests {
                 COMMAND_STRING_NOT_ARG_REMAINDER,
                 " \\\\",
                 new ArgumentParserSuccessfulResult(new Object[] { "\\" })
+            ),
+            Arguments.of(
+                COMMAND_STRING_NOT_ARG_REMAINDER,
+                " \\\\\\",
+                new ArgumentParserSuccessfulResult(new Object[] { "\\\\" })
             )
         );
     }

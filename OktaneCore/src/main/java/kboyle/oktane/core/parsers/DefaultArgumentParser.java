@@ -62,7 +62,7 @@ public class DefaultArgumentParser implements ArgumentParser {
                 }
             }
 
-            if (index >= inputLastIndex && p <= parametersSize - 1) {
+            if (index > inputLastIndex) {
                 return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
             }
 
@@ -77,7 +77,7 @@ public class DefaultArgumentParser implements ArgumentParser {
                     if (currentCharacter == QUOTE) {
                         if (input.charAt(index - 1) == ESCAPE) {
                             if (index == inputLastIndex) {
-                                currentParameter = input.substring(paramStart, index++ - 1).concat("\"");
+                                currentParameter = input.substring(paramStart, ++index);
                                 break;
                             }
 
@@ -107,20 +107,6 @@ public class DefaultArgumentParser implements ArgumentParser {
                         }
 
                         return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
-
-/* todo figure out why this block is necessary, unit test show that it's not
-
-                        if (index >= inputLastIndex) {
-                            if (input.charAt(index - 1) != QUOTE || input.charAt(index - 2) == ESCAPE) {
-                                return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
-                            }
-
-                            currentParameter = paramStart + 1 == index
-                                ? EMPTY
-                                : input.substring(paramStart + 1, index);
-                        }
-
-*/
                     } else if (currentCharacter == SPACE) {
                         currentParameter = input.substring(paramStart, index);
                         break;
