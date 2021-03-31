@@ -18,7 +18,7 @@ public class DiceModule extends CommandModuleBase<ExampleCommandContext> {
     }
 
     public CommandResult roll() {
-        return message("rolled: " + random.nextInt(6) + 1);
+        return message("rolled: " + (random.nextInt(6) + 1));
     }
 
     public CommandResult roll(int number, int sides) {

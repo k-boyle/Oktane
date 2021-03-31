@@ -7,15 +7,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class TestCommandBuilder {
-    private final List<CommandParameter.Builder> parameters = new ArrayList<>();
+public class BenchmarkCommandBuilder {
+    private static int counter;
 
-    public TestCommandBuilder addParameter(Class<?> type, boolean remainder) {
-        this.parameters.add(CommandParameter.builder().withName("").withType(type).withRemainder(remainder));
+    private final List<CommandParameter.Builder> parameters;
+
+    public BenchmarkCommandBuilder() {
+        parameters = new ArrayList<>();
+    }
+
+    public BenchmarkCommandBuilder withParameter() {
+        parameters.add(CommandParameter.builder().withType(String.class).withName(String.valueOf(counter++)));
         return this;
     }
 
-    public Command build() {
+    public Command create() {
         return new Command(
             "",
             ImmutableSet.of(),
@@ -25,6 +31,7 @@ public class TestCommandBuilder {
             ImmutableList.of(),
             null,
             false,
-            0);
+            0
+        );
     }
 }

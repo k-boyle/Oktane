@@ -12,6 +12,7 @@ class BenchmarkRunner {
             .include(CommandTotalExecutionBenchmark.class.getSimpleName())
 //            .include(CommandMapBenchmark.class.getSimpleName())
 //            .include(ArgumentParserBenchmark.class.getSimpleName())
+//            .include(ArgumentParserScalingBenchmark.class.getSimpleName())
 //            .addProfiler(GCProfiler.class)
             .forks(1)
             .build();

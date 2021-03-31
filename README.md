@@ -6,29 +6,32 @@ Oktane is a high performance, highly configurable Java command framework used to
 
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
+Example usage can be seen in the OktaneExample module.
+
 # Performance Benchmarks #
 
-**Benchmarks ran on a Ryzen 5600x @ 4.6GHz**
+**Benchmarks ran on a Ryzen 5600x @ 4.6GHz, as of 2.1.4-SNAPSHOT**
 
 | Benchmark                   | Mode | Cnt  | Score    |  Error    | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 126.187  | ± 0.489   | ns/op   |
-| commandIntParameter         | avgt |  5   | 59.992   | ± 0.283   | ns/op   |
-| commandNoParameters         | avgt |  5   | 23.304   | ± 0.202   | ns/op   |
-| commandNotFound             | avgt |  5   | 8.817    | ± 0.084   | ns/op   |
-| commandOneParameter         | avgt |  5   | 50.439   | ± 0.177   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 50.201   | ± 0.224   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 126.580  | ± 0.698   | ns/op   |
+| commandIntParameter         | avgt |  5   | 57.015   | ± 0.525   | ns/op   |
+| commandNoParameters         | avgt |  5   | 22.937   | ± 0.164   | ns/op   |
+| commandNotFound             | avgt |  5   | 8.503    | ± 0.063   | ns/op   |
+| commandOneParameter         | avgt |  5   | 48.051   | ± 0.158   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 45.567   | ± 0.377   | ns/op   |
 
-**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ**
+**Benchmarks ran on a Ryzen 2700x @ 3.6GHZ, as of 2.1.4-SNAPSHOT**
 
 | Benchmark                   | Mode | Cnt  | Score    | Error     | Units   |
 | --------------------------- | ---- | ---- | -------- | --------- | ------- |
-| commandFiveParameters       | avgt |  5   | 222.652  | ± 5.412   | ns/op   |
-| commandIntParameter         | avgt |  5   | 109.562  | ± 01.629  | ns/op   |
-| commandNoParameters         | avgt |  5   | 33.418   | ± 0.442   | ns/op   |
-| commandNotFound             | avgt |  5   | 11.863   | ± 0.132   | ns/op   |
-| commandOneParameter         | avgt |  5   | 86.111   | ± 2.251   | ns/op   |
-| commandRemainderParameter   | avgt |  5   | 87.937   | ± 2.196   | ns/op   |
+| commandFiveParameters       | avgt |  5   | 232.458  | ± 3.772   | ns/op   |
+| commandIntParameter         | avgt |  5   | 107.269  | ± 0.953   | ns/op   |
+| commandNoParameters         | avgt |  5   | 36.002   | ± 0.575   | ns/op   |
+| commandNotFound             | avgt |  5   | 13.297   | ± 0.092   | ns/op   |
+| commandOneParameter         | avgt |  5   | 86.012   | ± 1.011   | ns/op   |
+| commandRemainderParameter   | avgt |  5   | 87.491   | ± 1.619   | ns/op   |
+
 
 # Usage #
 
@@ -120,7 +123,7 @@ Type parsers are added during the `CommandHandler` building stage using the with
 ```java
 public class UserTypeParser implements TypeParser<User> {
     @Override
-    public TypeParserResult parse(CommandContext context, String input) {
+    public TypeParserResult<User> parse(CommandContext context, String input) {
         User user = User.parseFromInput(input);
         if (user != null) {
             return success(user);
@@ -153,14 +156,14 @@ Beans can be injected into module using the `BeanProvider`, any constructor argu
 will inject itself and does not need to be added to a provider.
 ```java
 public class OktaneCommandModule extends CommandModuleBase<OktaneCommandContext> {
-    private final CommandHandler commandHandler;
+    private final CommandHandler<OktaneCommandContext> commandHandler;
     
-    public OktaneCommandModule(CommandHandler commandHandler) {
+    public OktaneCommandModule(CommandHandler<OktaneCommandContext> commandHandler) {
         this.commandHandler = commandHandler;
     }
     
-    @CommandDescription(aliases = {"echo", "e"})
-    public CommandResult pingPong(@ParameterDescription(remainder = true) String input) {
+    @Aliases({"echo", "e"})
+    public CommandResult pingPong(@Remainder String input) {
         return message(context().user() + " said: " + input);
     }
 }

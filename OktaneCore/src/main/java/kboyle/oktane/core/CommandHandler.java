@@ -13,7 +13,7 @@ import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
 import kboyle.oktane.core.parsers.ArgumentParser;
 import kboyle.oktane.core.parsers.DefaultArgumentParser;
-import kboyle.oktane.core.parsers.PrimitiveTypeParser;
+import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
@@ -86,12 +86,13 @@ public class CommandHandler<T extends CommandContext> {
 
         ImmutableList.Builder<Result> failedResults = null;
 
-        for (CommandMatch searchResult : searchResults) {
-            if (searchResult.pathLength() < pathLength) {
+        for (int i = 0, searchResultsSize = searchResults.size(); i < searchResultsSize; i++) {
+            CommandMatch commandMatch = searchResults.get(i);
+            if (commandMatch.pathLength() < pathLength) {
                 continue;
             }
 
-            Command command = searchResult.command();
+            Command command = commandMatch.command();
             context.command = command;
 
             logger.trace("Attempting to execute {}", command);
@@ -115,7 +116,7 @@ public class CommandHandler<T extends CommandContext> {
 
             ArgumentParserResult argumentParserResult;
             try {
-                argumentParserResult = argumentParser.parse(context, input, searchResult.offset());
+                argumentParserResult = argumentParser.parse(context, commandMatch, input);
                 Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");
 
                 if (!argumentParserResult.success()) {
@@ -200,7 +201,7 @@ public class CommandHandler<T extends CommandContext> {
         private ArgumentParser argumentParser;
 
         private Builder() {
-            this.typeParserByClass = new HashMap<>(PrimitiveTypeParser.DEFAULT_PARSERS);
+            this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.beanProvider = BeanProvider.empty();
@@ -290,8 +291,9 @@ public class CommandHandler<T extends CommandContext> {
          */
         public CommandHandler<T> build() {
             List<Module> modules = new ArrayList<>();
+            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass);
             for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = CommandModuleFactory.create(moduleClazz, beanProvider);
+                Module module = moduleFactory.create(moduleClazz);
                 modules.add(module);
                 commandMap.map(module);
             }

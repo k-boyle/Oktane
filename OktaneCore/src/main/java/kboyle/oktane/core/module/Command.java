@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,9 +33,8 @@ public class Command {
             ImmutableSet<String> aliases,
             Optional<String> description,
             CommandCallback commandCallback,
-            ImmutableList<CommandParameter> parameters,
+            List<CommandParameter.Builder> parameters,
             ImmutableList<Precondition> preconditions,
-            Signature signature,
             Module module,
             boolean synchronised,
             int priority) {
@@ -41,12 +42,33 @@ public class Command {
         this.aliases = aliases;
         this.description = description;
         this.commandCallback = commandCallback;
-        this.parameters = parameters;
         this.preconditions = preconditions;
-        this.signature = signature;
         this.module = module;
         this.synchronised = synchronised;
         this.priority = priority;
+
+        List<CommandParameter> builtParameters = new ArrayList<>();
+        for (int i = 0; i < parameters.size(); i++) {
+            CommandParameter commandParameter = parameters.get(i).build(this);
+            Preconditions.checkState(
+                !commandParameter.remainder() || i == parameters.size() - 1,
+                "Parameter %s (%d) of Command %s cannot be remainder only the final parameter can be remainder",
+                commandParameter.name(),
+                i,
+                name
+            );
+            builtParameters.add(commandParameter);
+        }
+
+        this.signature = new Signature(
+            !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder(),
+            builtParameters.stream()
+                .map(CommandParameter::type)
+                .map(Class::toString)
+                .collect(Collectors.joining(";"))
+        );
+
+        this.parameters = ImmutableList.copyOf(builtParameters);
     }
 
     static Builder builder() {
@@ -148,8 +170,8 @@ public class Command {
     static class Builder {
         private static final String SPACE = " ";
 
+        private final List<CommandParameter.Builder> parameters;
         private final ImmutableSet.Builder<String> aliases;
-        private final ImmutableList.Builder<CommandParameter> parameters;
         private final ImmutableList.Builder<Precondition> preconditions;
 
         private String name;
@@ -159,8 +181,8 @@ public class Command {
         private int priority;
 
         private Builder() {
+            this.parameters = new ArrayList<>();
             this.aliases = ImmutableSet.builder();
-            this.parameters = ImmutableList.builder();
             this.preconditions = ImmutableList.builder();
         }
 
@@ -188,7 +210,7 @@ public class Command {
             return this;
         }
 
-        public Builder withParameter(CommandParameter commandParameter) {
+        public Builder withParameter(CommandParameter.Builder commandParameter) {
             Preconditions.checkNotNull(commandParameter, "commandParameter cannot be null");
             this.parameters.add(commandParameter);
             return this;
@@ -225,33 +247,13 @@ public class Command {
                 "A command must have a non-empty alias if there are no module groups"
             );
 
-            ImmutableList<CommandParameter> builtParameters = this.parameters.build();
-            for (int i = 0; i < builtParameters.size(); i++) {
-                CommandParameter commandParameter = builtParameters.get(i);
-                Preconditions.checkState(
-                    !commandParameter.remainder() || i == builtParameters.size() - 1,
-                    "Parameter %s of Command %s cannot be remainder only the final parameter can be remainder",
-                    commandParameter.name(),
-                    name
-                );
-            }
-
-            Signature commandSignature = new Signature(
-                !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder(),
-                builtParameters.stream()
-                    .map(CommandParameter::type)
-                    .map(Class::toString)
-                    .collect(Collectors.joining(";"))
-            );
-
             return new Command(
                 name,
                 builtAliases,
                 Optional.ofNullable(description),
                 commandCallback,
-                builtParameters,
+                parameters,
                 preconditions.build(),
-                commandSignature,
                 module,
                 synchronised,
                 priority);
