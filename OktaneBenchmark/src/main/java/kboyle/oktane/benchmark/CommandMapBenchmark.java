@@ -5,8 +5,10 @@ import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.CommandModuleFactory;
+import kboyle.oktane.core.module.Module;
 import org.openjdk.jmh.annotations.*;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -14,57 +16,34 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 @Fork(1)
 public class CommandMapBenchmark {
-    private final CommandMap commandMap = CommandMap.builder()
-        .map(CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.empty()))
+    private static final Module MODULE = new CommandModuleFactory(BeanProvider.empty(), Map.of()).create(BenchmarkModule.class);
+
+    private static final CommandMap COMMAND_MAP = CommandMap.builder()
+        .map(MODULE)
         .build();
 
     @Benchmark
-    public ImmutableList<CommandMatch> currentCommandNoParameters() {
-        return commandMap.findCommands("a");
+    public ImmutableList<CommandMatch> commandNoParameters() {
+        return COMMAND_MAP.findCommands("a");
     }
 
     @Benchmark
-    public ImmutableList<CommandMatch> currentCommandOneParameter() {
-        return commandMap.findCommands("n abc");
+    public ImmutableList<CommandMatch> commandOneParameter() {
+        return COMMAND_MAP.findCommands("n abc");
     }
 
     @Benchmark
-    public ImmutableList<CommandMatch> currentCommandRemainderParameter() {
-        return commandMap.findCommands("c abc def ghi");
+    public ImmutableList<CommandMatch> commandRemainderParameter() {
+        return COMMAND_MAP.findCommands("c abc def ghi");
     }
 
     @Benchmark
-    public ImmutableList<CommandMatch> currentCommandNotFound() {
-        return commandMap.findCommands("notfound");
+    public ImmutableList<CommandMatch> commandNotFound() {
+        return COMMAND_MAP.findCommands("notfound");
     }
 
     @Benchmark
-    public ImmutableList<CommandMatch> currentCommandFiveParameters() {
-        return commandMap.findCommands("f abc def ghi jkl mno");
-    }
-
-    @Benchmark
-    public ImmutableList<CommandMatch> newCommandNoParameters() {
-        return commandMap.findCommands("a");
-    }
-
-    @Benchmark
-    public ImmutableList<CommandMatch> newCommandOneParameter() {
-        return commandMap.findCommands("n abc");
-    }
-
-    @Benchmark
-    public ImmutableList<CommandMatch> newCommandRemainderParameter() {
-        return commandMap.findCommands("c abc def ghi");
-    }
-
-    @Benchmark
-    public ImmutableList<CommandMatch> newCommandFiveParameters() {
-        return commandMap.findCommands("f abc def ghi jkl mno");
-    }
-
-    @Benchmark
-    public ImmutableList<CommandMatch> newCommandNotFound() {
-        return commandMap.findCommands("notfound");
+    public ImmutableList<CommandMatch> commandFiveParameters() {
+        return COMMAND_MAP.findCommands("f abc def ghi jkl mno");
     }
 }

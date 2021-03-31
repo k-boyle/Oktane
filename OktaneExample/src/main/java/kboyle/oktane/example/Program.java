@@ -2,13 +2,14 @@ package kboyle.oktane.example;
 
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandHandler;
-import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.command.CommandMessageResult;
+import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.example.results.KillAppCommandResult;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Program {
     public static void main(String[] args) {
@@ -22,13 +23,13 @@ public class Program {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             Result result = commandHandler.execute(scanner.nextLine(), new ExampleCommandContext(beanProvider));
-            if (result instanceof FailedResult failure) {
-                System.out.println("Failed due to: " + failure.reason());
-            } else if (result instanceof CommandMessageResult message) {
+            if (result instanceof CommandMessageResult message) {
                 System.out.println(message.message());
             } else if (result instanceof KillAppCommandResult) {
                 System.out.println("Kill app...");
                 break;
+            } else if (result instanceof CommandMatchFailedResult commandMatchFailedResult) {
+                System.out.println(commandMatchFailedResult.failedResults().stream().map(Result::toString).collect(Collectors.joining("\n")));
             } else {
                 System.out.println("Got result: " + result);
             }

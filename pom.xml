@@ -11,7 +11,6 @@
     <modules>
         <module>OktaneCore</module>
         <module>OktaneBenchmark</module>
-        <module>Oktane4J</module>
         <module>OktaneExample</module>
     </modules>
 

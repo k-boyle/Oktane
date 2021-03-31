@@ -5,6 +5,7 @@ import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandCallback;
 import kboyle.oktane.core.module.CommandModuleFactory;
 import kboyle.oktane.core.module.Module;
+import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.openjdk.jmh.annotations.*;
 
@@ -18,7 +19,8 @@ import java.util.stream.Collectors;
 @State(Scope.Benchmark)
 @Fork(1)
 public class CommandExecutionBenchmark {
-    private final Module module = CommandModuleFactory.create(BenchmarkModule.class, BeanProvider.empty());
+    private final Module module = new CommandModuleFactory(BeanProvider.empty(), PrimitiveTypeParserFactory.create())
+        .create(BenchmarkModule.class);
     private final Map<String, Command> commands = module.commands().stream()
         .collect(Collectors.toMap(Command::name, Function.identity()));
 

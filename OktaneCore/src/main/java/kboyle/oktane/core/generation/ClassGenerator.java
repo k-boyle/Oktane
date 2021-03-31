@@ -37,6 +37,7 @@ public class ClassGenerator implements Generator {
         return this;
     }
 
+    // todo none of this handles generics
     @Override
     public Set<Type> imports() {
         Set<Type> aggregatedTypes = new HashSet<>(imports);

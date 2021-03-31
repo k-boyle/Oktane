@@ -24,4 +24,11 @@ public record ArgumentParserSuccessfulResult(Object[] parsedArguments) implement
     public int hashCode() {
         return Arrays.hashCode(parsedArguments);
     }
+
+    @Override
+    public String toString() {
+        return "ArgumentParserSuccessfulResult{" +
+            "parsedArguments=" + Arrays.toString(parsedArguments) +
+            '}';
+    }
 }

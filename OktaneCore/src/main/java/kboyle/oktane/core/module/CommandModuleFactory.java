@@ -7,31 +7,36 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.InvalidConstructorException;
 import kboyle.oktane.core.module.annotations.*;
+import kboyle.oktane.core.parsers.EnumTypeParser;
+import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
 
-public final class CommandModuleFactory {
-    private static final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
+public class CommandModuleFactory {
+    private final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
 
-    private CommandModuleFactory() {
+    private final BeanProvider beanProvider;
+    private final Map<Class<?>, TypeParser<?>> typeParserByClass;
+    private final CommandCallbackFactory callbackFactory;
+
+    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, TypeParser<?>> typeParserByClass) {
+        this.beanProvider = beanProvider;
+        this.typeParserByClass = typeParserByClass;
+        this.callbackFactory = new CommandCallbackFactory();
     }
 
-    public static <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz, BeanProvider beanProvider) {
+    public <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz) {
         Preconditions.checkState(!Modifier.isAbstract(moduleClazz.getModifiers()), "A module cannot be abstract");
 
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
-
-        CommandCallbackFactory callbackFactory = new CommandCallbackFactory();
 
         Module.Builder moduleBuilder = Module.builder()
             .withName(moduleClazz.getSimpleName());
@@ -81,15 +86,15 @@ public final class CommandModuleFactory {
 
             logger.trace("Creating command from {}", method.getName());
 
-            createCommand(
-                moduleClazz,
-                beanProvider,
-                callbackFactory,
-                moduleBuilder,
-                moduleGroups,
-                singleton,
-                moduleLock,
-                method
+            moduleBuilder.withCommand(
+                createCommand(
+                    moduleClazz,
+                    callbackFactory,
+                    moduleGroups,
+                    singleton,
+                    moduleLock,
+                    method
+                )
             );
         }
 
@@ -98,11 +103,9 @@ public final class CommandModuleFactory {
         return moduleBuilder.build();
     }
 
-    private static <S extends CommandContext, T extends CommandModuleBase<S>> void createCommand(
+    private <S extends CommandContext, T extends CommandModuleBase<S>> Command.Builder createCommand(
             Class<T> moduleClazz,
-            BeanProvider beanProvider,
             CommandCallbackFactory callbackFactory,
-            Module.Builder moduleBuilder,
             Aliases moduleGroups,
             boolean singleton,
             Object moduleLock,
@@ -154,18 +157,26 @@ public final class CommandModuleFactory {
 
         Parameter[] parameters = method.getParameters();
         for (Parameter parameter : parameters) {
-            createParameter(method, commandBuilder, parameter);
+            CommandParameter.Builder commandParameter = createParameter(method, parameter);
+            commandBuilder.withParameter(commandParameter);
         }
 
-        moduleBuilder.withCommand(commandBuilder);
+        return commandBuilder;
     }
 
-    private static void createParameter(Method method, Command.Builder commandBuilder, Parameter parameter) {
+    private CommandParameter.Builder createParameter(Method method, Parameter parameter) {
         Class<?> parameterType = parameter.getType();
+
+        TypeParser<?> parser = typeParserByClass.get(parameterType);
+        if (parser == null && parameterType.isEnum()) {
+            parser = typeParserByClass.computeIfAbsent(parameterType, type -> new EnumTypeParser(type));
+        }
+
         CommandParameter.Builder parameterBuilder = CommandParameter.builder()
             .withType(parameterType)
             .withName(parameter.getName())
-            .withRemainder(parameter.getAnnotation(Remainder.class) != null);
+            .withRemainder(parameter.getAnnotation(Remainder.class) != null)
+            .withParser(parser);
 
         Description parameterDescription = method.getAnnotation(Description.class);
         if (parameterDescription != null) {
@@ -179,7 +190,7 @@ public final class CommandModuleFactory {
             parameterBuilder.withName(parameterName.value());
         }
 
-        commandBuilder.withParameter(parameterBuilder.build());
+        return parameterBuilder;
     }
 
     private static boolean isValidCommandSignature(Method method) {
@@ -193,16 +204,9 @@ public final class CommandModuleFactory {
             || moduleAliases != null && moduleAliases.value().length > 0;
     }
 
-    private static Stream<Precondition> createPreconditions(Class<?> clazz) {
-        return createPreconditions(clazz.getAnnotationsByType(Require.class));
-    }
-
-    private static Stream<Precondition> createPreconditions(Method method) {
-        return createPreconditions(method.getAnnotationsByType(Require.class));
-    }
-
-    private static Stream<Precondition> createPreconditions(Require[] requires) {
-        return Arrays.stream(requires).map(CommandModuleFactory::initPrecondition);
+    private static Stream<Precondition> createPreconditions(AnnotatedElement element) {
+        return Arrays.stream(element.getAnnotationsByType(Require.class))
+            .map(CommandModuleFactory::initPrecondition);
     }
 
     private static Precondition initPrecondition(Require requirement) {
