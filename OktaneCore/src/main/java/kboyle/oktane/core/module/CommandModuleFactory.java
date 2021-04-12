@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
 
 public class CommandModuleFactory {
@@ -195,6 +196,7 @@ public class CommandModuleFactory {
 
     private static boolean isValidCommandSignature(Method method) {
         return !isStatic(method.getModifiers())
+            && isPublic(method.getModifiers())
             && method.getReturnType().equals(CommandResult.class)
             && method.getAnnotation(Disabled.class) == null;
     }
@@ -219,6 +221,10 @@ public class CommandModuleFactory {
             })
             .orElseThrow(() -> new InvalidConstructorException("Expected at least one valid constructor"));
         try {
+            if (arguments.length == 0) {
+                return (Precondition) validConstructor.newInstance();
+            }
+
             return (Precondition) validConstructor.newInstance((Object) arguments);
         } catch (Exception ex) {
             throw new FailedToInstantiatePreconditionException(clazz, ex);
