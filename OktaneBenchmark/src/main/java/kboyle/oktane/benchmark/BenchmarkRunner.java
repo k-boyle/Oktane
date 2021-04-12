@@ -9,10 +9,11 @@ class BenchmarkRunner {
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
 //            .include(CommandExecutionBenchmark.class.getSimpleName())
-            .include(CommandTotalExecutionBenchmark.class.getSimpleName())
+//            .include(CommandTotalExecutionBenchmark.class.getSimpleName())
 //            .include(CommandMapBenchmark.class.getSimpleName())
 //            .include(ArgumentParserBenchmark.class.getSimpleName())
 //            .include(ArgumentParserScalingBenchmark.class.getSimpleName())
+            .include(ReactiveBenchmark.class.getSimpleName())
 //            .addProfiler(GCProfiler.class)
             .forks(1)
             .build();

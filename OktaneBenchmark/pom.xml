@@ -33,6 +33,11 @@
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>${jmh.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.k-boyle</groupId>
+            <artifactId>OktaneReactive</artifactId>
+            <version>0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 
