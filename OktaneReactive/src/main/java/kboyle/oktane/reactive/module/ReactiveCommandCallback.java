@@ -5,6 +5,6 @@ import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
 @FunctionalInterface
-public interface CommandCallback {
+public interface ReactiveCommandCallback {
      Mono<CommandResult> execute(CommandContext context, Object[] beans, Object[] parameters);
 }

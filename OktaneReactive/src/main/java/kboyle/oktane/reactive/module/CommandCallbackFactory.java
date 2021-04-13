@@ -27,8 +27,8 @@ public class CommandCallbackFactory {
     private static final String CAST_TEMPLATE = "(%s)%s[%d]";
 
     @SuppressWarnings("unchecked")
-    public <T extends CommandContext> CommandCallback createCommandCallback(
-            Class<? extends CommandModuleBase<T>> moduleClazz,
+    public <T extends CommandContext> ReactiveCommandCallback createCommandCallback(
+            Class<? extends ReactiveModuleBase<T>> moduleClazz,
             boolean singleton,
             Object moduleLock,
             boolean commandSynchronised,
@@ -45,7 +45,7 @@ public class CommandCallbackFactory {
             .withPackage(getClass().getPackageName())
             .withAccess(AccessModifier.PUBLIC)
             .withName(generatedName)
-            .withImplementation(CommandCallback.class);
+            .withImplementation(ReactiveCommandCallback.class);
 
         Constructor<?> constructor = constructors[0];
 
@@ -57,7 +57,7 @@ public class CommandCallbackFactory {
         additionalImports.add(concreteCommandContextClazz);
         additionalImports.add(Mono.class);
 
-        CommandModuleBase<T> module = getModule(singleton, moduleClazz, beanProvider);
+        ReactiveModuleBase<T> module = getModule(singleton, moduleClazz, beanProvider);
         List<Object> constructorParameters = new ArrayList<>();
 
         MethodGenerator methodGenerator = new MethodGenerator()
@@ -103,7 +103,7 @@ public class CommandCallbackFactory {
             .append(deconstruct(method.getParameterTypes(), "parameters"))
             .append(");")
             .append("} catch (Exception ex) {")
-            .append("return Mono.just(new CommandExceptionResult(module.command(), ex));")
+            .append("return Mono.just(new CommandExceptionResult(context.command(), ex));")
             .append("}");
 
         if (moduleLock != null) {
@@ -115,16 +115,16 @@ public class CommandCallbackFactory {
         String generatedCode = classGenerator.generate();
 
         return RuntimeClassFactory.compile(
-            CommandCallback.class,
+            ReactiveCommandCallback.class,
             generatedName,
             generatedCode,
             constructorParameters.toArray()
         );
     }
 
-    private static <T extends CommandContext> CommandModuleBase<T> getModule(
+    private static <T extends CommandContext> ReactiveModuleBase<T> getModule(
             boolean singleton,
-            Class<? extends CommandModuleBase<T>> moduleClazz,
+            Class<? extends ReactiveModuleBase<T>> moduleClazz,
             BeanProvider beanProvider) {
         if (!singleton) {
             return null;

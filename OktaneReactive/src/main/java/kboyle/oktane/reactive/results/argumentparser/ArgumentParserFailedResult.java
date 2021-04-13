@@ -1,13 +1,15 @@
 package kboyle.oktane.reactive.results.argumentparser;
 
-import kboyle.oktane.reactive.module.Command;
-import kboyle.oktane.reactive.parsers.ParserFailedReason;
+import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.results.FailedResult;
+import kboyle.oktane.reactive.results.Result;
 
-public record ArgumentParserFailedResult(Command command, ParserFailedReason failureReason, int index) implements FailedResult, ArgumentParserResult {
+import java.util.List;
+
+public record ArgumentParserFailedResult(ReactiveCommand command, List<Result> results) implements FailedResult, ArgumentParserResult {
     @Override
     public String reason() {
-        return failureReason().toString();
+        return String.format("Argument parsing failed for command %s", command.name());
     }
 
     @Override

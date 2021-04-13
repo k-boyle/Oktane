@@ -1,12 +1,12 @@
 package kboyle.oktane.reactive.results.argumentparser;
 
-import kboyle.oktane.reactive.module.Command;
+import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.results.ExceptionResult;
 import kboyle.oktane.reactive.results.FailedResult;
 
 import java.util.Objects;
 
-public record ArgumentParserExceptionResult(Command command, Throwable exception) implements FailedResult, ExceptionResult, ArgumentParserResult {
+public record ArgumentParserExceptionResult(ReactiveCommand command, Throwable exception) implements FailedResult, ExceptionResult, ArgumentParserResult {
     @Override
     public String reason() {
         return String.format("An exception was thrown whilst trying to execute %s", command.name());

@@ -1,12 +1,12 @@
 package kboyle.oktane.reactive.results.argumentparser;
 
-import kboyle.oktane.reactive.module.Command;
+import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.results.SuccessfulResult;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public record ArgumentParserSuccessfulResult(Command command, Object[] parsedArguments) implements ArgumentParserResult, SuccessfulResult {
+public record ArgumentParserSuccessfulResult(ReactiveCommand command, Object[] parsedArguments) implements ArgumentParserResult, SuccessfulResult {
     @Override
     public boolean equals(Object o) {
         return this == o

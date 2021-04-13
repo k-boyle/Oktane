@@ -1,7 +1,7 @@
 package kboyle.oktane.reactive.module;
 
 import com.google.common.base.Preconditions;
-import kboyle.oktane.reactive.parsers.TypeParser;
+import kboyle.oktane.reactive.parsers.ReactiveTypeParser;
 
 import java.util.Optional;
 
@@ -9,21 +9,21 @@ import java.util.Optional;
  * Represents a parameter of a command.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public final class CommandParameter {
+public final class ReactiveCommandParameter {
     private final Class<?> type;
     private final Optional<String> description;
     private final String name;
     private final boolean remainder;
-    private final TypeParser<?> parser;
-    private final Command command;
+    private final ReactiveTypeParser<?> parser;
+    private final ReactiveCommand command;
 
-    CommandParameter(
+    ReactiveCommandParameter(
             Class<?> type,
             Optional<String> description,
             String name,
             boolean remainder,
-            TypeParser<?> parser,
-            Command command) {
+            ReactiveTypeParser<?> parser,
+            ReactiveCommand command) {
         this.type = type;
         this.description = description;
         this.name = name;
@@ -67,14 +67,14 @@ public final class CommandParameter {
     /**
      * @return The TypeParser used for this parameter.
      */
-    public TypeParser<?> parser() {
+    public ReactiveTypeParser<?> parser() {
         return parser;
     }
 
     /**
      * @return The Command that this parameter belongs to.
      */
-    public Command command() {
+    public ReactiveCommand command() {
         return command;
     }
 
@@ -83,7 +83,7 @@ public final class CommandParameter {
         private String description;
         private String name;
         private boolean remainder;
-        private TypeParser<?> parser;
+        private ReactiveTypeParser<?> parser;
 
         private Builder() {
         }
@@ -110,15 +110,15 @@ public final class CommandParameter {
             return this;
         }
 
-        public Builder withParser(TypeParser<?> parser) {
+        public Builder withParser(ReactiveTypeParser<?> parser) {
             this.parser = parser;
             return this;
         }
 
-        public CommandParameter build(Command command) {
+        public ReactiveCommandParameter build(ReactiveCommand command) {
             Preconditions.checkNotNull(type, "A parameter type must be specified");
             Preconditions.checkNotNull(name, "A parameter name must be specified");
-            return new CommandParameter(type, Optional.ofNullable(description), name, remainder, parser, command);
+            return new ReactiveCommandParameter(type, Optional.ofNullable(description), name, remainder, parser, command);
         }
     }
 }

@@ -7,10 +7,10 @@ import kboyle.oktane.reactive.results.precondition.PreconditionSuccessfulResult;
 import reactor.core.publisher.Mono;
 
 @FunctionalInterface
-public interface Precondition {
+public interface ReactivePrecondition {
     Mono<PreconditionSuccessfulResult> SUCCESS = Mono.just(PreconditionSuccessfulResult.get());
 
-    Mono<PreconditionResult> run(CommandContext context, Command command);
+    Mono<PreconditionResult> run(CommandContext context, ReactiveCommand command);
 
     default Mono<PreconditionSuccessfulResult> success() {
         return SUCCESS;

@@ -17,26 +17,26 @@ import java.util.stream.Collectors;
  * Represents a command.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Command {
+public class ReactiveCommand {
     private final String name;
     private final ImmutableSet<String> aliases;
     private final Optional<String> description;
-    private final CommandCallback commandCallback;
-    private final ImmutableList<CommandParameter> parameters;
-    private final ImmutableList<Precondition> preconditions;
+    private final ReactiveCommandCallback commandCallback;
+    private final ImmutableList<ReactiveCommandParameter> parameters;
+    private final ImmutableList<ReactivePrecondition> preconditions;
     private final Signature signature;
-    private final Module module;
+    private final ReactiveModule module;
     private final boolean synchronised;
     private final int priority;
 
-    Command(
+    ReactiveCommand(
             String name,
             ImmutableSet<String> aliases,
             Optional<String> description,
-            CommandCallback commandCallback,
-            List<CommandParameter.Builder> parameters,
-            ImmutableList<Precondition> preconditions,
-            Module module,
+            ReactiveCommandCallback commandCallback,
+            List<ReactiveCommandParameter.Builder> parameters,
+            ImmutableList<ReactivePrecondition> preconditions,
+            ReactiveModule module,
             boolean synchronised,
             int priority) {
         this.name = name;
@@ -48,9 +48,9 @@ public class Command {
         this.synchronised = synchronised;
         this.priority = priority;
 
-        List<CommandParameter> builtParameters = new ArrayList<>();
+        List<ReactiveCommandParameter> builtParameters = new ArrayList<>();
         for (int i = 0; i < parameters.size(); i++) {
-            CommandParameter commandParameter = parameters.get(i).build(this);
+            ReactiveCommandParameter commandParameter = parameters.get(i).build(this);
             Preconditions.checkState(
                 !commandParameter.remainder() || i == parameters.size() - 1,
                 "Parameter %s (%d) of Command %s cannot be remainder only the final parameter can be remainder",
@@ -64,7 +64,7 @@ public class Command {
         this.signature = new Signature(
             !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder(),
             builtParameters.stream()
-                .map(CommandParameter::type)
+                .map(ReactiveCommandParameter::type)
                 .map(Class::toString)
                 .collect(Collectors.joining(";"))
         );
@@ -116,21 +116,21 @@ public class Command {
     /**
      * @return The method of the command.
      */
-    public CommandCallback commandCallback() {
+    public ReactiveCommandCallback commandCallback() {
         return commandCallback;
     }
 
     /**
      * @return The command's parameters.
      */
-    public ImmutableList<CommandParameter> parameters() {
+    public ImmutableList<ReactiveCommandParameter> parameters() {
         return parameters;
     }
 
     /**
      * @return The command's preconditions.
      */
-    public ImmutableList<Precondition> preconditions() {
+    public ImmutableList<ReactivePrecondition> preconditions() {
         return preconditions;
     }
 
@@ -144,7 +144,7 @@ public class Command {
     /**
      * @return The Module that this command belongs to.
      */
-    public Module module() {
+    public ReactiveModule module() {
         return module;
     }
 
@@ -172,13 +172,13 @@ public class Command {
     static class Builder {
         private static final String SPACE = " ";
 
-        private final List<CommandParameter.Builder> parameters;
+        private final List<ReactiveCommandParameter.Builder> parameters;
         private final ImmutableSet.Builder<String> aliases;
-        private final ImmutableList.Builder<Precondition> preconditions;
+        private final ImmutableList.Builder<ReactivePrecondition> preconditions;
 
         private String name;
         private String description;
-        private CommandCallback commandCallback;
+        private ReactiveCommandCallback commandCallback;
         private boolean synchronised;
         private int priority;
 
@@ -206,19 +206,19 @@ public class Command {
             return this;
         }
 
-        public Builder withCallback(CommandCallback commandCallback) {
+        public Builder withCallback(ReactiveCommandCallback commandCallback) {
             Preconditions.checkNotNull(commandCallback, "commandCallback cannot be null");
             this.commandCallback = commandCallback;
             return this;
         }
 
-        public Builder withParameter(CommandParameter.Builder commandParameter) {
+        public Builder withParameter(ReactiveCommandParameter.Builder commandParameter) {
             Preconditions.checkNotNull(commandParameter, "commandParameter cannot be null");
             this.parameters.add(commandParameter);
             return this;
         }
 
-        public Builder withPrecondition(Precondition precondition) {
+        public Builder withPrecondition(ReactivePrecondition precondition) {
             Preconditions.checkNotNull(precondition, "precondition cannot be null");
             this.preconditions.add(precondition);
             return this;
@@ -239,7 +239,7 @@ public class Command {
             return this;
         }
 
-        Command build(Module module) {
+        ReactiveCommand build(ReactiveModule module) {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
 
@@ -249,7 +249,7 @@ public class Command {
                 "A command must have a non-empty alias if there are no module groups"
             );
 
-            return new Command(
+            return new ReactiveCommand(
                 name,
                 builtAliases,
                 Optional.ofNullable(description),

@@ -3,7 +3,7 @@ package kboyle.oktane.reactive.mapping;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import kboyle.oktane.reactive.module.Command;
+import kboyle.oktane.reactive.module.ReactiveCommand;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 class CommandMapNode {
     private static final char SPACE = ' ';
 
-    private final ImmutableMap<String, List<Command>> commandsByAlias;
+    private final ImmutableMap<String, List<ReactiveCommand>> commandsByAlias;
     private final ImmutableMap<String, CommandMapNode> nodeByAlias;
 
-    private CommandMapNode(Map<String, List<Command>> commandsByAlias, Map<String, CommandMapNode> nodeByAlias) {
+    private CommandMapNode(Map<String, List<ReactiveCommand>> commandsByAlias, Map<String, CommandMapNode> nodeByAlias) {
         this.commandsByAlias = ImmutableMap.copyOf(commandsByAlias);
         this.nodeByAlias = ImmutableMap.copyOf(nodeByAlias);
     }
@@ -55,16 +55,16 @@ class CommandMapNode {
     }
 
     private void handleSegmentAsAlias(
-        ImmutableList.Builder<CommandMatch> results,
-        String segment,
-        int pathLength,
-        int commandEnd,
-        int argumentStart) {
-        List<Command> commands = commandsByAlias.get(segment);
+            ImmutableList.Builder<CommandMatch> results,
+            String segment,
+            int pathLength,
+            int commandEnd,
+            int argumentStart) {
+        List<ReactiveCommand> commands = commandsByAlias.get(segment);
         if (commands != null) {
             pathLength++;
             for (int i = 0, commandsSize = commands.size(); i < commandsSize; i++) {
-                Command command = commands.get(i);
+                ReactiveCommand command = commands.get(i);
                 results.add(new CommandMatch(command, pathLength, commandEnd, argumentStart));
             }
         }
@@ -75,7 +75,7 @@ class CommandMapNode {
     }
 
     static class Builder {
-        private final Map<String, List<Command>> commandsByAlias;
+        private final Map<String, List<ReactiveCommand>> commandsByAlias;
         private final Map<String, Builder> nodeByAlias;
 
         private Builder() {
@@ -83,7 +83,7 @@ class CommandMapNode {
             this.nodeByAlias = new HashMap<>();
         }
 
-        public Builder addCommand(Command command, List<String> paths, int index) {
+        public Builder addCommand(ReactiveCommand command, List<String> paths, int index) {
             Preconditions.checkState(!paths.isEmpty(), "Cannot map pathless commands to root");
 
             String path = paths.get(index);
@@ -112,10 +112,10 @@ class CommandMapNode {
             return this;
         }
 
-        private void assertUniqueCommand(Command command, String path, List<Command> commands) {
-            for (Command otherCommand : commands) {
-                Command.Signature commandSignature = command.signature();
-                Command.Signature otherCommandSignature = otherCommand.signature();
+        private void assertUniqueCommand(ReactiveCommand command, String path, List<ReactiveCommand> commands) {
+            for (ReactiveCommand otherCommand : commands) {
+                ReactiveCommand.Signature commandSignature = command.signature();
+                ReactiveCommand.Signature otherCommandSignature = otherCommand.signature();
 
                 Preconditions.checkState(
                     !commandSignature.equals(otherCommandSignature),

@@ -1,4 +1,4 @@
-package kboyle.oktane.reactive.results.typeparser;
+    package kboyle.oktane.reactive.results.typeparser;
 
 import kboyle.oktane.reactive.results.FailedResult;
 

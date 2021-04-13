@@ -14,7 +14,7 @@ public class Program {
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            Mono<Result> result = commandHandler.push(scanner.nextLine(), new Context());
+            Mono<Result> result = commandHandler.execute(scanner.nextLine(), new Context());
             System.out.println(result.block());
         }
     }

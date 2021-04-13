@@ -1,21 +1,21 @@
 package kboyle.oktane.reactive.parsers;
 
 import kboyle.oktane.reactive.CommandContext;
-import kboyle.oktane.reactive.module.Command;
+import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.results.typeparser.TypeParserResult;
 import reactor.core.publisher.Mono;
 
-public class EnumTypeParser<T extends Enum<T>> implements TypeParser<T> {
+public class EnumReactiveTypeParser<T extends Enum<T>> implements ReactiveTypeParser<T> {
     private final Class<T> enumClazz;
     private final T[] enumConstants;
 
-    public EnumTypeParser(Class<T> enumClazz) {
+    public EnumReactiveTypeParser(Class<T> enumClazz) {
         this.enumClazz = enumClazz;
         this.enumConstants = enumClazz.getEnumConstants();
     }
 
     @Override
-    public Mono<TypeParserResult<T>> parse(CommandContext context, Command command, String input) {
+    public Mono<TypeParserResult<T>> parse(CommandContext context, ReactiveCommand command, String input) {
         if (Character.isDigit(input.charAt(0))) {
             try {
                 int ord = Integer.parseInt(input);

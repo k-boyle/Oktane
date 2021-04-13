@@ -1,7 +1,7 @@
 package kboyle.oktane.reactive;
 
 import kboyle.oktane.reactive.exceptions.UnhandledTypeException;
-import kboyle.oktane.reactive.module.CommandModuleBase;
+import kboyle.oktane.reactive.module.ReactiveModuleBase;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -15,7 +15,7 @@ public final class ReflectionUtil {
         if (type instanceof Class<?> clazz) {
             return unwrap(clazz.getGenericSuperclass());
         } else if (type instanceof ParameterizedType parameterizedType) {
-            if (parameterizedType.getRawType() == CommandModuleBase.class) {
+            if (parameterizedType.getRawType() == ReactiveModuleBase.class) {
                 return parameterizedType;
             }
             return unwrap(parameterizedType);
@@ -25,12 +25,12 @@ public final class ReflectionUtil {
     }
 
     public static <T extends CommandContext> boolean isValidModuleClass(Class<T> contextClazz, Class<?> moduleCandidate) {
-        if (!CommandModuleBase.class.isAssignableFrom(moduleCandidate) || Modifier.isAbstract(moduleCandidate.getModifiers())) {
+        if (!ReactiveModuleBase.class.isAssignableFrom(moduleCandidate) || Modifier.isAbstract(moduleCandidate.getModifiers())) {
             return false;
         }
 
         ParameterizedType parameterizedType = unwrap(moduleCandidate.getGenericSuperclass());
-        if (parameterizedType.getRawType() != CommandModuleBase.class) {
+        if (parameterizedType.getRawType() != ReactiveModuleBase.class) {
             return isValidModuleClass(contextClazz, (Class<?>) parameterizedType.getRawType());
         }
 

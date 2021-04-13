@@ -16,21 +16,21 @@ import java.util.Optional;
  * Represents a command module.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Module {
+public class ReactiveModule {
     private final String name;
     private final ImmutableSet<String> groups;
-    private final ImmutableList<Command> commands;
-    private final ImmutableList<Precondition> preconditions;
+    private final ImmutableList<ReactiveCommand> commands;
+    private final ImmutableList<ReactivePrecondition> preconditions;
     private final Optional<String> description;
     private final ImmutableList<Class<?>> beans;
     private final boolean singleton;
     private final boolean synchronised;
 
-    private Module(
+    private ReactiveModule(
             String name,
             ImmutableSet<String> groups,
-            List<Command.Builder> commands,
-            ImmutableList<Precondition> preconditions,
+            List<ReactiveCommand.Builder> commands,
+            ImmutableList<ReactivePrecondition> preconditions,
             Optional<String> description,
             ImmutableList<Class<?>> beans,
             boolean singleton,
@@ -39,7 +39,7 @@ public class Module {
         this.groups = groups;
         this.commands = commands.stream()
             .map(command -> command.build(this))
-            .sorted(Comparator.comparingInt(Command::priority).reversed())
+            .sorted(Comparator.comparingInt(ReactiveCommand::priority).reversed())
             .collect(ImmutableList.toImmutableList());
         this.preconditions = preconditions;
         this.description = description;
@@ -57,7 +57,7 @@ public class Module {
      * @param context The context to pass to the preconditions.
      * @return The result of executing the preconditions.
      */
-    public Mono<PreconditionResult> runPreconditions(CommandContext context, Command command) {
+    public Mono<PreconditionResult> runPreconditions(CommandContext context, ReactiveCommand command) {
         return CommandUtil.runPreconditions(context, command, preconditions);
     }
 
@@ -78,7 +78,7 @@ public class Module {
     /**
      * @return The module's commands.
      */
-    public ImmutableList<Command> commands() {
+    public ImmutableList<ReactiveCommand> commands() {
         return commands;
     }
 
@@ -114,8 +114,8 @@ public class Module {
         private static final String SPACE = " ";
 
         private final ImmutableSet.Builder<String> groups;
-        private final List<Command.Builder> commands;
-        private final ImmutableList.Builder<Precondition> preconditions;
+        private final List<ReactiveCommand.Builder> commands;
+        private final ImmutableList.Builder<ReactivePrecondition> preconditions;
         private final ImmutableList.Builder<Class<?>> beans;
 
         private String name;
@@ -148,13 +148,13 @@ public class Module {
             return this;
         }
 
-        public Builder withCommand(Command.Builder command) {
+        public Builder withCommand(ReactiveCommand.Builder command) {
             Preconditions.checkNotNull(command, "command cannot be null");
             this.commands.add(command);
             return this;
         }
 
-        public Builder withPrecondition(Precondition precondition) {
+        public Builder withPrecondition(ReactivePrecondition precondition) {
             Preconditions.checkNotNull(precondition, "precondition cannot be null");
             this.preconditions.add(precondition);
             return this;
@@ -186,10 +186,10 @@ public class Module {
             return this;
         }
 
-        public Module build() {
+        public ReactiveModule build() {
             Preconditions.checkNotNull(name, "A module name must be specified");
 
-            return new Module(
+            return new ReactiveModule(
                 name,
                 groups.build(),
                 commands,

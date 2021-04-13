@@ -2,8 +2,8 @@ package kboyle.oktane.reactive.mapping;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import kboyle.oktane.reactive.module.Command;
-import kboyle.oktane.reactive.module.Module;
+import kboyle.oktane.reactive.module.ReactiveCommand;
+import kboyle.oktane.reactive.module.ReactiveModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ public class CommandMap {
             this.rootNode = CommandMapNode.builder();
         }
 
-        public Builder map(Module module) {
+        public Builder map(ReactiveModule module) {
             Preconditions.checkState(!invalidState, "CommandMap has been put into an invalid state");
 
             try {
@@ -46,7 +46,7 @@ public class CommandMap {
             return this;
         }
 
-        private void map0(Module module, List<String> paths) {
+        private void map0(ReactiveModule module, List<String> paths) {
             if (module.groups().isEmpty()) {
                 map1(module, paths);
                 return;
@@ -64,8 +64,8 @@ public class CommandMap {
             }
         }
 
-        private void map1(Module module, List<String> paths) {
-            for (Command command : module.commands()) {
+        private void map1(ReactiveModule module, List<String> paths) {
+            for (ReactiveCommand command : module.commands()) {
                 if (command.aliases().isEmpty()) {
                     rootNode.addCommand(command, paths, 0);
                     continue;

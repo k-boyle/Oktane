@@ -7,8 +7,8 @@ import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.reactive.exceptions.InvalidConstructorException;
 import kboyle.oktane.reactive.module.annotations.*;
-import kboyle.oktane.reactive.parsers.EnumTypeParser;
-import kboyle.oktane.reactive.parsers.TypeParser;
+import kboyle.oktane.reactive.parsers.EnumReactiveTypeParser;
+import kboyle.oktane.reactive.parsers.ReactiveTypeParser;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,21 +26,21 @@ public class CommandModuleFactory {
     private final Logger logger = LoggerFactory.getLogger(CommandModuleFactory.class);
 
     private final BeanProvider beanProvider;
-    private final Map<Class<?>, TypeParser<?>> typeParserByClass;
+    private final Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass;
     private final CommandCallbackFactory callbackFactory;
 
-    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, TypeParser<?>> typeParserByClass) {
+    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
         this.callbackFactory = new CommandCallbackFactory();
     }
 
-    public <S extends CommandContext, T extends CommandModuleBase<S>> Module create(Class<T> moduleClazz) {
+    public <S extends CommandContext, T extends ReactiveModuleBase<S>> ReactiveModule create(Class<T> moduleClazz) {
         Preconditions.checkState(!Modifier.isAbstract(moduleClazz.getModifiers()), "A module cannot be abstract");
 
         logger.trace("Creating module from {}", moduleClazz.getSimpleName());
 
-        Module.Builder moduleBuilder = Module.builder()
+        ReactiveModule.Builder moduleBuilder = ReactiveModule.builder()
             .withName(moduleClazz.getSimpleName());
 
         Constructor<?>[] constructors = moduleClazz.getConstructors();
@@ -105,7 +105,7 @@ public class CommandModuleFactory {
         return moduleBuilder.build();
     }
 
-    private <S extends CommandContext, T extends CommandModuleBase<S>> Command.Builder createCommand(
+    private <S extends CommandContext, T extends ReactiveModuleBase<S>> ReactiveCommand.Builder createCommand(
             Class<T> moduleClazz,
             CommandCallbackFactory callbackFactory,
             Aliases moduleGroups,
@@ -120,7 +120,7 @@ public class CommandModuleFactory {
 
         boolean commandSynchronised = method.getAnnotation(Synchronised.class) != null;
 
-        Command.Builder commandBuilder = Command.builder()
+        ReactiveCommand.Builder commandBuilder = ReactiveCommand.builder()
             .withName(method.getName())
             .withSynchronised(commandSynchronised)
             .withCallback(callbackFactory.createCommandCallback(
@@ -159,22 +159,22 @@ public class CommandModuleFactory {
 
         Parameter[] parameters = method.getParameters();
         for (Parameter parameter : parameters) {
-            CommandParameter.Builder commandParameter = createParameter(method, parameter);
+            ReactiveCommandParameter.Builder commandParameter = createParameter(method, parameter);
             commandBuilder.withParameter(commandParameter);
         }
 
         return commandBuilder;
     }
 
-    private CommandParameter.Builder createParameter(Method method, Parameter parameter) {
+    private ReactiveCommandParameter.Builder createParameter(Method method, Parameter parameter) {
         Class<?> parameterType = parameter.getType();
 
-        TypeParser<?> parser = typeParserByClass.get(parameterType);
+        ReactiveTypeParser<?> parser = typeParserByClass.get(parameterType);
         if (parser == null && parameterType.isEnum()) {
-            parser = typeParserByClass.computeIfAbsent(parameterType, type -> new EnumTypeParser(type));
+            parser = typeParserByClass.computeIfAbsent(parameterType, type -> new EnumReactiveTypeParser(type));
         }
 
-        CommandParameter.Builder parameterBuilder = CommandParameter.builder()
+        ReactiveCommandParameter.Builder parameterBuilder = ReactiveCommandParameter.builder()
             .withType(parameterType)
             .withName(parameter.getName())
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
@@ -212,13 +212,13 @@ public class CommandModuleFactory {
             || moduleAliases != null && moduleAliases.value().length > 0;
     }
 
-    private static Stream<Precondition> createPreconditions(AnnotatedElement element) {
+    private static Stream<ReactivePrecondition> createPreconditions(AnnotatedElement element) {
         return Arrays.stream(element.getAnnotationsByType(Require.class))
             .map(CommandModuleFactory::initPrecondition);
     }
 
-    private static Precondition initPrecondition(Require requirement) {
-        Class<? extends Precondition> clazz = requirement.precondition();
+    private static ReactivePrecondition initPrecondition(Require requirement) {
+        Class<? extends ReactivePrecondition> clazz = requirement.precondition();
         String[] arguments = requirement.arguments();
         Constructor<?> validConstructor = Arrays.stream(clazz.getConstructors())
             .filter(CommandModuleFactory::isValidConstructor)
@@ -227,7 +227,11 @@ public class CommandModuleFactory {
             })
             .orElseThrow(() -> new InvalidConstructorException("Expected at least one valid constructor"));
         try {
-            return (Precondition) validConstructor.newInstance((Object) arguments);
+            if (arguments.length == 0) {
+                return (ReactivePrecondition) validConstructor.newInstance();
+            }
+
+            return (ReactivePrecondition) validConstructor.newInstance((Object) arguments);
         } catch (Exception ex) {
             throw new FailedToInstantiatePreconditionException(clazz, ex);
         }

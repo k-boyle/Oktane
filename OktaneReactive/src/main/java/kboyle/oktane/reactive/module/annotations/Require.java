@@ -1,6 +1,6 @@
 package kboyle.oktane.reactive.module.annotations;
 
-import kboyle.oktane.reactive.module.Precondition;
+import kboyle.oktane.reactive.module.ReactivePrecondition;
 
 import java.lang.annotation.*;
 
@@ -8,6 +8,6 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Repeatable(Requires.class)
 public @interface Require {
-    Class<? extends Precondition> precondition();
+    Class<? extends ReactivePrecondition> precondition();
     String[] arguments() default {};
 }

@@ -6,20 +6,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
 import kboyle.oktane.reactive.exceptions.RuntimeIOException;
 import kboyle.oktane.reactive.mapping.CommandMap;
-import kboyle.oktane.reactive.module.Command;
-import kboyle.oktane.reactive.module.CommandModuleBase;
 import kboyle.oktane.reactive.module.CommandModuleFactory;
-import kboyle.oktane.reactive.module.Module;
-import kboyle.oktane.reactive.parsers.ArgumentParser;
-import kboyle.oktane.reactive.parsers.DefaultArgumentParser;
-import kboyle.oktane.reactive.parsers.PrimitiveTypeParserFactory;
-import kboyle.oktane.reactive.parsers.TypeParser;
+import kboyle.oktane.reactive.module.ReactiveCommand;
+import kboyle.oktane.reactive.module.ReactiveModule;
+import kboyle.oktane.reactive.module.ReactiveModuleBase;
+import kboyle.oktane.reactive.parsers.*;
 import kboyle.oktane.reactive.results.Result;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.reactive.results.search.CommandMatchFailedResult;
 import kboyle.oktane.reactive.results.search.CommandNotFoundResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,15 +36,15 @@ public class ReactiveCommandHandler<T extends CommandContext> {
     private static final Mono<Result> COMMAND_NOT_FOUND = Mono.just(CommandNotFoundResult.get());
     private static final Object[] EMPTY_BEANS = new Object[0];
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final CommandMap commandMap;
-    // todo this
-    private final DefaultArgumentParser argumentParser = new DefaultArgumentParser(ImmutableMap.of());
-    private final ImmutableList<Module> modules;
+    private final ReactiveArgumentParser argumentParser;
+    private final Tokeniser tokeniser;
+    private final ImmutableList<ReactiveModule> modules;
 
-    private ReactiveCommandHandler(CommandMap commandMapper, ArgumentParser argumentParser, ImmutableList<Module> modules) {
-        this.commandMap = commandMapper;
+    private ReactiveCommandHandler(CommandMap commandMap, ReactiveArgumentParser argumentParser, Tokeniser tokeniser, ImmutableList<ReactiveModule> modules) {
+        this.commandMap = commandMap;
+        this.argumentParser = argumentParser;
+        this.tokeniser = tokeniser;
         this.modules = modules;
     }
 
@@ -62,7 +57,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
         return new Builder<>();
     }
 
-    public Mono<Result> push(String input, T context) {
+    public Mono<Result> execute(String input, T context) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
@@ -85,8 +80,13 @@ public class ReactiveCommandHandler<T extends CommandContext> {
                                 return Mono.just(preconditionResult);
                             }
 
-                            // todo another nested call here to tokenise first to save wrapping tokeniser results in argument parser
-                            return argumentParser.parse(context, match, input);
+                            var tokeniserResult = tokeniser.tokenise(input, match);
+
+                            if (!tokeniserResult.success()) {
+                                return Mono.just(tokeniserResult);
+                            }
+
+                            return argumentParser.parse(context, match.command(), tokeniserResult.tokens());
                         });
                     })
                     .collectList()
@@ -98,8 +98,10 @@ public class ReactiveCommandHandler<T extends CommandContext> {
                         }
 
                         var success = (ArgumentParserSuccessfulResult) lastResult;
-                        // todo beans
-                        return success.command().commandCallback().execute(context, null, success.parsedArguments());
+                        ReactiveCommand command = success.command();
+                        context.command = command;
+                        var beans = getBeans(context, command.module().beans());
+                        return command.commandCallback().execute(context, beans, success.parsedArguments());
                     });
             });
     }
@@ -107,14 +109,14 @@ public class ReactiveCommandHandler<T extends CommandContext> {
     /**
      * @return All of the modules that belong to the CommandHandler.
      */
-    public ImmutableList<Module> modules() {
+    public ImmutableList<ReactiveModule> modules() {
         return modules;
     }
 
     /**
      * @return All of the commands that belong to the CommandHandler.
      */
-    public Stream<Command> commands() {
+    public Stream<ReactiveCommand> commands() {
         return modules.stream().flatMap(module -> module.commands().stream());
     }
 
@@ -147,18 +149,20 @@ public class ReactiveCommandHandler<T extends CommandContext> {
      * @param <T> The type of context that's used in commands.
      */
     public static class Builder<T extends CommandContext> {
-        private final Map<Class<?>, TypeParser<?>> typeParserByClass;
+        private final Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
-        private final List<Class<? extends CommandModuleBase<T>>> commandModules;
+        private final List<Class<? extends ReactiveModuleBase<T>>> commandModules;
 
         private BeanProvider beanProvider;
-        private ArgumentParser argumentParser;
+        private ReactiveArgumentParser argumentParser;
+        private Tokeniser tokeniser;
 
         private Builder() {
-            this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
+            this.typeParserByClass = new HashMap<>(PrimitiveReactiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.beanProvider = BeanProvider.empty();
+            this.tokeniser = new DefaultTokeniser();
         }
 
         /**
@@ -169,7 +173,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
          * @param <S>    The type that the TypeParser is for.
          * @return The builder.
          */
-        public <S> Builder<T> withTypeParser(Class<S> clazz, TypeParser<S> parser) {
+        public <S> Builder<T> withTypeParser(Class<S> clazz, ReactiveTypeParser<S> parser) {
             Preconditions.checkNotNull(clazz, "Clazz cannot be null");
             Preconditions.checkNotNull(parser, "Parser cannot be null");
             this.typeParserByClass.put(clazz, parser);
@@ -183,7 +187,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
          * @param <S>         The type of module you want to add.
          * @return The builder.
          */
-        public <S extends CommandModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
+        public <S extends ReactiveModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
             Preconditions.checkNotNull(moduleClazz, "moduleClazz cannot be null");
             this.commandModules.add(moduleClazz);
             return this;
@@ -213,7 +217,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
                     .stream()
                     .map(ClassPath.ClassInfo::load)
                     .filter(clazz -> isValidModuleClass(contextClazz, clazz))
-                    .forEach(clazz -> withModule(clazz.asSubclass(CommandModuleBase.class)));
+                    .forEach(clazz -> withModule(clazz.asSubclass(ReactiveModuleBase.class)));
 
                 return this;
             } catch (IOException exception) {
@@ -239,9 +243,15 @@ public class ReactiveCommandHandler<T extends CommandContext> {
          * @param argumentParser The argument parser.
          * @return The builder.
          */
-        public Builder<T> withArgumentParser(ArgumentParser argumentParser) {
+        public Builder<T> withArgumentParser(ReactiveArgumentParser argumentParser) {
             Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
             this.argumentParser = argumentParser;
+            return this;
+        }
+
+        public Builder<T> withTokeniser(Tokeniser tokeniser) {
+            Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
+            this.tokeniser = tokeniser;
             return this;
         }
 
@@ -251,19 +261,19 @@ public class ReactiveCommandHandler<T extends CommandContext> {
          * @return The built CommandHandler.
          */
         public ReactiveCommandHandler<T> build() {
-            List<Module> modules = new ArrayList<>();
+            List<ReactiveModule> modules = new ArrayList<>();
             CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass);
-            for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = moduleFactory.create(moduleClazz);
+            for (Class<? extends ReactiveModuleBase<T>> moduleClazz : commandModules) {
+                ReactiveModule module = moduleFactory.create(moduleClazz);
                 modules.add(module);
                 commandMap.map(module);
             }
 
             if (argumentParser == null) {
-//                argumentParser = new DefaultArgumentParser();
+                argumentParser = new DefaultReactiveArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
-            return new ReactiveCommandHandler<>(commandMap.build(), argumentParser, ImmutableList.copyOf(modules));
+            return new ReactiveCommandHandler<>(commandMap.build(), argumentParser, tokeniser, ImmutableList.copyOf(modules));
         }
     }
 }

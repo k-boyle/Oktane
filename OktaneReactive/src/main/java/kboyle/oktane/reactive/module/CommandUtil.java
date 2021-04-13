@@ -14,7 +14,7 @@ public final class CommandUtil {
     private CommandUtil() {
     }
 
-    public static Mono<PreconditionResult> runPreconditions(CommandContext context, Command command, ImmutableList<Precondition> preconditions) {
+    public static Mono<PreconditionResult> runPreconditions(CommandContext context, ReactiveCommand command, ImmutableList<ReactivePrecondition> preconditions) {
         if (preconditions.isEmpty()) {
             return SUCCESS;
         }
