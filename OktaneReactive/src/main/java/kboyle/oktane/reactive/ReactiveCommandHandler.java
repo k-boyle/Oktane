@@ -41,7 +41,11 @@ public class ReactiveCommandHandler<T extends CommandContext> {
     private final Tokeniser tokeniser;
     private final ImmutableList<ReactiveModule> modules;
 
-    private ReactiveCommandHandler(CommandMap commandMap, ReactiveArgumentParser argumentParser, Tokeniser tokeniser, ImmutableList<ReactiveModule> modules) {
+    private ReactiveCommandHandler(
+            CommandMap commandMap,
+            ReactiveArgumentParser argumentParser,
+            Tokeniser tokeniser,
+            ImmutableList<ReactiveModule> modules) {
         this.commandMap = commandMap;
         this.argumentParser = argumentParser;
         this.tokeniser = tokeniser;
