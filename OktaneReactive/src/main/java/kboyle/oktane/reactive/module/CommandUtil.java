@@ -23,14 +23,9 @@ public final class CommandUtil {
             .flatMap(precondition -> precondition.run(context, command))
             .collectList()
             .map(results -> {
-                ImmutableList.Builder<PreconditionResult> builder = ImmutableList.builder();
-                for (PreconditionResult result : results) {
-                    if (!result.success()) {
-                        builder.add(result);
-                    }
-                }
-
-                ImmutableList<PreconditionResult> failedResults = builder.build();
+                ImmutableList<PreconditionResult> failedResults = results.stream()
+                    .filter(result -> !result.success())
+                    .collect(ImmutableList.toImmutableList());
 
                 if (failedResults.isEmpty()) {
                     return PreconditionSuccessfulResult.get();

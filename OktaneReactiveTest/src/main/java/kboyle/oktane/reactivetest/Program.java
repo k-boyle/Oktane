@@ -9,13 +9,14 @@ import java.util.Scanner;
 public class Program {
     public static void main(String[] args) {
         ReactiveCommandHandler<Context> commandHandler = ReactiveCommandHandler.<Context>builder()
+            .withTypeParser(Exception.class, new ThrowingTypeParser())
             .withModule(Module.class)
             .build();
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
             Mono<Result> result = commandHandler.execute(scanner.nextLine(), new Context());
-            System.out.println(result.block());
+            result.subscribe(System.out::println, System.out::println);
         }
     }
 }

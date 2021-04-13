@@ -35,7 +35,7 @@ Example usage can be seen in the OktaneExample module.
 
 # Usage #
 
-**kboyle.oktane.reactivetest.Context Creation**
+**Context Creation**
 
 Your command context is a standard pojo used to pass contextual data into your commands. `BeanProvider` is a service container with the interface providing a default implementation.
 ```java
@@ -53,7 +53,7 @@ public class OktaneCommandContext extends CommandContext {
 }
 ```
 
-**kboyle.oktane.reactivetest.Module Creation**
+**Module Creation**
 
 To define a class as a module the class just needs to extend `CommandModuleBase<T>`. Any methods in the class that are annotated with the CommandDescription
 annotation and return `CommandResult`; 
@@ -90,7 +90,7 @@ Result result = commandHandlder.execute("echo Oktane is really cool :)", context
 Modules and commands can be configured a fair amount.
 
 ```java
-@Name("My kboyle.oktane.reactivetest.Module")                                      // Can be used in help displays, all the modules and commands can be accessed via
+@Name("My Module")                                      // Can be used in help displays, all the modules and commands can be accessed via
                                                         // CommandHandler#modules, and CommandHandler#commands 
 @Description("This is a command module")                // Can be used in help displays
 @Aliases({"a", "b"})                                    // commands inside a group must have the group prefix to execute, e.g. "a echo"

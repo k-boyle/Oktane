@@ -7,7 +7,6 @@ import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.module.ReactiveCommandParameter;
 import kboyle.oktane.reactive.results.Result;
-import kboyle.oktane.reactive.results.argumentparser.ArgumentParserExceptionResult;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserFailedResult;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserSuccessfulResult;
@@ -66,8 +65,6 @@ public class DefaultReactiveArgumentParser implements ReactiveArgumentParser {
             );
         }
 
-        return parser.parse(context, parameter.command(), input)
-            .cast(Result.class)
-            .onErrorResume(ex -> Mono.just(new ArgumentParserExceptionResult(parameter.command(), ex)));
+        return parser.parse(context, parameter.command(), input).cast(Result.class);
     }
 }
