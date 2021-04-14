@@ -27,4 +27,4 @@ if stable_major > snapshot_major:
     snapshot_major = stable_major
 
 
-print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch + 1}-SNAPSHOT')
+print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch}-SNAPSHOT')
