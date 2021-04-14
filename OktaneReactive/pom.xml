@@ -15,7 +15,7 @@
     <properties>
         <sonar.skip>true</sonar.skip>
 
-        <reactor-core.version>3.4.4</reactor-core.version>
+        <reactor-core.version>3.4.5</reactor-core.version>
     </properties>
 
     <dependencies>
