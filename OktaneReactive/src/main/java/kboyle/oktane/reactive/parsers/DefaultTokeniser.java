@@ -29,15 +29,15 @@ public class DefaultTokeniser implements Tokeniser {
 
         boolean emptyParameters = parameters.isEmpty();
         if ((index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
-            return new TokeniserTooFewTokensResult(input, parametersSize);
+            return new TokeniserTooFewTokensResult(command, input, parametersSize);
         }
 
         if (emptyParameters) {
             if (commandEnd != index && noneWhitespaceRemains(input, index)) {
-                return new TokeniserTooManyTokensResult(input, parametersSize);
+                return new TokeniserTooManyTokensResult(command, input, parametersSize);
             }
 
-            return TokeniserSuccessfulResult.empty();
+            return new TokeniserSuccessfulResult(command, List.of());
         }
 
         List<String> tokens = new ArrayList<>(command.parameters().size());
@@ -57,7 +57,7 @@ public class DefaultTokeniser implements Tokeniser {
             }
 
             if (index > inputLastIndex) {
-                return new TokeniserTooFewTokensResult(input, parametersSize);
+                return new TokeniserTooFewTokensResult(command, input, parametersSize);
             }
 
             if (parameter.remainder()) {
@@ -100,7 +100,7 @@ public class DefaultTokeniser implements Tokeniser {
                             break;
                         }
 
-                        return new TokeniserMissingQuoteResult(input, index);
+                        return new TokeniserMissingQuoteResult(command, input, index);
                     } else if (currentCharacter == SPACE) {
                         currentParameter = input.substring(paramStart, index);
                         break;
@@ -116,10 +116,10 @@ public class DefaultTokeniser implements Tokeniser {
         }
 
         if (index != inputLength && noneWhitespaceRemains(input, index)) {
-            return new TokeniserTooManyTokensResult(input, parametersSize);
+            return new TokeniserTooManyTokensResult(command, input, parametersSize);
         }
 
-        return new TokeniserSuccessfulResult(tokens);
+        return new TokeniserSuccessfulResult(command, tokens);
     }
 
     private static boolean noneWhitespaceRemains(String input, int index) {

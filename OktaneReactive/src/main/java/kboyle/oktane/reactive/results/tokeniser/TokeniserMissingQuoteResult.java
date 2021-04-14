@@ -1,10 +1,11 @@
 package kboyle.oktane.reactive.results.tokeniser;
 
+import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.results.FailedResult;
 
 import java.util.List;
 
-public record TokeniserMissingQuoteResult(String input, int index) implements TokeniserResult, FailedResult {
+public record TokeniserMissingQuoteResult(ReactiveCommand command, String input, int index) implements TokeniserResult, FailedResult {
     @Override
     public List<String> tokens() {
         return List.of();

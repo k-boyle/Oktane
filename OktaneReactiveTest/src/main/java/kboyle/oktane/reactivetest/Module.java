@@ -43,4 +43,21 @@ public class Module extends ReactiveModuleBase<Context> {
     public Mono<CommandResult> error() {
         return Mono.error(new RuntimeException());
     }
+
+    @Aliases("overload")
+    public Mono<CommandResult> overload() {
+        return message("1");
+    }
+
+    @Aliases("overload")
+    @Require(precondition = LongPrecondition.class)
+    public Mono<CommandResult> overload(int a) {
+        return message("2");
+    }
+
+    @Aliases("overload")
+    @Require(precondition = LongPrecondition.class)
+    public Mono<CommandResult> overload(int a, String b) {
+        return message("3");
+    }
 }

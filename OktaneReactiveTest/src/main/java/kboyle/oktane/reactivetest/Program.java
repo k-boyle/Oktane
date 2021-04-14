@@ -16,7 +16,12 @@ public class Program {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             Mono<Result> result = commandHandler.execute(scanner.nextLine(), new Context());
-            result.subscribe(System.out::println, System.out::println);
+            long start = System.nanoTime();
+            result.subscribe(r -> printResult(start, r), ex -> printResult(start, ex));
         }
+    }
+
+    private static void printResult(long start, Object obj) {
+        System.out.printf("took: %dns, result: %s%n", System.nanoTime() - start, obj);
     }
 }

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
 import kboyle.oktane.reactive.exceptions.RuntimeIOException;
 import kboyle.oktane.reactive.mapping.CommandMap;
+import kboyle.oktane.reactive.mapping.CommandMatch;
 import kboyle.oktane.reactive.module.CommandModuleFactory;
 import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.module.ReactiveModule;
@@ -15,6 +16,7 @@ import kboyle.oktane.reactive.results.Result;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.reactive.results.search.CommandMatchFailedResult;
 import kboyle.oktane.reactive.results.search.CommandNotFoundResult;
+import kboyle.oktane.reactive.results.tokeniser.TokeniserSuccessfulResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -69,45 +71,47 @@ public class ReactiveCommandHandler<T extends CommandContext> {
             return COMMAND_NOT_FOUND;
         }
 
-        return Mono.just(input)
-            .map(commandMap::findCommands)
-            .flatMap(matches -> {
-                if (matches.isEmpty()) {
-                    return COMMAND_NOT_FOUND;
+        ImmutableList<CommandMatch> matches = commandMap.findCommands(input);
+
+        if (matches.isEmpty()) {
+            return COMMAND_NOT_FOUND;
+        }
+
+        return Flux.fromIterable(matches)
+            .flatMap(match -> match.command().runPreconditions(context)
+                .map(result -> {
+                    if (!result.success()) {
+                        return result;
+                    }
+
+                    return tokeniser.tokenise(input, match);
+                })
+            )
+            .flatMap(result0 -> {
+                if (!result0.success()) {
+                    return Mono.just(result0);
                 }
 
-                return Flux.fromIterable(matches)
-                    .flatMap(match -> {
-                        var preconditionResult0 = match.command().runPreconditions(context);
-                        return preconditionResult0.flatMap(preconditionResult -> {
-                            if (!preconditionResult.success()) {
-                                return Mono.just(preconditionResult);
-                            }
+                var result = (TokeniserSuccessfulResult) result0;
+                return argumentParser.parse(context, result.command(), result.tokens());
+            })
+            .collectList()
+            .flatMap(results -> results.stream()
+                .filter(Result::success)
+                .map(ArgumentParserSuccessfulResult.class::cast)
+                .findFirst()
+                .map(result -> executeCommand(context, result))
+                .orElseGet(() -> Mono.just(new CommandMatchFailedResult(results)))
+            );
+    }
 
-                            var tokeniserResult = tokeniser.tokenise(input, match);
-
-                            if (!tokeniserResult.success()) {
-                                return Mono.just(tokeniserResult);
-                            }
-
-                            return argumentParser.parse(context, match.command(), tokeniserResult.tokens());
-                        });
-                    })
-                    .collectList()
-                    .flatMap(results -> {
-                        var lastResult = results.get(results.size() - 1);
-
-                        if (!lastResult.success()) {
-                            return Mono.just(new CommandMatchFailedResult(results));
-                        }
-
-                        var success = (ArgumentParserSuccessfulResult) lastResult;
-                        ReactiveCommand command = success.command();
-                        context.command = command;
-                        var beans = getBeans(context, command.module().beans());
-                        return command.commandCallback().execute(context, beans, success.parsedArguments());
-                    });
-            });
+    private Mono<Result> executeCommand(T context, ArgumentParserSuccessfulResult parserResult) {
+        ReactiveCommand command = parserResult.command();
+        context.command = command;
+        var beans = getBeans(context, command.module().beans());
+        return command.commandCallback()
+            .execute(context, beans, parserResult.parsedArguments())
+            .cast(Result.class);
     }
 
     /**

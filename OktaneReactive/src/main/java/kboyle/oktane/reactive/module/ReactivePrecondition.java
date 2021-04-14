@@ -8,15 +8,23 @@ import reactor.core.publisher.Mono;
 
 @FunctionalInterface
 public interface ReactivePrecondition {
-    Mono<PreconditionSuccessfulResult> SUCCESS = Mono.just(PreconditionSuccessfulResult.get());
+    Mono<PreconditionResult> SUCCESS = Mono.just(PreconditionSuccessfulResult.get());
 
     Mono<PreconditionResult> run(CommandContext context, ReactiveCommand command);
 
-    default Mono<PreconditionSuccessfulResult> success() {
+    default Mono<PreconditionResult> monoSuccess() {
         return SUCCESS;
     }
 
-    default Mono<PreconditionFailedResult> failure(String reason, Object... args) {
+    default PreconditionResult success() {
+        return PreconditionSuccessfulResult.get();
+    }
+
+    default Mono<PreconditionResult> monoFailure(String reason, Object... args) {
         return Mono.just(new PreconditionFailedResult(String.format(reason, args)));
+    }
+
+    default PreconditionResult failure(String reason, Object... args) {
+        return new PreconditionFailedResult(String.format(reason, args));
     }
 }
