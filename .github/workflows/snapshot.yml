@@ -44,4 +44,4 @@ jobs:
           
         run: |
           mvn versions:set -DnewVersion="$snapshot_version"
-          mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am
+          mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore,OktaneReactive -am
