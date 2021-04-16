@@ -11,17 +11,17 @@ on:
     types: [ opened, synchronize, reopened ]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 15
-        uses: actions/setup-java@v1
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
         with:
-          java-version: 15
-      - name: Build with Maven
-        run: mvn clean compile test
+          java-version: '16'
+          distribution: 'adopt'
+      - name: Verify with Maven
+        run: mvn -B verify --file pom.xml
 
   sonar:
     name: Sonar Analysis
@@ -30,10 +30,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 15
-        uses: actions/setup-java@v1
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
         with:
-          java-version: 15
+          java-version: '16'
+          distribution: 'adopt'
       - name: Cache SonarCloud packages
         uses: actions/cache@v2
         with:

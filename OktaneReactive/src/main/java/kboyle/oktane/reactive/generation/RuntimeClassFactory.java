@@ -18,7 +18,6 @@ public final class RuntimeClassFactory {
     private static final List<String> COMPILATION_OPTIONS = List.of(
         "--release",
         System.getProperty("java.specification.version"),
-        "--enable-preview",
         "-g",
         "-proc:none",
         "-classpath",
