@@ -24,7 +24,7 @@ public class DefaultTokeniser implements Tokeniser {
         int inputLength = input.length();
         int inputLastIndex = inputLength - 1;
 
-        ImmutableList<ReactiveCommandParameter> parameters = command.parameters();
+        ImmutableList<ReactiveCommandParameter> parameters = command.parameters;
         int parametersSize = parameters.size();
 
         boolean emptyParameters = parameters.isEmpty();
@@ -40,7 +40,7 @@ public class DefaultTokeniser implements Tokeniser {
             return new TokeniserSuccessfulResult(command, List.of());
         }
 
-        List<String> tokens = new ArrayList<>(command.parameters().size());
+        List<String> tokens = new ArrayList<>(command.parameters.size());
         for (int p = 0; p < parametersSize; p++) {
             String currentParameter = null;
             ReactiveCommandParameter parameter = parameters.get(p);
@@ -60,7 +60,7 @@ public class DefaultTokeniser implements Tokeniser {
                 return new TokeniserTooFewTokensResult(command, input, parametersSize);
             }
 
-            if (parameter.remainder()) {
+            if (parameter.remainder) {
                 currentParameter = input.substring(index);
                 index = inputLength;
             } else {
