@@ -92,7 +92,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
                     return Mono.just(result0);
                 }
 
-                var result = (TokeniserSuccessfulResult) result0;
+                TokeniserSuccessfulResult result = (TokeniserSuccessfulResult) result0;
                 return argumentParser.parse(context, result.command(), result.tokens());
             })
             .collectList()
@@ -108,7 +108,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
     private Mono<Result> executeCommand(T context, ArgumentParserSuccessfulResult parserResult) {
         ReactiveCommand command = parserResult.command();
         context.command = command;
-        var beans = getBeans(context, command.module.beans);
+        Object[] beans = getBeans(context, command.module.beans);
         return command.commandCallback
             .execute(context, beans, parserResult.parsedArguments())
             .cast(Result.class);
