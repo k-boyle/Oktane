@@ -9,7 +9,7 @@ import java.util.List;
 public record ArgumentParserFailedResult(ReactiveCommand command, List<Result> results) implements FailedResult, ArgumentParserResult {
     @Override
     public String reason() {
-        return String.format("Argument parsing failed for command %s", command.name());
+        return String.format("Argument parsing failed for command %s", command.name);
     }
 
     @Override

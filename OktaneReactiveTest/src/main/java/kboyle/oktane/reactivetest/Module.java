@@ -60,4 +60,23 @@ public class Module extends ReactiveModuleBase<Context> {
     public Mono<CommandResult> overload(int a, String b) {
         return message("3");
     }
+
+    @Aliases("nested")
+    public static class Nested extends ReactiveModuleBase<Context> {
+        public Mono<CommandResult> root() {
+            return nop();
+        }
+
+        @Aliases("notroot")
+        public Mono<CommandResult> notRoot() {
+            return nop();
+        }
+
+        public static class Nested2 extends ReactiveModuleBase<Context> {
+            @Aliases("nested")
+            public Mono<CommandResult> nestedNested() {
+                return nop();
+            }
+        }
+    }
 }

@@ -10,7 +10,7 @@ public class Program {
     public static void main(String[] args) {
         ReactiveCommandHandler<Context> commandHandler = ReactiveCommandHandler.<Context>builder()
             .withTypeParser(Exception.class, new ThrowingTypeParser())
-            .withModule(Module.class)
+            .withModules(Context.class)
             .build();
 
         Scanner scanner = new Scanner(System.in);

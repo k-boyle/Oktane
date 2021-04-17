@@ -61,7 +61,7 @@ public class ClassGenerator implements Generator {
             importClazzes(importStatements, imports, type);
         }
 
-        classBuilder.append(importStatements.toString());
+        classBuilder.append(importStatements);
 
         StringJoiner classSignature = new StringJoiner(" ");
         classSignature.add(accessModifier.declaration());
@@ -82,7 +82,7 @@ public class ClassGenerator implements Generator {
 
         classSignature.add("{");
 
-        classBuilder.append(classSignature.toString());
+        classBuilder.append(classSignature);
 
 
         StringBuilder fieldDeclarations = new StringBuilder();
@@ -96,7 +96,7 @@ public class ClassGenerator implements Generator {
             ));
         }
 
-        classBuilder.append(fieldDeclarations.toString());
+        classBuilder.append(fieldDeclarations);
         classBuilder.append(constructorGenerator().generate());
 
         for (MethodGenerator method : methods) {
@@ -145,7 +145,16 @@ public class ClassGenerator implements Generator {
     }
 
     private String importClazz(Class<?> clazz) {
-        return String.format(IMPORT_TEMPLATE, clazz.getPackageName(), clazz.getSimpleName());
+        return String.format(IMPORT_TEMPLATE, clazz.getPackageName(), unwrapNestedClass(clazz));
+    }
+
+    private String unwrapNestedClass(Class<?> clazz) {
+        Class<?> enclosingClass = clazz.getEnclosingClass();
+        if (enclosingClass == null) {
+            return clazz.getSimpleName();
+        }
+
+        return unwrapNestedClass(enclosingClass) + "." + clazz.getSimpleName();
     }
 
     public ClassGenerator withName(String name) {

@@ -114,8 +114,8 @@ class CommandMapNode {
 
         private void assertUniqueCommand(ReactiveCommand command, String path, List<ReactiveCommand> commands) {
             for (ReactiveCommand otherCommand : commands) {
-                ReactiveCommand.Signature commandSignature = command.signature();
-                ReactiveCommand.Signature otherCommandSignature = otherCommand.signature();
+                ReactiveCommand.Signature commandSignature = command.signature;
+                ReactiveCommand.Signature otherCommandSignature = otherCommand.signature;
 
                 Preconditions.checkState(
                     !commandSignature.equals(otherCommandSignature),

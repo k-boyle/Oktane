@@ -1,4 +1,4 @@
-package kboyle.oktane.reactive.module;
+package kboyle.oktane.reactive.module.factory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Streams;
@@ -9,6 +9,8 @@ import kboyle.oktane.reactive.generation.AccessModifier;
 import kboyle.oktane.reactive.generation.ClassGenerator;
 import kboyle.oktane.reactive.generation.MethodGenerator;
 import kboyle.oktane.reactive.generation.RuntimeClassFactory;
+import kboyle.oktane.reactive.module.ReactiveCommandCallback;
+import kboyle.oktane.reactive.module.ReactiveModuleBase;
 import kboyle.oktane.reactive.results.command.CommandExceptionResult;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
@@ -21,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static kboyle.oktane.reactive.ReflectionUtil.unwrap;
+import static kboyle.oktane.reactive.module.CommandUtil.unwrapModuleBase;
 
 public class CommandCallbackFactory {
     private static final String CAST_TEMPLATE = "(%s)%s[%d]";
@@ -37,7 +39,7 @@ public class CommandCallbackFactory {
         Constructor<?>[] constructors = moduleClazz.getConstructors();
         Preconditions.checkState(constructors.length == 1, "There must be only 1 public constructor");
 
-        ParameterizedType moduleTypeParameterized = unwrap(moduleClazz);
+        ParameterizedType moduleTypeParameterized = unwrapModuleBase(moduleClazz);
         Class<T> concreteCommandContextClazz = (Class<T>) moduleTypeParameterized.getActualTypeArguments()[0];
 
         String generatedName = moduleClazz.getSimpleName() + method.getName() + System.nanoTime();
