@@ -71,5 +71,12 @@ public class Module extends ReactiveModuleBase<Context> {
         public Mono<CommandResult> notRoot() {
             return nop();
         }
+
+        public static class Nested2 extends ReactiveModuleBase<Context> {
+            @Aliases("nested")
+            public Mono<CommandResult> nestedNested() {
+                return nop();
+            }
+        }
     }
 }

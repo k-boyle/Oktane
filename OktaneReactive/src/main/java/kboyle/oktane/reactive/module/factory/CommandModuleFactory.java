@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.lang.reflect.Modifier.isStatic;
+
 public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends ReactiveModuleBase<CONTEXT>> {
     private final BeanProvider beanProvider;
     private final Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass;
@@ -104,6 +106,8 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends R
     private <MODULE extends BASE> Stream<ReactiveModule.Builder> createChildren(Class<MODULE> moduleClass) {
         Class<? extends BASE> moduleBaseClass = (Class<? extends BASE>) moduleClass.getSuperclass();
         return Arrays.stream(moduleClass.getDeclaredClasses())
+            .filter(cl -> isStatic(cl.getModifiers()))
+            .filter(cl -> cl.getSuperclass() != moduleClass)
             .filter(moduleBaseClass::isAssignableFrom)
             .map(cl -> createBuilder((Class<? extends BASE>) cl));
     }
