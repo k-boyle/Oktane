@@ -7,10 +7,10 @@ import com.google.common.reflect.ClassPath;
 import kboyle.oktane.reactive.exceptions.RuntimeIOException;
 import kboyle.oktane.reactive.mapping.CommandMap;
 import kboyle.oktane.reactive.mapping.CommandMatch;
-import kboyle.oktane.reactive.module.CommandModuleFactory;
 import kboyle.oktane.reactive.module.ReactiveCommand;
 import kboyle.oktane.reactive.module.ReactiveModule;
 import kboyle.oktane.reactive.module.ReactiveModuleBase;
+import kboyle.oktane.reactive.module.factory.CommandModuleFactory;
 import kboyle.oktane.reactive.parsers.*;
 import kboyle.oktane.reactive.results.Result;
 import kboyle.oktane.reactive.results.argumentparser.ArgumentParserSuccessfulResult;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static kboyle.oktane.reactive.ReflectionUtil.isValidModuleClass;
+import static kboyle.oktane.reactive.module.CommandUtil.isValidModuleClass;
 
 /**
  * The entry point for executing commands.
@@ -92,7 +92,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
                     return Mono.just(result0);
                 }
 
-                var result = (TokeniserSuccessfulResult) result0;
+                TokeniserSuccessfulResult result = (TokeniserSuccessfulResult) result0;
                 return argumentParser.parse(context, result.command(), result.tokens());
             })
             .collectList()
@@ -108,8 +108,8 @@ public class ReactiveCommandHandler<T extends CommandContext> {
     private Mono<Result> executeCommand(T context, ArgumentParserSuccessfulResult parserResult) {
         ReactiveCommand command = parserResult.command();
         context.command = command;
-        var beans = getBeans(context, command.module().beans());
-        return command.commandCallback()
+        Object[] beans = getBeans(context, command.module.beans);
+        return command.commandCallback
             .execute(context, beans, parserResult.parsedArguments())
             .cast(Result.class);
     }
@@ -125,7 +125,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
      * @return All of the commands that belong to the CommandHandler.
      */
     public Stream<ReactiveCommand> commands() {
-        return modules.stream().flatMap(module -> module.commands().stream());
+        return modules.stream().flatMap(module -> module.commands.stream());
     }
 
     private Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClazzes) {
@@ -270,7 +270,11 @@ public class ReactiveCommandHandler<T extends CommandContext> {
          */
         public ReactiveCommandHandler<T> build() {
             List<ReactiveModule> modules = new ArrayList<>();
-            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass);
+            CommandModuleFactory<T, ReactiveModuleBase<T>> moduleFactory = new CommandModuleFactory<>(
+                beanProvider,
+                typeParserByClass
+            );
+
             for (Class<? extends ReactiveModuleBase<T>> moduleClazz : commandModules) {
                 ReactiveModule module = moduleFactory.create(moduleClazz);
                 modules.add(module);

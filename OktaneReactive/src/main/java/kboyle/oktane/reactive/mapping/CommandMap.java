@@ -37,7 +37,7 @@ public class CommandMap {
             Preconditions.checkState(!invalidState, "CommandMap has been put into an invalid state");
 
             try {
-                map0(module, new ArrayList<>());
+                mapModule(module, new ArrayList<>());
             } catch (IllegalStateException e) {
                 invalidState = true;
                 throw e;
@@ -46,32 +46,41 @@ public class CommandMap {
             return this;
         }
 
-        private void map0(ReactiveModule module, List<String> paths) {
-            if (module.groups().isEmpty()) {
-                map1(module, paths);
+        private void mapModule(ReactiveModule module, List<String> paths) {
+            if (module.groups.isEmpty()) {
+                mapCommands(module, paths);
+                mapChildren(module, paths);
                 return;
             }
 
-            for (String group : module.groups()) {
+            for (String group : module.groups) {
                 if (group.isEmpty()) {
-                    map1(module, paths);
+                    mapCommands(module, paths);
+                    mapChildren(module, paths);
                 } else {
                     paths.add(group);
-                    map1(module, paths);
+                    mapCommands(module, paths);
+                    mapChildren(module, paths);
 
                     paths.remove(paths.size() - 1);
                 }
             }
         }
 
-        private void map1(ReactiveModule module, List<String> paths) {
-            for (ReactiveCommand command : module.commands()) {
-                if (command.aliases().isEmpty()) {
+        private void mapChildren(ReactiveModule module, List<String> paths) {
+            for (ReactiveModule child : module.children) {
+                mapModule(child, paths);
+            }
+        }
+
+        private void mapCommands(ReactiveModule module, List<String> paths) {
+            for (ReactiveCommand command : module.commands) {
+                if (command.aliases.isEmpty()) {
                     rootNode.addCommand(command, paths, 0);
                     continue;
                 }
 
-                for (String alias : command.aliases()) {
+                for (String alias : command.aliases) {
                     if (alias.isEmpty()) {
                         if (paths.isEmpty()) {
                             continue;
