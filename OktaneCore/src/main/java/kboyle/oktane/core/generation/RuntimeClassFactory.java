@@ -20,8 +20,11 @@ public final class RuntimeClassFactory {
     static {
         String classPath = System.getProperty("java.class.path");
 
-        if (classPath.endsWith(".jar")) {
-            CLASS_PATH = System.getProperty("oktane.classpath");
+        if (!classPath.contains(";")) {
+            CLASS_PATH = System.getProperty(
+                "oktanecp",
+                RuntimeClassFactory.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1)
+            );
         } else {
             CLASS_PATH = classPath;
         }

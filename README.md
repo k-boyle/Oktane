@@ -33,6 +33,10 @@ Example usage can be seen in the OktaneExample module.
 | commandRemainderParameter   | avgt |  5   | 87.491   | ± 1.619   | ns/op   |
 
 
+# Spring #
+Building a spring application that depends on Oktane can lead to issues with the classpath when it comes to code generation.
+Any compilation errors that occur in the code gen phase can be fixed by either using the Maven Shade plugin to build the jar, or manually specifying the `oktanecp` system property to specify the classpath to use for code compilation (this can't be a jar that `javac -cp` can't handle). Work is being done to fix this issue without workarounds.
+
 # Usage #
 
 **Context Creation**
