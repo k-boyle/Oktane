@@ -14,15 +14,29 @@ import java.util.List;
 public final class RuntimeClassFactory {
     private static final JavaCompiler JAVA_COMPILER = ToolProvider.getSystemJavaCompiler();
     private static final StandardJavaFileManager STANDARD_JAVA_FILE_MANAGER = JAVA_COMPILER.getStandardFileManager(null, null, null);
-    private static final String CLASSPATH = System.getProperty("java.class.path");
-    private static final List<String> COMPILATION_OPTIONS = List.of(
-        "--release",
-        System.getProperty("java.specification.version"),
-        "-g",
-        "-proc:none",
-        "-classpath",
-        CLASSPATH
-    );
+    private static final String CLASS_PATH;
+    private static final List<String> COMPILATION_OPTIONS;
+
+    static {
+        String classPath = System.getProperty("java.class.path");
+
+        if (classPath.endsWith(".jar")) {
+            CLASS_PATH = System.getProperty("oktane.classpath");
+        } else {
+            CLASS_PATH = classPath;
+        }
+
+        System.out.println("cp: " + CLASS_PATH);
+
+        COMPILATION_OPTIONS = List.of(
+            "--release",
+            System.getProperty("java.specification.version"),
+            "-g",
+            "-proc:none",
+            "-classpath",
+            CLASS_PATH
+        );
+    }
 
     private RuntimeClassFactory() {
     }
