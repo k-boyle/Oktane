@@ -19,6 +19,7 @@ public final class RuntimeClassFactory {
 
     static {
         String classPath = System.getProperty("java.class.path");
+        System.out.println(classPath);
 
         if (!classPath.contains(";")) {
             CLASS_PATH = System.getProperty(
