@@ -19,9 +19,9 @@ public final class RuntimeClassFactory {
 
     static {
         String classPath = System.getProperty("java.class.path");
-        System.out.println("cp " + classPath);
+        String os = System.getProperty("os.name");
 
-        if (classPath.isEmpty() || !classPath.contains(";")) {
+        if (classPath.isEmpty() || os.startsWith("Windows") && !classPath.contains(";") || !classPath.contains(":")) {
             CLASS_PATH = System.getProperty(
                 "oktanecp",
                 RuntimeClassFactory.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1)
