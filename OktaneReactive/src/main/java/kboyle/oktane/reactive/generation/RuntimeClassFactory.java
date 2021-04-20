@@ -26,8 +26,6 @@ public final class RuntimeClassFactory {
             CLASS_PATH = classPath;
         }
 
-        System.out.println("cp: " + CLASS_PATH);
-
         COMPILATION_OPTIONS = List.of(
             "--release",
             System.getProperty("java.specification.version"),
