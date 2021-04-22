@@ -109,7 +109,12 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends React
         Type returnType = method.getGenericReturnType();
         return !isStatic(method.getModifiers())
             && isPublic(method.getModifiers())
-            && returnType instanceof ParameterizedType parameterizedType
+            && isCorrectReturnType(returnType);
+    }
+
+    private static boolean isCorrectReturnType(Type returnType) {
+        return returnType.equals(CommandResult.class)
+            || returnType instanceof ParameterizedType parameterizedType
             && parameterizedType.getRawType() instanceof Class<?> rawTypeClazz
             && rawTypeClazz.isAssignableFrom(Mono.class)
             && parameterizedType.getActualTypeArguments().length == 1
