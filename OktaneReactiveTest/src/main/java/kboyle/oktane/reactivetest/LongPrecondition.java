@@ -11,6 +11,6 @@ import java.time.Duration;
 public class LongPrecondition implements ReactivePrecondition {
     @Override
     public Mono<PreconditionResult> run(CommandContext context, ReactiveCommand command) {
-        return monoSuccess().delayElement(Duration.ofSeconds(2));
+        return success().mono().delayElement(Duration.ofSeconds(2));
     }
 }
