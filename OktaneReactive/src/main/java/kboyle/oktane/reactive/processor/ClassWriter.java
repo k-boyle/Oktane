@@ -23,20 +23,16 @@ public class ClassWriter {
         this.context = context;
     }
 
-    public void write(PrintWriter writer, String callbackClassname, ExecutableElement method) {
+    public void write(PrintWriter writer, String callbackClassname, MethodData data) {
+        ExecutableElement method = data.method();
+
         writer.println("package kboyle.oktane.reactive.processor;");
 
         writer.println();
 
-        writer.print("import ");
-        writer.print(Mono.class.getName());
-        writer.println(";");
-        writer.print("import ");
-        writer.print(CommandResult.class.getName());
-        writer.println(";");
-        writer.print("import ");
-        writer.print(AnnotatedCommandCallback.class.getName());
-        writer.println(";");
+        importClass(Mono.class, writer);
+        importClass(CommandResult.class, writer);
+        importClass(AnnotatedCommandCallback.class, writer);
 
         writer.println();
 
@@ -52,11 +48,27 @@ public class ClassWriter {
         writer.print("\tpublic Mono<CommandResult> execute(");
         writer.print(commandModule);
         writer.println(" module, Object[] parameters) {");
-        writer.print("\t\treturn module.");
-        writer.print(method.getSimpleName());
-        writer.print("(");
-        writer.print(unwrap("parameters", method.getParameters()));
-        writer.println(");");
+
+        StringBuilder methodCallBuilder = new StringBuilder();
+        methodCallBuilder.append("\t\treturn ");
+
+        if (!data.monoReturn()) {
+            methodCallBuilder.append("Mono.just(");
+        }
+
+        methodCallBuilder.append("module.");
+        methodCallBuilder.append(method.getSimpleName());
+        methodCallBuilder.append("(");
+        methodCallBuilder.append(unwrap("parameters", method.getParameters()));
+
+        if (!data.monoReturn()) {
+            methodCallBuilder.append(")");
+        }
+
+        methodCallBuilder.append(");");
+
+        writer.println(methodCallBuilder);
+
         writer.println("\t}");
 
         writer.println();
@@ -84,5 +96,11 @@ public class ClassWriter {
         }
 
         return unwrapped.toString();
+    }
+
+    private void importClass(Class<?> cl, PrintWriter writer) {
+        writer.print("import ");
+        writer.print(cl.getName());
+        writer.println(";");
     }
 }
