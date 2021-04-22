@@ -18,10 +18,14 @@ public class PrimitiveTypeParser<T> implements ReactiveTypeParser<T> {
 
     @Override
     public Mono<TypeParserResult<T>> parse(CommandContext context, ReactiveCommand command, String input) {
+        return parse(input).mono();
+    }
+
+    private TypeParserResult<T> parse(String input) {
         try {
-            return monoSuccess(parseFunc.apply(input));
+            return success(parseFunc.apply(input));
         } catch (Exception ex) {
-            return monoFailure("Failed to parse %s as %s", input, cl);
+            return failure("Failed to parse %s as %s", input, cl);
         }
     }
 }

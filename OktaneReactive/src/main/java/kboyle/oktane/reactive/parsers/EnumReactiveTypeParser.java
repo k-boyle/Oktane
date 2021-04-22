@@ -16,11 +16,15 @@ public class EnumReactiveTypeParser<T extends Enum<T>> implements ReactiveTypePa
 
     @Override
     public Mono<TypeParserResult<T>> parse(CommandContext context, ReactiveCommand command, String input) {
+        return parse(input).mono();
+    }
+
+    private TypeParserResult<T> parse(String input) {
         if (Character.isDigit(input.charAt(0))) {
             try {
                 int ord = Integer.parseInt(input);
                 if (ord >= enumConstants.length) {
-                    return monoFailure(
+                    return failure(
                         "%d is outside of ordinal range for %s [0, %d]",
                         ord,
                         enumClazz.getSimpleName(),
@@ -28,16 +32,16 @@ public class EnumReactiveTypeParser<T extends Enum<T>> implements ReactiveTypePa
                     );
                 }
 
-                return monoSuccess(enumConstants[ord]);
+                return success(enumConstants[ord]);
             } catch (NumberFormatException ignore) {
-                return monoFailure("Failed to parse %s as %s", input, enumClazz.getSimpleName());
+                return failure("Failed to parse %s as %s", input, enumClazz.getSimpleName());
             }
         }
 
         try {
-            return monoSuccess(Enum.valueOf(enumClazz, input.toUpperCase()));
+            return success(Enum.valueOf(enumClazz, input.toUpperCase()));
         } catch (IllegalArgumentException exception) {
-            return monoFailure("Failed to parse %s as %s", input, enumClazz.getSimpleName());
+            return failure("Failed to parse %s as %s", input, enumClazz.getSimpleName());
         }
     }
 }
