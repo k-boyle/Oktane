@@ -49,25 +49,22 @@ public class ClassWriter {
         writer.print(commandModule);
         writer.println(" module, Object[] parameters) {");
 
-        StringBuilder methodCallBuilder = new StringBuilder();
-        methodCallBuilder.append("\t\treturn ");
+        writer.print("\t\treturn ");
 
         if (!data.monoReturn()) {
-            methodCallBuilder.append("Mono.just(");
+            writer.print("Mono.just(");
         }
 
-        methodCallBuilder.append("module.");
-        methodCallBuilder.append(method.getSimpleName());
-        methodCallBuilder.append("(");
-        methodCallBuilder.append(unwrap("parameters", method.getParameters()));
+        writer.print("module.");
+        writer.print(method.getSimpleName());
+        writer.print("(");
+        writer.print(unwrap("parameters", method.getParameters()));
 
         if (!data.monoReturn()) {
-            methodCallBuilder.append(")");
+            writer.print(")");
         }
 
-        methodCallBuilder.append(");");
-
-        writer.println(methodCallBuilder);
+        writer.println(");");
 
         writer.println("\t}");
 
