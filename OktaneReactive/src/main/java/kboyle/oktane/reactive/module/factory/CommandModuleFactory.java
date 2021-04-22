@@ -23,14 +23,10 @@ import static java.lang.reflect.Modifier.isStatic;
 public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends ReactiveModuleBase<CONTEXT>> {
     private final BeanProvider beanProvider;
     private final Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass;
-    private final CommandCallbackFactory callbackFactory;
 
-    public CommandModuleFactory(
-            BeanProvider beanProvider,
-            Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass) {
+    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, ReactiveTypeParser<?>> typeParserByClass) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
-        this.callbackFactory = new CommandCallbackFactory();
     }
 
     public <MODULE extends BASE> ReactiveModule create(Class<MODULE> moduleClass) {
@@ -84,7 +80,6 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends R
         CommandFactory<CONTEXT, MODULE> commandFactory = new CommandFactory<>(
             typeParserByClass,
             moduleClass,
-            callbackFactory,
             singleton,
             moduleLock,
             beanProvider

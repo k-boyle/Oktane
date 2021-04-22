@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.reactive.CommandContext;
+import kboyle.oktane.reactive.module.callback.ReactiveCommandCallback;
 import kboyle.oktane.reactive.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
