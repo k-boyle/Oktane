@@ -3,9 +3,9 @@ package kboyle.oktane.reactive.module.factory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import kboyle.oktane.reactive.BeanProvider;
+import kboyle.oktane.reactive.CollectionUtils;
 import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.exceptions.FailedToInstantiateCommandCallback;
-import kboyle.oktane.reactive.exceptions.InvalidConstructorException;
 import kboyle.oktane.reactive.exceptions.MethodInvocationFailedException;
 import kboyle.oktane.reactive.module.CommandUtil;
 import kboyle.oktane.reactive.module.ReactiveCommand;
@@ -183,11 +183,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends React
 
     @SuppressWarnings("unchecked")
     private Function<Object[], MODULE> getModuleFactory() {
-        Constructor<?> constructor = Arrays.stream(moduleClass.getConstructors())
-            .reduce((single, other) -> {
-                throw new InvalidConstructorException("Expected only a single constructor");
-            })
-            .orElseThrow(() -> new InvalidConstructorException("Expected at least one valid constructor"));
+        Constructor<?> constructor = CollectionUtils.single(moduleClass.getConstructors());
 
         return beans -> {
             try {

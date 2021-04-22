@@ -6,22 +6,22 @@ import kboyle.oktane.reactive.module.ReactiveModuleBase;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
-public class SingletonCommandCallback<C extends CommandContext, T extends ReactiveModuleBase<C>> extends AnnotatedCommandCallback<C, T> {
-    private final AnnotatedCommandCallback<C, T> delegate;
-    private final T module;
+public class SingletonCommandCallback<C extends CommandContext, M extends ReactiveModuleBase<C>> extends AnnotatedCommandCallback<C, M> {
+    private final AnnotatedCommandCallback<C, M> delegate;
+    private final M module;
 
-    public SingletonCommandCallback(AnnotatedCommandCallback<C, T> delegate, T module) {
+    public SingletonCommandCallback(AnnotatedCommandCallback<C, M> delegate, M module) {
         this.delegate = delegate;
         this.module = Preconditions.checkNotNull(module);
     }
 
     @Override
-    public Mono<CommandResult> execute(T module, Object[] parameters) {
+    public Mono<CommandResult> execute(M module, Object[] parameters) {
         return delegate.execute(module, parameters);
     }
 
     @Override
-    public T getModule(Object[] beans) {
+    public M getModule(Object[] beans) {
         return module;
     }
 }
