@@ -5,7 +5,7 @@ import java.util.Map;
 
 @FunctionalInterface
 public interface BeanProvider {
-     class Empty implements BeanProvider {
+    class Empty implements BeanProvider {
         private static final Empty INSTANCE = new Empty();
 
         private Empty() {
@@ -18,7 +18,7 @@ public interface BeanProvider {
     }
 
     class Simple implements BeanProvider {
-         private final Map<Class<?>, Object> beanByClass;
+        private final Map<Class<?>, Object> beanByClass;
 
         private Simple() {
             beanByClass = new HashMap<>();
@@ -41,7 +41,7 @@ public interface BeanProvider {
     }
 
     static Simple simple() {
-         return new Simple();
+        return new Simple();
     }
 
     <T> T getBean(Class<T> clazz);

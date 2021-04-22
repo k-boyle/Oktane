@@ -1,9 +1,9 @@
 package kboyle.oktane.reactive.module;
 
 import com.google.common.collect.ImmutableList;
+import kboyle.oktane.reactive.CollectionUtils;
 import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.exceptions.FailedToInstantiatePreconditionException;
-import kboyle.oktane.reactive.exceptions.InvalidConstructorException;
 import kboyle.oktane.reactive.exceptions.UnhandledTypeException;
 import kboyle.oktane.reactive.module.annotations.Require;
 import kboyle.oktane.reactive.results.precondition.PreconditionResult;
@@ -51,12 +51,8 @@ public final class CommandUtil {
     private static ReactivePrecondition initPrecondition(Require requirement) {
         Class<? extends ReactivePrecondition> clazz = requirement.precondition();
         String[] arguments = requirement.arguments();
-        Constructor<?> validConstructor = Arrays.stream(clazz.getConstructors())
-            .filter(CommandUtil::isValidConstructor)
-            .reduce((single, other) -> {
-                throw new InvalidConstructorException("Expected only a single constructor");
-            })
-            .orElseThrow(() -> new InvalidConstructorException("Expected at least one valid constructor"));
+        Constructor<?> validConstructor = CollectionUtils.single(clazz.getConstructors());
+
         try {
             if (arguments.length == 0) {
                 return (ReactivePrecondition) validConstructor.newInstance();
