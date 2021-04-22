@@ -7,12 +7,12 @@ import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
 public class SingletonCommandCallback<C extends CommandContext, T extends ReactiveModuleBase<C>> extends AnnotatedCommandCallback<C, T> {
-    private final T module;
     private final AnnotatedCommandCallback<C, T> delegate;
+    private final T module;
 
     public SingletonCommandCallback(AnnotatedCommandCallback<C, T> delegate, T module) {
-        this.module = Preconditions.checkNotNull(module);
         this.delegate = delegate;
+        this.module = Preconditions.checkNotNull(module);
     }
 
     @Override
