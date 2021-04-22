@@ -201,6 +201,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
             return this;
         }
 
+        // todo fix
         /**
          * Adds all the modules in the same package as the contextClazz.
          *

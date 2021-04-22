@@ -4,9 +4,11 @@ import kboyle.oktane.reactive.module.ReactiveModuleBase;
 import kboyle.oktane.reactive.module.annotations.Aliases;
 import kboyle.oktane.reactive.module.annotations.Remainder;
 import kboyle.oktane.reactive.module.annotations.Require;
+import kboyle.oktane.reactive.processor.OktaneModule;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
+@OktaneModule
 public class Module extends ReactiveModuleBase<Context> {
     @Aliases("echo")
     public Mono<CommandResult> echo(@Remainder String input) {
@@ -61,7 +63,12 @@ public class Module extends ReactiveModuleBase<Context> {
         return message("3");
     }
 
+    private Mono<CommandResult> privateM() {
+        return nop();
+    }
+
     @Aliases("nested")
+    @OktaneModule
     public static class Nested extends ReactiveModuleBase<Context> {
         public Mono<CommandResult> root() {
             return nop();
@@ -72,6 +79,7 @@ public class Module extends ReactiveModuleBase<Context> {
             return nop();
         }
 
+        @OktaneModule
         public static class Nested2 extends ReactiveModuleBase<Context> {
             @Aliases("nested")
             public Mono<CommandResult> nestedNested() {
