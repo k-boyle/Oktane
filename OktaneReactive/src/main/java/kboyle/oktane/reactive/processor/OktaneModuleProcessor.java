@@ -3,7 +3,6 @@ package kboyle.oktane.reactive.processor;
 import com.google.auto.service.AutoService;
 import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.module.ReactiveModuleBase;
-import kboyle.oktane.reactive.module.callback.AnnotatedCommandCallback;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
@@ -20,9 +19,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -89,87 +86,9 @@ public class OktaneModuleProcessor extends AbstractProcessor {
                     continue;
                 }
 
-                ExecutableElement constructor = getConstructor(commandModule);
-                commandModule.getEnclosedElements().stream()
-                    .filter(ExecutableElement.class::isInstance)
-                    .map(ExecutableElement.class::cast)
-                    .filter(element -> element.getModifiers().contains(Modifier.PUBLIC))
-                    .filter(element -> types.isSameType(element.getReturnType(), commandReturnType))
-                    .forEach(method -> {
-                        String callbackClassname = getGeneratedClassName(commandModule, method);
-
-                        try {
-                            JavaFileObject javaFileObject = filer.createSourceFile(callbackClassname);
-
-                            TypeMirror contextType = getContextType(commandModule);
-                            if (contextType == null) {
-                                print(ERROR, "Failed to unwrap context type for %s", moduleType);
-                                return;
-                            }
-
-                            String context = contextType.toString();
-
-                            try (PrintWriter writer = new PrintWriter(javaFileObject.openWriter())) {
-                                writer.println("package kboyle.oktane.reactive.processor;");
-
-                                writer.println();
-
-                                writer.print("import ");
-                                writer.print(Mono.class.getName());
-                                writer.println(";");
-                                writer.print("import ");
-                                writer.print(CommandResult.class.getName());
-                                writer.println(";");
-                                writer.print("import ");
-                                writer.print(AnnotatedCommandCallback.class.getName());
-                                writer.println(";");
-
-                                writer.println();
-
-                                writer.print("public class ");
-                                writer.print(callbackClassname);
-                                writer.print(" extends AnnotatedCommandCallback<");
-                                writer.print(context);
-                                writer.print(", ");
-                                writer.print(commandModule);
-                                writer.println("> {");
-
-                                writer.println("\t@Override");
-                                writer.print("\tpublic Mono<CommandResult> execute(");
-                                writer.print(commandModule);
-                                writer.println(" module, Object[] parameters) {");
-                                writer.print("\t\treturn module.");
-                                writer.print(method.getSimpleName());
-                                writer.print("(");
-                                writer.print(unwrap("parameters", method.getParameters()));
-                                writer.println(");");
-                                writer.println("\t}");
-
-                                writer.println();
-
-                                writer.println("\t@Override");
-                                writer.print("\tpublic ");
-                                writer.print(commandModule);
-                                writer.println(" getModule(Object[] beans) {");
-                                writer.print("\t\treturn new ");
-                                writer.print(commandModule);
-                                writer.print("(");
-                                writer.print(unwrap("beans", constructor.getParameters()));
-                                writer.println(");");
-                                writer.println("\t}");
-
-                                writer.print("}");
-                            }
-                        } catch (IOException ex) {
-                            print(ERROR,
-                                "An exception was thrown whilst try to create callback for %s\n%s",
-                                method,
-                                Arrays.stream(ex.getStackTrace())
-                                    .map(StackTraceElement::toString)
-                                    .collect(Collectors.joining("\n"))
-                            );
-                        }
-                    });
+                if (!createCommandCallback(commandModule)) {
+                    return false;
+                }
             }
         }
 
@@ -179,6 +98,50 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
     private void print(Diagnostic.Kind kind, String message, Object... args) {
         processingEnv.getMessager().printMessage(kind, String.format(message, args));
+    }
+
+    private boolean createCommandCallback(Element commandModule) {
+        print(NOTE, "Processing annotated class %s", commandModule);
+
+        TypeMirror contextType = getContextType(commandModule);
+        if (contextType == null) {
+            print(ERROR, "Failed to unwrap context type for %s", commandModule);
+            return false;
+        }
+
+        ExecutableElement constructor = getConstructor(commandModule);
+
+        String context = contextType.toString();
+
+        ClassWriter classWriter = new ClassWriter(commandModule, constructor, context);
+        commandModule.getEnclosedElements().stream()
+            .filter(ExecutableElement.class::isInstance)
+            .map(ExecutableElement.class::cast)
+            .filter(element -> element.getModifiers().contains(Modifier.PUBLIC))
+            .filter(element -> types.isSameType(element.getReturnType(), commandReturnType))
+            .forEach(method -> createClass(commandModule, classWriter, method));
+
+        return true;
+    }
+
+    private void createClass(Element commandModule, ClassWriter classWriter, ExecutableElement method) {
+        String callbackClassname = getGeneratedClassName(commandModule, method);
+
+        try {
+            JavaFileObject javaFileObject = filer.createSourceFile(callbackClassname);
+
+            try (PrintWriter writer = new PrintWriter(javaFileObject.openWriter())) {
+                classWriter.write(writer, callbackClassname, method);
+            }
+        } catch (IOException ex) {
+            print(ERROR,
+                "An exception was thrown whilst try to create callback for %s\n%s",
+                method,
+                Arrays.stream(ex.getStackTrace())
+                    .map(StackTraceElement::toString)
+                    .collect(Collectors.joining("\n"))
+            );
+        }
     }
 
     private String getGeneratedClassName(Element commandModule, ExecutableElement method) {
@@ -204,17 +167,6 @@ public class OktaneModuleProcessor extends AbstractProcessor {
         }
 
         return getNestedPath(enclosingElement) + "$$" + commandModule.getSimpleName();
-    }
-
-    private String unwrap(String containerName, List<? extends VariableElement> parameters) {
-        StringJoiner unwrapped = new StringJoiner(", ");
-        for (int i = 0; i < parameters.size(); i++) {
-            VariableElement parameter = parameters.get(i);
-            TypeMirror type = parameter.asType();
-            unwrapped.add("(" + type + ") " + containerName + "[" + i + "]");
-        }
-
-        return unwrapped.toString();
     }
 
     private ExecutableElement getConstructor(Element element) {
