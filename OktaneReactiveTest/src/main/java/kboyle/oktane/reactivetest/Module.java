@@ -12,17 +12,17 @@ import reactor.core.publisher.Mono;
 public class Module extends ReactiveModuleBase<Context> {
     @Aliases("echo")
     public Mono<CommandResult> echo(@Remainder String input) {
-        return monoMessage("echo: " + input);
+        return message("echo: " + input).mono();
     }
 
     @Aliases("add")
     public Mono<CommandResult> add(int a, int b) {
-        return monoMessage(a + b + "");
+        return message(a + b + "").mono();
     }
 
     @Aliases("remainder")
     public Mono<CommandResult> remainder(String a, @Remainder String b) {
-        return monoMessage("a: " + a + " b: " + b);
+        return message("a: " + a + " b: " + b).mono();
     }
 
     @Aliases("throw1")
@@ -32,13 +32,13 @@ public class Module extends ReactiveModuleBase<Context> {
 
     @Aliases("throw2")
     public Mono<CommandResult> throw0(Exception ex) {
-        return monoNop();
+        return nop().mono();
     }
 
     @Aliases("throw3")
     @Require(precondition = ThrowingPrecondition.class)
     public Mono<CommandResult> throw1() {
-        return monoNop();
+        return nop().mono();
     }
 
     @Aliases("error")
@@ -48,19 +48,19 @@ public class Module extends ReactiveModuleBase<Context> {
 
     @Aliases("overload")
     public Mono<CommandResult> overload() {
-        return monoMessage("1");
+        return message("1").mono();
     }
 
     @Aliases("overload")
     @Require(precondition = LongPrecondition.class)
     public Mono<CommandResult> overload(int a) {
-        return monoMessage("2");
+        return message("2").mono();
     }
 
     @Aliases("overload")
     @Require(precondition = LongPrecondition.class)
     public Mono<CommandResult> overload(int a, String b) {
-        return monoMessage("3");
+        return message("3").mono();
     }
 
     @Aliases("sync")
@@ -69,26 +69,26 @@ public class Module extends ReactiveModuleBase<Context> {
     }
 
     private Mono<CommandResult> privateM() {
-        return monoNop();
+        return nop().mono();
     }
 
     @Aliases("nested")
     @OktaneModule
     public static class Nested extends ReactiveModuleBase<Context> {
         public Mono<CommandResult> root() {
-            return monoNop();
+            return nop().mono();
         }
 
         @Aliases("notroot")
         public Mono<CommandResult> notRoot() {
-            return monoNop();
+            return nop().mono();
         }
 
         @OktaneModule
         public static class Nested2 extends ReactiveModuleBase<Context> {
             @Aliases("nested")
             public Mono<CommandResult> nestedNested() {
-                return monoNop();
+                return nop().mono();
             }
         }
     }

@@ -130,13 +130,14 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
     private void createClass(Element commandModule, ClassWriter classWriter, MethodData data) {
         ExecutableElement method = data.method();
+        String classPackage = getPackage(commandModule);
         String callbackClassname = getGeneratedClassName(commandModule, method);
 
         try {
             JavaFileObject javaFileObject = filer.createSourceFile(callbackClassname);
 
             try (PrintWriter writer = new PrintWriter(javaFileObject.openWriter())) {
-                classWriter.write(writer, callbackClassname, data);
+                classWriter.write(writer, callbackClassname, classPackage, data);
             }
         } catch (IOException ex) {
             print(ERROR,
@@ -163,6 +164,15 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .collect(Collectors.joining("_"));
 
         return String.join("$", nestedPath, method.getSimpleName(), parameterNameString);
+    }
+
+    private String getPackage(Element element) {
+        Element enclosingElement = element.getEnclosingElement();
+        if (enclosingElement instanceof PackageElement packageElement) {
+            return packageElement.toString();
+        }
+
+        return getPackage(enclosingElement);
     }
 
     private String getNestedPath(Element commandModule) {

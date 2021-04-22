@@ -11,19 +11,11 @@ import reactor.core.publisher.Mono;
 public interface ReactiveTypeParser<T> {
     Mono<TypeParserResult<T>> parse(CommandContext context, ReactiveCommand command, String input);
 
-    default Mono<TypeParserResult<T>> monoSuccess(T value) {
-        return Mono.just(new TypeParserSuccessfulResult<>(value));
-    }
-
-    default TypeParserSuccessfulResult<T> success(T value) {
+    default TypeParserResult<T> success(T value) {
         return new TypeParserSuccessfulResult<>(value);
     }
 
-    default Mono<TypeParserResult<T>> monoFailure(String reason, Object... args) {
-        return Mono.just(new TypeParserFailedResult<>(String.format(reason, args)));
-    }
-
-    default TypeParserFailedResult<T> failure(String reason, Object... args) {
+    default TypeParserResult<T> failure(String reason, Object... args) {
         return new TypeParserFailedResult<>(String.format(reason, args));
     }
 }
