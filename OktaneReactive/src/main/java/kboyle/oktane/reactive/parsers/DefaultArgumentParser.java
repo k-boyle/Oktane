@@ -18,16 +18,22 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.function.Function;
 
-public class DefaultReactiveArgumentParser implements ReactiveArgumentParser {
+public class DefaultArgumentParser implements ReactiveArgumentParser {
+    private static final Object[] EMPTY = new Object[0];
+
     private final ImmutableMap<Class<?>, ReactiveTypeParser<?>> typeParserByClass;
 
-    public DefaultReactiveArgumentParser(ImmutableMap<Class<?>, ReactiveTypeParser<?>> typeParserByClass) {
+    public DefaultArgumentParser(ImmutableMap<Class<?>, ReactiveTypeParser<?>> typeParserByClass) {
         this.typeParserByClass = typeParserByClass;
     }
 
     @Override
     public Mono<ArgumentParserResult> parse(CommandContext context, ReactiveCommand command, List<String> tokens) {
         ImmutableList<ReactiveCommandParameter> parameters = command.parameters;
+
+        if (parameters.isEmpty()) {
+            return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
+        }
 
         return Flux.fromIterable(tokens)
             .zipWithIterable(parameters, (token, parameter) -> parse(parameter, context, token))

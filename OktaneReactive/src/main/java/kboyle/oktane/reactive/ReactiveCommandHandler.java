@@ -283,7 +283,7 @@ public class ReactiveCommandHandler<T extends CommandContext> {
             }
 
             if (argumentParser == null) {
-                argumentParser = new DefaultReactiveArgumentParser(ImmutableMap.copyOf(typeParserByClass));
+                argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
             return new ReactiveCommandHandler<>(commandMap.build(), argumentParser, tokeniser, ImmutableList.copyOf(modules));
