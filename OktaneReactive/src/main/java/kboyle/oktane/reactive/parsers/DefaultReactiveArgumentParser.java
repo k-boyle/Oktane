@@ -27,7 +27,7 @@ public class DefaultReactiveArgumentParser implements ReactiveArgumentParser {
 
     @Override
     public Mono<ArgumentParserResult> parse(CommandContext context, ReactiveCommand command, List<String> tokens) {
-        ImmutableList<ReactiveCommandParameter> parameters = command.parameters();
+        ImmutableList<ReactiveCommandParameter> parameters = command.parameters;
 
         return Flux.fromIterable(tokens)
             .zipWithIterable(parameters, (token, parameter) -> parse(parameter, context, token))
@@ -50,13 +50,13 @@ public class DefaultReactiveArgumentParser implements ReactiveArgumentParser {
     }
 
     private Mono<Result> parse(ReactiveCommandParameter parameter, CommandContext context, String input) {
-        Class<?> type = parameter.type();
+        Class<?> type = parameter.type;
 
         if (type == String.class) {
             return Mono.just(new TypeParserSuccessfulResult<>(input));
         }
 
-        ReactiveTypeParser<?> parser = parameter.parser();
+        ReactiveTypeParser<?> parser = parameter.parser;
         if (parser == null) {
             parser = Preconditions.checkNotNull(
                 typeParserByClass.get(type),
@@ -65,6 +65,6 @@ public class DefaultReactiveArgumentParser implements ReactiveArgumentParser {
             );
         }
 
-        return parser.parse(context, parameter.command(), input).cast(Result.class);
+        return parser.parse(context, parameter.command, input).cast(Result.class);
     }
 }

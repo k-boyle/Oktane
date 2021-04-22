@@ -3,16 +3,8 @@ package kboyle.oktane.core.generation;
 import com.google.common.base.Preconditions;
 import kboyle.oktane.core.exceptions.FailedToInstantiateRuntimeModule;
 
-import javax.tools.DiagnosticCollector;
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaCompiler;
+import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
@@ -22,16 +14,31 @@ import java.util.List;
 public final class RuntimeClassFactory {
     private static final JavaCompiler JAVA_COMPILER = ToolProvider.getSystemJavaCompiler();
     private static final StandardJavaFileManager STANDARD_JAVA_FILE_MANAGER = JAVA_COMPILER.getStandardFileManager(null, null, null);
-    private static final String CLASSPATH = System.getProperty("java.class.path");
-    private static final List<String> COMPILATION_OPTIONS = List.of(
-        "--release",
-        System.getProperty("java.specification.version"),
-        "--enable-preview",
-        "-g",
-        "-proc:none",
-        "-classpath",
-        CLASSPATH
-    );
+    private static final String CLASS_PATH;
+    private static final List<String> COMPILATION_OPTIONS;
+
+    static {
+        String classPath = System.getProperty("java.class.path");
+        String os = System.getProperty("os.name");
+
+        if (classPath.isEmpty() || os.startsWith("Windows") && !classPath.contains(";") || !classPath.contains(":")) {
+            CLASS_PATH = System.getProperty(
+                "oktanecp",
+                RuntimeClassFactory.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1)
+            );
+        } else {
+            CLASS_PATH = classPath;
+        }
+
+        COMPILATION_OPTIONS = List.of(
+            "--release",
+            System.getProperty("java.specification.version"),
+            "-g",
+            "-proc:none",
+            "-classpath",
+            CLASS_PATH
+        );
+    }
 
     private RuntimeClassFactory() {
     }

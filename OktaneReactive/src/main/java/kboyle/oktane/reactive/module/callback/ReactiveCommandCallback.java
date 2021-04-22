@@ -1,4 +1,4 @@
-package kboyle.oktane.reactive.module;
+package kboyle.oktane.reactive.module.callback;
 
 import kboyle.oktane.reactive.CommandContext;
 import kboyle.oktane.reactive.results.command.CommandResult;
