@@ -32,6 +32,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     private Types types;
 
     private TypeMirror moduleBaseType;
+    private TypeMirror monoCommandReturnType;
     private TypeMirror commandReturnType;
 
     private Filer filer;
@@ -50,7 +51,9 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
         TypeMirror commandResult = elements.getTypeElement(CommandResult.class.getName()).asType();
         TypeElement mono = elements.getTypeElement(Mono.class.getName());
-        this.commandReturnType = types.getDeclaredType(mono, commandResult);
+        this.monoCommandReturnType = types.getDeclaredType(mono, commandResult);
+
+        this.commandReturnType = commandResult;
 
         this.filer = processingEnv.getFiler();
     }
@@ -118,20 +121,22 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .filter(ExecutableElement.class::isInstance)
             .map(ExecutableElement.class::cast)
             .filter(element -> element.getModifiers().contains(Modifier.PUBLIC))
-            .filter(element -> types.isSameType(element.getReturnType(), commandReturnType))
+            .map(this::getMethodData)
+            .filter(MethodData::isValid)
             .forEach(method -> createClass(commandModule, classWriter, method));
 
         return true;
     }
 
-    private void createClass(Element commandModule, ClassWriter classWriter, ExecutableElement method) {
+    private void createClass(Element commandModule, ClassWriter classWriter, MethodData data) {
+        ExecutableElement method = data.method();
         String callbackClassname = getGeneratedClassName(commandModule, method);
 
         try {
             JavaFileObject javaFileObject = filer.createSourceFile(callbackClassname);
 
             try (PrintWriter writer = new PrintWriter(javaFileObject.openWriter())) {
-                classWriter.write(writer, callbackClassname, method);
+                classWriter.write(writer, callbackClassname, data);
             }
         } catch (IOException ex) {
             print(ERROR,
@@ -192,5 +197,16 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
         print(ERROR, "Unknown Element found %s", element);
         return null;
+    }
+
+    private MethodData getMethodData(ExecutableElement element) {
+        TypeMirror returnType = element.getReturnType();
+        boolean monoReturn = types.isSameType(returnType, monoCommandReturnType);
+
+        return new MethodData(
+            element,
+            monoReturn || types.isSameType(returnType, commandReturnType),
+            monoReturn
+        );
     }
 }

@@ -19,15 +19,27 @@ public abstract class ReactiveModuleBase<T extends CommandContext> {
         this.context = context;
     }
 
-    protected Mono<CommandResult> message(String reply) {
+    protected Mono<CommandResult> monoMessage(String reply) {
         return Mono.just(new CommandMessageResult(context.command(), reply));
     }
 
-    protected Mono<CommandResult> nop() {
+    protected Mono<CommandResult> monoNop() {
         return Mono.just(new CommandNOPResult(context.command()));
     }
 
-    protected Mono<CommandResult> exception(Exception ex) {
+    protected Mono<CommandResult> monoException(Exception ex) {
         return Mono.just(new CommandExceptionResult(context.command(), ex));
+    }
+
+    protected CommandResult message(String reply) {
+        return new CommandMessageResult(context.command(), reply);
+    }
+
+    protected CommandResult nop() {
+        return new CommandNOPResult(context.command());
+    }
+
+    protected CommandResult exception(Exception ex) {
+        return new CommandExceptionResult(context.command(), ex);
     }
 }
