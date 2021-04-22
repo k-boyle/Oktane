@@ -14,7 +14,6 @@ import kboyle.oktane.reactive.module.ReactiveModuleBase;
 import kboyle.oktane.reactive.module.annotations.*;
 import kboyle.oktane.reactive.module.callback.*;
 import kboyle.oktane.reactive.parsers.ReactiveTypeParser;
-import kboyle.oktane.reactive.processor.OktaneModuleProcessor;
 import kboyle.oktane.reactive.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,7 +172,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends React
             )
             .collect(Collectors.joining("_"));
 
-        return OktaneModuleProcessor.class.getPackageName() + "." + String.join("$", classPath, method.getName(), parameterNameString);
+        return moduleClass.getPackageName() + "." + String.join("$", classPath, method.getName(), parameterNameString);
     }
 
     private String unwrap(Class<?> cl) {

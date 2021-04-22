@@ -23,10 +23,12 @@ public class ClassWriter {
         this.context = context;
     }
 
-    public void write(PrintWriter writer, String callbackClassname, MethodData data) {
+    public void write(PrintWriter writer, String callbackClassname, String classPackage, MethodData data) {
         ExecutableElement method = data.method();
 
-        writer.println("package kboyle.oktane.reactive.processor;");
+        writer.print("package ");
+        writer.print(classPackage);
+        writer.println(";");
 
         writer.println();
 
