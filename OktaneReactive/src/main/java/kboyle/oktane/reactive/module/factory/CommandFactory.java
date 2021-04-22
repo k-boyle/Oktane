@@ -132,8 +132,9 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends React
             callback = (AnnotatedCommandCallback<CONTEXT, MODULE>) constructor.newInstance();
         } catch (ClassNotFoundException e) {
             logger.warn(
-                "Module {} was not annotation with @OktaneModule so callbacks weren't generated. Falling back to using reflection",
-                moduleClass
+                "Failed to find a class for method {} using {}",
+                method,
+                generatedClassPath
             );
 
             callback = new ReflectedCommandCallback<>(getModuleFactory(), getCallbackFunction(method));
