@@ -5,7 +5,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.module.callback.CommandCallback;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +19,16 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class Command {
-    private final String name;
-    private final ImmutableSet<String> aliases;
-    private final Optional<String> description;
-    private final CommandCallback commandCallback;
-    private final ImmutableList<CommandParameter> parameters;
-    private final ImmutableList<Precondition> preconditions;
-    private final Signature signature;
-    private final Module module;
-    private final boolean synchronised;
-    private final int priority;
+    public final String name;
+    public final ImmutableSet<String> aliases;
+    public final Optional<String> description;
+    public final CommandCallback commandCallback;
+    public final ImmutableList<CommandParameter> parameters;
+    public final ImmutableList<Precondition> preconditions;
+    public final Signature signature;
+    public final CommandModule module;
+    public final boolean synchronised;
+    public final int priority;
 
     Command(
             String name,
@@ -35,7 +37,7 @@ public class Command {
             CommandCallback commandCallback,
             List<CommandParameter.Builder> parameters,
             ImmutableList<Precondition> preconditions,
-            Module module,
+            CommandModule module,
             boolean synchronised,
             int priority) {
         this.name = name;
@@ -51,9 +53,9 @@ public class Command {
         for (int i = 0; i < parameters.size(); i++) {
             CommandParameter commandParameter = parameters.get(i).build(this);
             Preconditions.checkState(
-                !commandParameter.remainder() || i == parameters.size() - 1,
+                !commandParameter.remainder || i == parameters.size() - 1,
                 "Parameter %s (%d) of Command %s cannot be remainder only the final parameter can be remainder",
-                commandParameter.name(),
+                commandParameter.name,
                 i,
                 name
             );
@@ -61,9 +63,9 @@ public class Command {
         }
 
         this.signature = new Signature(
-            !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder(),
+            !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder,
             builtParameters.stream()
-                .map(CommandParameter::type)
+                .map(parameter -> parameter.type)
                 .map(Class::toString)
                 .collect(Collectors.joining(";"))
         );
@@ -71,7 +73,7 @@ public class Command {
         this.parameters = ImmutableList.copyOf(builtParameters);
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -80,84 +82,15 @@ public class Command {
      * @param context The context to pass to the preconditions.
      * @return The result of executing the preconditions.
      */
-    public PreconditionResult runPreconditions(CommandContext context) {
-        PreconditionResult moduleResult = module.runPreconditions(context);
+    public Mono<PreconditionResult> runPreconditions(CommandContext context) {
+        return module.runPreconditions(context, this)
+            .flatMap(result -> {
+                if (!result.success()) {
+                    return Mono.just(result);
+                }
 
-        if (!moduleResult.success()) {
-            return moduleResult;
-        }
-
-         return CommandUtil.runPreconditions(context, preconditions);
-    }
-
-    /**
-     * @return The command's name.
-     */
-    public String name() {
-        return name;
-    }
-
-    /**
-     * @return The command's aliases.
-     */
-    public ImmutableSet<String> aliases() {
-        return aliases;
-    }
-
-    /**
-     * @return The command's description.
-     */
-    public Optional<String> description() {
-        return description;
-    }
-
-    /**
-     * @return The method of the command.
-     */
-    public CommandCallback commandCallback() {
-        return commandCallback;
-    }
-
-    /**
-     * @return The command's parameters.
-     */
-    public ImmutableList<CommandParameter> parameters() {
-        return parameters;
-    }
-
-    /**
-     * @return The command's preconditions.
-     */
-    public ImmutableList<Precondition> preconditions() {
-        return preconditions;
-    }
-
-    /**
-     * @return The command's signature that's used to determine uniqueness.
-     */
-    public Signature signature() {
-        return signature;
-    }
-
-    /**
-     * @return The Module that this command belongs to.
-     */
-    public Module module() {
-        return module;
-    }
-
-    /**
-     * @return Whether the execution of the command is synchronised or not.
-     */
-    public boolean synchronised() {
-        return synchronised;
-    }
-
-    /**
-     * @return The commands priority within a given module.
-     */
-    public int priority() {
-        return priority;
+                return CommandUtils.runPreconditions(context, this, preconditions);
+            });
     }
 
     @Override
@@ -167,7 +100,7 @@ public class Command {
             .toString();
     }
 
-    static class Builder {
+    public static class Builder {
         private static final String SPACE = " ";
 
         private final List<CommandParameter.Builder> parameters;
@@ -237,13 +170,13 @@ public class Command {
             return this;
         }
 
-        Command build(Module module) {
+        Command build(CommandModule module) {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
 
             ImmutableSet<String> builtAliases = this.aliases.build();
             Preconditions.checkState(
-                isValidAliases(builtAliases, module.groups()),
+                isValidAliases(builtAliases, module.groups),
                 "A command must have a non-empty alias if there are no module groups"
             );
 

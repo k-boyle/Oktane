@@ -8,21 +8,17 @@ import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandModuleBase;
-import kboyle.oktane.core.module.CommandModuleFactory;
-import kboyle.oktane.core.module.Module;
-import kboyle.oktane.core.parsers.ArgumentParser;
-import kboyle.oktane.core.parsers.DefaultArgumentParser;
-import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
-import kboyle.oktane.core.parsers.TypeParser;
+import kboyle.oktane.core.module.CommandModule;
+import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.factory.CommandModuleFactory;
+import kboyle.oktane.core.parsers.*;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
-import kboyle.oktane.core.results.execution.ExecutionExceptionResult;
-import kboyle.oktane.core.results.precondition.PreconditionResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.core.results.search.CommandNotFoundResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kboyle.oktane.core.results.tokeniser.TokeniserSuccessfulResult;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,130 +27,97 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static kboyle.oktane.core.ReflectionUtil.isValidModuleClass;
+import static kboyle.oktane.core.module.CommandUtils.isValidModuleClass;
 
 /**
  * The entry point for executing commands.
+ *
  * @param <T> The type of context that's used in commands.
  */
 public class CommandHandler<T extends CommandContext> {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
+    private static final Mono<Result> COMMAND_NOT_FOUND = Mono.just(CommandNotFoundResult.get());
     private static final Object[] EMPTY_BEANS = new Object[0];
 
     private final CommandMap commandMap;
     private final ArgumentParser argumentParser;
-    private final ImmutableList<Module> modules;
+    private final Tokeniser tokeniser;
+    private final ImmutableList<CommandModule> modules;
 
-    private CommandHandler(CommandMap commandMapper, ArgumentParser argumentParser, ImmutableList<Module> modules) {
-        this.commandMap = commandMapper;
+    private CommandHandler(
+            CommandMap commandMap,
+            ArgumentParser argumentParser,
+            Tokeniser tokeniser,
+            ImmutableList<CommandModule> modules) {
+        this.commandMap = commandMap;
         this.argumentParser = argumentParser;
+        this.tokeniser = tokeniser;
         this.modules = modules;
     }
 
     /**
      * Creates a new builder for the CommandHandler.
+     *
      * @return A new CommandHandler builder.
      */
     public static <T extends CommandContext> Builder<T> builder() {
         return new Builder<>();
     }
 
-    /**
-     * Attempts to execute a command based on the given input.
-     * @param input The input to parse.
-     * @param context The context for the command invocation.
-     * @return A Mono holding the result of the execution.
-     */
-    public Result execute(String input, T context) {
+    public Mono<Result> execute(String input, T context) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
         if (input.isEmpty()) {
-            return CommandNotFoundResult.get();
+            return COMMAND_NOT_FOUND;
         }
 
-        logger.trace("Finding command to execute from {}", input);
+        ImmutableList<CommandMatch> matches = commandMap.findCommands(input);
 
-        ImmutableList<CommandMatch> searchResults = commandMap.findCommands(input);
-
-        if (searchResults.isEmpty()) {
-            return CommandNotFoundResult.get();
+        if (matches.isEmpty()) {
+            return COMMAND_NOT_FOUND;
         }
 
-        int pathLength = searchResults.get(0).pathLength();
-
-        ImmutableList.Builder<Result> failedResults = null;
-
-        for (int i = 0, searchResultsSize = searchResults.size(); i < searchResultsSize; i++) {
-            CommandMatch commandMatch = searchResults.get(i);
-            if (commandMatch.pathLength() < pathLength) {
-                continue;
-            }
-
-            Command command = commandMatch.command();
-            context.command = command;
-
-            logger.trace("Attempting to execute {}", command);
-
-            try {
-                PreconditionResult preconditionResult = command.runPreconditions(context);
-                if (!preconditionResult.success()) {
-                    if (searchResults.size() == 1) {
-                        return preconditionResult;
+        return Flux.fromIterable(matches)
+            .flatMap(match -> match.command().runPreconditions(context)
+                .map(result -> {
+                    if (!result.success()) {
+                        return result;
                     }
 
-                    if (failedResults == null) {
-                        failedResults = ImmutableList.builder();
-                    }
-                    failedResults.add(preconditionResult);
-                    continue;
+                    return tokeniser.tokenise(input, match);
+                })
+            )
+            .flatMap(result0 -> {
+                if (!result0.success()) {
+                    return Mono.just(result0);
                 }
-            } catch (Exception ex) {
-                return new ExecutionExceptionResult(command, ex, ExecutionStep.PRECONDITIONS);
-            }
 
-            ArgumentParserResult argumentParserResult;
-            try {
-                argumentParserResult = argumentParser.parse(context, commandMatch, input);
-                Preconditions.checkNotNull(argumentParserResult, "Argument parser must return a non-null result");
+                TokeniserSuccessfulResult result = (TokeniserSuccessfulResult) result0;
+                return argumentParser.parse(context, result.command(), result.tokens());
+            })
+            .collectList()
+            .flatMap(results -> results.stream()
+                .filter(Result::success)
+                .map(ArgumentParserSuccessfulResult.class::cast)
+                .findFirst()
+                .map(result -> executeCommand(context, result))
+                .orElseGet(() -> Mono.just(new CommandMatchFailedResult(results)))
+            );
+    }
 
-                if (!argumentParserResult.success()) {
-                    if (searchResults.size() == 1) {
-                        return argumentParserResult;
-                    }
-
-                    if (failedResults == null) {
-                        failedResults = ImmutableList.builder();
-                    }
-                    failedResults.add(argumentParserResult);
-                    continue;
-                }
-            } catch (Exception ex) {
-                return new ExecutionExceptionResult(command, ex, ExecutionStep.ARGUMENT_PARSING);
-            }
-
-            Preconditions.checkNotNull(argumentParserResult.parsedArguments(), "Argument parser must return parsed arguments on success");
-
-            ImmutableList<Class<?>> beanClazzes = command.module().beans();
-            Object[] beans = getBeans(context, beanClazzes);
-
-            try {
-                logger.trace("Found command match, executing {}", command);
-                return command.commandCallback().execute(context, beans, argumentParserResult.parsedArguments());
-            } catch (Exception ex) {
-                return new ExecutionExceptionResult(command, ex, ExecutionStep.COMMAND_EXECUTION);
-            }
-        }
-
-        assert failedResults != null;
-        return new CommandMatchFailedResult(failedResults.build());
+    private Mono<Result> executeCommand(T context, ArgumentParserSuccessfulResult parserResult) {
+        Command command = parserResult.command();
+        context.command = command;
+        Object[] beans = getBeans(context, command.module.beans);
+        return command.commandCallback
+            .execute(context, beans, parserResult.parsedArguments())
+            .cast(Result.class);
     }
 
     /**
      * @return All of the modules that belong to the CommandHandler.
      */
-    public ImmutableList<Module> modules() {
+    public ImmutableList<CommandModule> modules() {
         return modules;
     }
 
@@ -162,7 +125,7 @@ public class CommandHandler<T extends CommandContext> {
      * @return All of the commands that belong to the CommandHandler.
      */
     public Stream<Command> commands() {
-        return modules.stream().flatMap(module -> module.commands().stream());
+        return modules.stream().flatMap(module -> module.commands.stream());
     }
 
     private Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClazzes) {
@@ -190,28 +153,32 @@ public class CommandHandler<T extends CommandContext> {
 
     /**
      * A builder for the CommandHandler.
+     *
      * @param <T> The type of context that's used in commands.
      */
     public static class Builder<T extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
-        private final List<Class<? extends CommandModuleBase<T>>> commandModules;
+        private final List<Class<? extends ModuleBase<T>>> commandModules;
 
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
+        private Tokeniser tokeniser;
 
         private Builder() {
             this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.beanProvider = BeanProvider.empty();
+            this.tokeniser = new DefaultTokeniser();
         }
 
         /**
          * Adds a type parser that will be used by the CommandHandler.
-         * @param clazz The class representing the type that the TypeParser is for.
+         *
+         * @param clazz  The class representing the type that the TypeParser is for.
          * @param parser The TypeParser.
-         * @param <S> The type that the TypeParser is for.
+         * @param <S>    The type that the TypeParser is for.
          * @return The builder.
          */
         public <S> Builder<T> withTypeParser(Class<S> clazz, TypeParser<S> parser) {
@@ -223,18 +190,21 @@ public class CommandHandler<T extends CommandContext> {
 
         /**
          * Adds a module that will be used by the CommandBuilder.
+         *
          * @param moduleClazz The class representing the type of module that you want to add.
-         * @param <S> The type of module you want to add.
+         * @param <S>         The type of module you want to add.
          * @return The builder.
          */
-        public <S extends CommandModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
+        public <S extends ModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
             Preconditions.checkNotNull(moduleClazz, "moduleClazz cannot be null");
             this.commandModules.add(moduleClazz);
             return this;
         }
 
+        // todo fix
         /**
          * Adds all the modules in the same package as the contextClazz.
+         *
          * @param contextClazz The class representing the type of context used for the CommandHandler.
          * @return The builder.
          */
@@ -244,8 +214,9 @@ public class CommandHandler<T extends CommandContext> {
 
         /**
          * Adds all the modules in the specified package.
+         *
          * @param contextClazz The class representing the type of context used for the CommandHandler.
-         * @param packageName The package name to search in.
+         * @param packageName  The package name to search in.
          * @return The builder.
          */
         @SuppressWarnings("UnstableApiUsage")
@@ -255,7 +226,7 @@ public class CommandHandler<T extends CommandContext> {
                     .stream()
                     .map(ClassPath.ClassInfo::load)
                     .filter(clazz -> isValidModuleClass(contextClazz, clazz))
-                    .forEach(clazz -> withModule(clazz.asSubclass(CommandModuleBase.class)));
+                    .forEach(clazz -> withModule(clazz.asSubclass(ModuleBase.class)));
 
                 return this;
             } catch (IOException exception) {
@@ -265,6 +236,7 @@ public class CommandHandler<T extends CommandContext> {
 
         /**
          * Adds the bean provider that will be used to fetch dependencies for singleton modules and preconditions.
+         *
          * @param beanProvider The bean provider.
          * @return The builder.
          */
@@ -276,6 +248,7 @@ public class CommandHandler<T extends CommandContext> {
 
         /**
          * Sets the ArgumentParser that will be used, if none is specified then the default will be used.
+         *
          * @param argumentParser The argument parser.
          * @return The builder.
          */
@@ -285,15 +258,26 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
+        public Builder<T> withTokeniser(Tokeniser tokeniser) {
+            Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
+            this.tokeniser = tokeniser;
+            return this;
+        }
+
         /**
          * Builds the CommandHandler.
+         *
          * @return The built CommandHandler.
          */
         public CommandHandler<T> build() {
-            List<Module> modules = new ArrayList<>();
-            CommandModuleFactory moduleFactory = new CommandModuleFactory(beanProvider, typeParserByClass);
-            for (Class<? extends CommandModuleBase<T>> moduleClazz : commandModules) {
-                Module module = moduleFactory.create(moduleClazz);
+            List<CommandModule> modules = new ArrayList<>();
+            CommandModuleFactory<T, ModuleBase<T>> moduleFactory = new CommandModuleFactory<>(
+                beanProvider,
+                typeParserByClass
+            );
+
+            for (Class<? extends ModuleBase<T>> moduleClazz : commandModules) {
+                CommandModule module = moduleFactory.create(moduleClazz);
                 modules.add(module);
                 commandMap.map(module);
             }
@@ -302,7 +286,7 @@ public class CommandHandler<T extends CommandContext> {
                 argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
-            return new CommandHandler<>(commandMap.build(), argumentParser, ImmutableList.copyOf(modules));
+            return new CommandHandler<>(commandMap.build(), argumentParser, tokeniser, ImmutableList.copyOf(modules));
         }
     }
 }

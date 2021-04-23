@@ -1,7 +1,9 @@
 package kboyle.oktane.core.parsers;
 
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
+import reactor.core.publisher.Mono;
 
 public class EnumTypeParser<T extends Enum<T>> implements TypeParser<T> {
     private final Class<T> enumClazz;
@@ -13,7 +15,11 @@ public class EnumTypeParser<T extends Enum<T>> implements TypeParser<T> {
     }
 
     @Override
-    public TypeParserResult<T> parse(CommandContext context, String input) {
+    public Mono<TypeParserResult<T>> parse(CommandContext context, Command command, String input) {
+        return parse(input).mono();
+    }
+
+    private TypeParserResult<T> parse(String input) {
         if (Character.isDigit(input.charAt(0))) {
             try {
                 int ord = Integer.parseInt(input);

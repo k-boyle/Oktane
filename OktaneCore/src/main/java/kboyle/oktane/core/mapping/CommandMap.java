@@ -3,7 +3,7 @@ package kboyle.oktane.core.mapping;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.Module;
+import kboyle.oktane.core.module.CommandModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +33,11 @@ public class CommandMap {
             this.rootNode = CommandMapNode.builder();
         }
 
-        public Builder map(Module module) {
+        public Builder map(CommandModule module) {
             Preconditions.checkState(!invalidState, "CommandMap has been put into an invalid state");
 
             try {
-                map0(module, new ArrayList<>());
+                mapModule(module, new ArrayList<>());
             } catch (IllegalStateException e) {
                 invalidState = true;
                 throw e;
@@ -46,32 +46,41 @@ public class CommandMap {
             return this;
         }
 
-        private void map0(Module module, List<String> paths) {
-            if (module.groups().isEmpty()) {
-                map1(module, paths);
+        private void mapModule(CommandModule module, List<String> paths) {
+            if (module.groups.isEmpty()) {
+                mapCommands(module, paths);
+                mapChildren(module, paths);
                 return;
             }
 
-            for (String group : module.groups()) {
+            for (String group : module.groups) {
                 if (group.isEmpty()) {
-                    map1(module, paths);
+                    mapCommands(module, paths);
+                    mapChildren(module, paths);
                 } else {
                     paths.add(group);
-                    map1(module, paths);
+                    mapCommands(module, paths);
+                    mapChildren(module, paths);
 
                     paths.remove(paths.size() - 1);
                 }
             }
         }
 
-        private void map1(Module module, List<String> paths) {
-            for (Command command : module.commands()) {
-                if (command.aliases().isEmpty()) {
+        private void mapChildren(CommandModule module, List<String> paths) {
+            for (CommandModule child : module.children) {
+                mapModule(child, paths);
+            }
+        }
+
+        private void mapCommands(CommandModule module, List<String> paths) {
+            for (Command command : module.commands) {
+                if (command.aliases.isEmpty()) {
                     rootNode.addCommand(command, paths, 0);
                     continue;
                 }
 
-                for (String alias : command.aliases()) {
+                for (String alias : command.aliases) {
                     if (alias.isEmpty()) {
                         if (paths.isEmpty()) {
                             continue;

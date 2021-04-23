@@ -10,12 +10,12 @@ import java.util.Optional;
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class CommandParameter {
-    private final Class<?> type;
-    private final Optional<String> description;
-    private final String name;
-    private final boolean remainder;
-    private final TypeParser<?> parser;
-    private final Command command;
+    public final Class<?> type;
+    public final Optional<String> description;
+    public final String name;
+    public final boolean remainder;
+    public final TypeParser<?> parser;
+    public final Command command;
 
     CommandParameter(
             Class<?> type,
@@ -32,53 +32,11 @@ public final class CommandParameter {
         this.command = command;
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * @return The underlying type of the parameter.
-     */
-    public Class<?> type() {
-        return type;
-    }
-
-    /**
-     * @return The parameter's description.
-     */
-    public Optional<String> description() {
-        return description;
-    }
-
-    /**
-     * @return The parameter's name.
-     */
-    public String name() {
-        return name;
-    }
-
-    /**
-     * @return Whether or not this parameter is a remainder.
-     */
-    public boolean remainder() {
-        return remainder;
-    }
-
-    /**
-     * @return The TypeParser used for this parameter.
-     */
-    public TypeParser<?> parser() {
-        return parser;
-    }
-
-    /**
-     * @return The Command that this parameter belongs to.
-     */
-    public Command command() {
-        return command;
-    }
-
-    static class Builder {
+    public static class Builder {
         private Class<?> type;
         private String description;
         private String name;

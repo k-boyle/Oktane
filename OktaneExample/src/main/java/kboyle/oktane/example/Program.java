@@ -22,7 +22,7 @@ public class Program {
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            Result result = commandHandler.execute(scanner.nextLine(), new ExampleCommandContext(beanProvider));
+            Result result = commandHandler.execute(scanner.nextLine(), new ExampleCommandContext(beanProvider)).block();
             if (result instanceof CommandMessageResult message) {
                 System.out.println(message.message());
             } else if (result instanceof KillAppCommandResult) {
