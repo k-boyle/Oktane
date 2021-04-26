@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
-@Repeatable(Requires.class)
+@Repeatable(RequireAll.class)
 public @interface Require {
     Class<? extends Precondition> precondition();
     String[] arguments() default {};

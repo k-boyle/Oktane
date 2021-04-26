@@ -1,13 +1,12 @@
 package kboyle.oktane.core;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.UnhandledTypeException;
-import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandModule;
-import kboyle.oktane.core.module.ModuleBase;
-import kboyle.oktane.core.module.Precondition;
+import kboyle.oktane.core.module.*;
 import kboyle.oktane.core.module.annotations.Require;
+import kboyle.oktane.core.module.annotations.RequireAny;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
 import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
@@ -63,8 +62,23 @@ public enum CommandUtils {
      * @return The created {@link Precondition}
      */
     public static Stream<Precondition> createPreconditions(AnnotatedElement element) {
+        return Streams.concat(getANDPreconditions(element), getORPreconditions(element));
+    }
+
+    private static Stream<Precondition> getANDPreconditions(AnnotatedElement element) {
         return Arrays.stream(element.getAnnotationsByType(Require.class))
             .map(CommandUtils::initPrecondition);
+    }
+
+    private static Stream<Precondition> getORPreconditions(AnnotatedElement element) {
+        return Arrays.stream(element.getAnnotationsByType(RequireAny.class))
+            .map(CommandUtils::createAnyPrecondition);
+    }
+
+    private static AnyPrecondition createAnyPrecondition(RequireAny any) {
+        return new AnyPrecondition(Arrays.stream(any.value())
+            .map(CommandUtils::initPrecondition)
+            .collect(ImmutableList.toImmutableList()));
     }
 
     private static Precondition initPrecondition(Require requirement) {
