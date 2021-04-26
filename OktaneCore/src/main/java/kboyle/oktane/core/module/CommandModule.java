@@ -68,7 +68,17 @@ public class CommandModule {
      * @return The result of executing the preconditions.
      */
     public Mono<PreconditionResult> runPreconditions(CommandContext context, Command command) {
-        return CommandUtils.runPreconditions(context, command, preconditions);
+        return parent.map(parent ->
+            parent.runPreconditions(context, command)
+                .flatMap(result -> {
+                    if (!result.success()) {
+                        return Mono.just(result);
+                    }
+
+                    return CommandUtils.runPreconditions(context, command, preconditions);
+                })
+            )
+            .orElseGet(() -> CommandUtils.runPreconditions(context, command, preconditions));
     }
 
     public static class Builder {
