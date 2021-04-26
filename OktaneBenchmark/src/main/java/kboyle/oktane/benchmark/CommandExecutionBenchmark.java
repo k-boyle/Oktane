@@ -1,72 +1,111 @@
 package kboyle.oktane.benchmark;
 
-import kboyle.oktane.core.BeanProvider;
-import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandCallback;
-import kboyle.oktane.core.module.CommandModuleFactory;
-import kboyle.oktane.core.module.Module;
-import kboyle.oktane.core.parsers.PrimitiveTypeParserFactory;
+import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
+import kboyle.oktane.core.module.callback.ReflectedCommandCallback;
+import kboyle.oktane.core.module.factory.ReflectedCommandFactoryProxy;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.openjdk.jmh.annotations.*;
+import reactor.core.publisher.Mono;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
+@State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-@State(Scope.Benchmark)
 @Fork(1)
 public class CommandExecutionBenchmark {
-    private final Module module = new CommandModuleFactory(BeanProvider.empty(), PrimitiveTypeParserFactory.create())
-        .create(BenchmarkModule.class);
-    private final Map<String, Command> commands = module.commands().stream()
-        .collect(Collectors.toMap(Command::name, Function.identity()));
+    private static final AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> GENERATED_NO_PARAMETERS_CALLBACK;
+    private static final AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> GENERATED_ONE_PARAMETER_CALLBACK;
+    private static final AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> GENERATED_TWO_PARAMETERS_CALLBACK;
 
-    private final CommandCallback c = commands.get("f").commandCallback();
-    private final CommandCallback b = commands.get("b").commandCallback();
-    private final CommandCallback a = commands.get("a").commandCallback();
+    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_NO_PARAMETERS_CALLBACK;
+    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_ONE_PARAMETER_CALLBACK;
+    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_TWO_PARAMETERS_CALLBACK;
 
-    private final Object[] empty = new Object[0];
-    private final Object[] one = new Object[] { "abc" };
-    private final Object[] five = new Object[] { "a", "b", "c", "d", "e" };
-    private final BenchmarkCommandContext context = new BenchmarkCommandContext();
+    private static final BenchmarkContext CONTEXT = new BenchmarkContext();
+    private static final Object[] EMPTY = new Object[0];
+    private static final Object[] ONE = new Object[] { "one" };
+    private static final Object[] TWO = new Object[] { "one", "TWO" };
 
-    @Benchmark
-    public CommandResult commandNoParameters() {
-        return a.execute(context, empty, empty);
+    static {
+        GENERATED_NO_PARAMETERS_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$noParameters$");
+        GENERATED_ONE_PARAMETER_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$oneParameter$java0lang0String");
+        GENERATED_TWO_PARAMETERS_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$twoParameters$java0lang0String_java0lang0String");
+
+        REFLECTED_NO_PARAMETERS_CALLBACK = createReflectedCallback("noParameters");
+        REFLECTED_ONE_PARAMETER_CALLBACK = createReflectedCallback("oneParameter", String.class);
+        REFLECTED_TWO_PARAMETERS_CALLBACK = createReflectedCallback("twoParameters", String.class, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createGeneratedCallback(String name) {
+        try {
+            var cl = Class.forName(name);
+            return (AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule>) cl.getConstructors()[0].newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createReflectedCallback(String name, Class<?>... parameterTypes) {
+        try {
+            var method = GeneratedBenchmarkModule.class.getMethod(name, parameterTypes);
+            return ReflectedCommandFactoryProxy.createCallback(GeneratedBenchmarkModule.class, method);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Benchmark
-    public CommandResult commandOneParameter() {
-        return b.execute(context, empty, one);
+    public Mono<CommandResult> directNoParameters() {
+        var module = new GeneratedBenchmarkModule();
+        module.setContext(CONTEXT);
+        return module.noParameters().mono();
     }
 
     @Benchmark
-    public CommandResult commandFiveParameters() {
-        return c.execute(context, empty, five);
-    }
-
-
-    @Benchmark
-    public CommandResult directCommandNoParameters() {
-        BenchmarkModule benchmarkModule = new BenchmarkModule();
-        benchmarkModule.setContext(context);
-        return benchmarkModule.a();
+    public Mono<CommandResult> directOneParameter() {
+        var module = new GeneratedBenchmarkModule();
+        module.setContext(CONTEXT);
+        return module.oneParameter("one").mono();
     }
 
     @Benchmark
-    public CommandResult directCommandOneParameter() {
-        BenchmarkModule benchmarkModule = new BenchmarkModule();
-        benchmarkModule.setContext(context);
-        return benchmarkModule.b("abc");
+    public Mono<CommandResult> directTwoParameters() {
+        var module = new GeneratedBenchmarkModule();
+        module.setContext(CONTEXT);
+        return module.twoParameters("one", "two").mono();
     }
 
     @Benchmark
-    public CommandResult directCommandFiveParameters() {
-        BenchmarkModule benchmarkModule = new BenchmarkModule();
-        benchmarkModule.setContext(context);
-        return benchmarkModule.f("a", "b", "c", "d", "e");
+    public Mono<CommandResult> generatedNoParameters() {
+        return GENERATED_NO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, EMPTY);
+    }
+
+    @Benchmark
+    public Mono<CommandResult> generatedOneParameter() {
+        return GENERATED_ONE_PARAMETER_CALLBACK.execute(CONTEXT, EMPTY, ONE);
+    }
+
+    @Benchmark
+    public Mono<CommandResult> generatedTwoParameters() {
+        return GENERATED_TWO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, TWO);
+    }
+
+    @Benchmark
+    public Mono<CommandResult> reflectedNoParameters() {
+        return REFLECTED_NO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, EMPTY);
+    }
+
+    @Benchmark
+    public Mono<CommandResult> reflectedOneParameter() {
+        return REFLECTED_ONE_PARAMETER_CALLBACK.execute(CONTEXT, EMPTY, ONE);
+    }
+
+    @Benchmark
+    public Mono<CommandResult> reflectedTwoParameters() {
+        return REFLECTED_TWO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, TWO);
     }
 }

@@ -12,8 +12,6 @@
         <module>OktaneCore</module>
         <module>OktaneBenchmark</module>
         <module>OktaneExample</module>
-        <module>OktaneReactive</module>
-        <module>OktaneReactiveTest</module>
     </modules>
 
     <name>Oktane</name>

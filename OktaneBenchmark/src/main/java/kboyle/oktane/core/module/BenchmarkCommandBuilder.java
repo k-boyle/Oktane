@@ -21,6 +21,11 @@ public class BenchmarkCommandBuilder {
         return this;
     }
 
+    public BenchmarkCommandBuilder withRemainderParameter() {
+        parameters.add(CommandParameter.builder().withType(String.class).withName(String.valueOf(counter++)).withRemainder(true));
+        return this;
+    }
+
     public Command create() {
         return new Command(
             "",

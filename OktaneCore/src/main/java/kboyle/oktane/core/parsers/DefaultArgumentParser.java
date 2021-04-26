@@ -1,21 +1,24 @@
 package kboyle.oktane.core.parsers;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.*;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserFailedResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
+import kboyle.oktane.core.results.typeparser.TypeParserSuccessfulResult;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.function.Function;
 
 public class DefaultArgumentParser implements ArgumentParser {
-    private static final char SPACE = ' ';
-    private static final char QUOTE = '"';
-    private static final char ESCAPE = '\\';
-    private static final String EMPTY = "";
+    private static final Object[] EMPTY = new Object[0];
 
     private final ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass;
 
@@ -24,155 +27,49 @@ public class DefaultArgumentParser implements ArgumentParser {
     }
 
     @Override
-    public ArgumentParserResult parse(CommandContext context, CommandMatch commandMatch, String input) {
-        Command command = commandMatch.command();
-        int index = commandMatch.argumentStart();
-        int commandEnd = commandMatch.commandEnd();
-        int inputLength = input.length();
-        int inputLastIndex = inputLength - 1;
-        ImmutableList<CommandParameter> parameters = command.parameters();
+    public Mono<ArgumentParserResult> parse(CommandContext context, Command command, List<String> tokens) {
+        var parameters = command.parameters;
 
-        boolean emptyParameters = parameters.isEmpty();
-        if ((index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
-            return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
+        if (parameters.isEmpty()) {
+            return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
         }
 
-        if (emptyParameters) {
-            if (commandEnd != index && noneWhitespaceRemains(input, index)) {
-                return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
-            }
+        return Flux.fromIterable(tokens)
+            .zipWithIterable(parameters, (token, parameter) -> parse(parameter, context, token))
+            .flatMap(Function.identity())
+            .collectList()
+            .map(results -> {
+                var allSuccess = results.stream().allMatch(Result::success);
 
-            return ArgumentParserSuccessfulResult.empty();
-        }
-
-        Object[] parsedArguments = null;
-        int parametersSize = parameters.size();
-        for (int p = 0; p < parametersSize; p++) {
-            String currentParameter = null;
-            CommandParameter parameter = parameters.get(p);
-
-            for (; index < inputLength; index++) {
-                char currentCharacter = input.charAt(index);
-                if (currentCharacter == SPACE) {
-                    continue;
+                if (!allSuccess) {
+                    return new ArgumentParserFailedResult(command, results);
                 }
 
-                if (currentCharacter != ESCAPE || input.charAt(index - 1) == ESCAPE) {
-                    break;
-                }
-            }
+                var arguments = results.stream()
+                    .map(TypeParserResult.class::cast)
+                    .map(TypeParserResult::value)
+                    .toArray();
 
-            if (index > inputLastIndex) {
-                return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_FEW_ARGUMENTS, index);
-            }
-
-            if (parameter.remainder()) {
-                currentParameter = input.substring(index);
-                index = inputLength;
-            } else {
-                int paramStart = index;
-                for (; index < inputLength; index++) {
-                    char currentCharacter = input.charAt(index);
-
-                    if (currentCharacter == QUOTE) {
-                        if (input.charAt(index - 1) == ESCAPE) {
-                            if (index == inputLastIndex) {
-                                currentParameter = input.substring(paramStart, ++index);
-                                break;
-                            }
-
-                            continue;
-                        }
-
-                        index++;
-                        boolean outerbreak = false;
-                        for (; index < inputLength; index++) {
-                            if (input.charAt(index) != QUOTE) {
-                                continue;
-                            }
-
-                            if (input.charAt(index - 1) != ESCAPE) {
-                                currentParameter = paramStart + 1 == index
-                                    ? EMPTY
-                                    : input.substring(paramStart + 1, index);
-
-                                index++;
-                                outerbreak = true;
-                                break;
-                            }
-                        }
-
-                        if (outerbreak) {
-                            break;
-                        }
-
-                        return new ArgumentParserFailedResult(command, ParserFailedReason.MISSING_QUOTE, index);
-                    } else if (currentCharacter == SPACE) {
-                        currentParameter = input.substring(paramStart, index);
-                        break;
-                    } else if (index == inputLastIndex) {
-                        currentParameter = paramStart == 0 ? input : input.substring(paramStart);
-                        index++;
-                        break;
-                    }
-                }
-            }
-
-            Class<?> type = parameter.type();
-            if (type == String.class) {
-                if (parsedArguments == null) {
-                    parsedArguments = new Object[parametersSize];
-                }
-                parsedArguments[p] = currentParameter;
-                continue;
-            }
-
-            Result parseResult = parse(parameter, context, currentParameter);
-            if (parseResult instanceof TypeParserResult<?> typeParserResult) {
-                if (parseResult.success()) {
-                    if (parsedArguments == null) {
-                        parsedArguments = new Object[parametersSize];
-                    }
-                    parsedArguments[p] = typeParserResult.value();
-                } else {
-                    return new ArgumentParserFailedToParseArgumentResult(typeParserResult);
-                }
-            } else {
-                return (ArgumentParserExceptionResult) parseResult;
-            }
-        }
-
-        if (index != inputLength && noneWhitespaceRemains(input, index)) {
-            return new ArgumentParserFailedResult(command, ParserFailedReason.TOO_MANY_ARGUMENTS, index);
-        }
-
-        return new ArgumentParserSuccessfulResult(parsedArguments);
+                return new ArgumentParserSuccessfulResult(command, arguments);
+            });
     }
 
-    private Result parse(CommandParameter parameter, CommandContext context, String input) {
-        TypeParser<?> parser = parameter.parser();
+    private Mono<Result> parse(CommandParameter parameter, CommandContext context, String input) {
+        var type = parameter.type;
+
+        if (type == String.class) {
+            return Mono.just(new TypeParserSuccessfulResult<>(input));
+        }
+
+        var parser = parameter.parser;
         if (parser == null) {
             parser = Preconditions.checkNotNull(
-                typeParserByClass.get(parameter.type()),
+                typeParserByClass.get(type),
                 "Missing type parser for type %s",
-                parameter.type()
+                type
             );
         }
 
-        try {
-            return Preconditions.checkNotNull(parser.parse(context, input), "A type parser cannot return null");
-        } catch (Exception ex) {
-            return new ArgumentParserExceptionResult(context.command(), ex);
-        }
-    }
-
-    private static boolean noneWhitespaceRemains(String input, int index) {
-        for (; index < input.length(); index++) {
-            if (input.charAt(index) != SPACE) {
-                return true;
-            }
-        }
-
-        return false;
+        return parser.parse(context, parameter.command, input).cast(Result.class);
     }
 }
