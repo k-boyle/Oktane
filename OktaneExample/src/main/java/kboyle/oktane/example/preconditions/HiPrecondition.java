@@ -6,10 +6,10 @@ import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
-public class OrTest implements Precondition {
+public class HiPrecondition implements Precondition {
     private final String something;
 
-    public OrTest(String[] args) {
+    public HiPrecondition(String[] args) {
         this.something = args[0];
     }
 
