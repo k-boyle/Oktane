@@ -7,9 +7,8 @@ import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public final class CollectionUtils {
-    private CollectionUtils() {
-    }
+public enum CollectionUtils {
+    ;
 
     public static <T> T single(Collection<T> collection) {
         return single(collection, t -> true);

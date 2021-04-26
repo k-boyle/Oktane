@@ -1,14 +1,13 @@
-package kboyle.oktane.core.module;
+package kboyle.oktane.core;
 
 import com.google.common.collect.ImmutableList;
-import kboyle.oktane.core.CollectionUtils;
-import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.exceptions.FailedToInstantiateCommandCallback;
 import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
-import kboyle.oktane.core.exceptions.MethodInvocationFailedException;
 import kboyle.oktane.core.exceptions.UnhandledTypeException;
+import kboyle.oktane.core.module.Command;
+import kboyle.oktane.core.module.CommandModule;
+import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.annotations.Require;
-import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
 import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
@@ -17,16 +16,25 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.*;
 import java.util.Arrays;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public final class CommandUtils {
+/**
+ * Utilities for commands.
+ */
+public enum CommandUtils {
+    ;
+
     private static final Mono<PreconditionResult> SUCCESS = Mono.just(PreconditionSuccessfulResult.get());
 
-    private CommandUtils() {
-    }
-
+    /**
+     * Runs the given preconditions.
+     *
+     * @param context The context to pass to {@link Precondition#run(CommandContext, Command)}.
+     * @param command The command to pass to {@link Precondition#run(CommandContext, Command)}.
+     * @param preconditions The {@link Precondition} to run.
+     * @return The result of running all of the preconditions.
+     */
     public static Mono<PreconditionResult> runPreconditions(CommandContext context, Command command, ImmutableList<Precondition> preconditions) {
         if (preconditions.isEmpty()) {
             return SUCCESS;
@@ -48,15 +56,21 @@ public final class CommandUtils {
             });
     }
 
+    /**
+     * Creates all of the {@link Precondition}s from the {@link Require} annotations on the element.
+     *
+     * @param element The element to search for annotations on.
+     * @return The created {@link Precondition}
+     */
     public static Stream<Precondition> createPreconditions(AnnotatedElement element) {
         return Arrays.stream(element.getAnnotationsByType(Require.class))
             .map(CommandUtils::initPrecondition);
     }
 
     private static Precondition initPrecondition(Require requirement) {
-        Class<? extends Precondition> clazz = requirement.precondition();
+        Class<? extends Precondition> cl = requirement.precondition();
         String[] arguments = requirement.arguments();
-        Constructor<?> validConstructor = CollectionUtils.single(clazz.getConstructors());
+        Constructor<?> validConstructor = CollectionUtils.single(cl.getConstructors(), CommandUtils::isValidConstructor);
 
         try {
             if (arguments.length == 0) {
@@ -65,7 +79,7 @@ public final class CommandUtils {
 
             return (Precondition) validConstructor.newInstance((Object) arguments);
         } catch (Exception ex) {
-            throw new FailedToInstantiatePreconditionException(clazz, ex);
+            throw new FailedToInstantiatePreconditionException(cl, ex);
         }
     }
 
@@ -74,22 +88,22 @@ public final class CommandUtils {
         return parameters.length == 0 || parameters.length == 1 && parameters[0].getType().equals(String[].class);
     }
 
-    public static <T extends CommandContext> boolean isValidModuleClass(Class<T> contextClazz, Class<?> moduleCandidate) {
+    static <T extends CommandContext> boolean isValidModuleClass(Class<T> contextClass, Class<?> moduleCandidate) {
         if (!ModuleBase.class.isAssignableFrom(moduleCandidate) || Modifier.isAbstract(moduleCandidate.getModifiers())) {
             return false;
         }
 
         ParameterizedType parameterizedType = unwrapModuleBase(moduleCandidate.getGenericSuperclass());
         if (parameterizedType.getRawType() != ModuleBase.class) {
-            return isValidModuleClass(contextClazz, (Class<?>) parameterizedType.getRawType());
+            return isValidModuleClass(contextClass, (Class<?>) parameterizedType.getRawType());
         }
 
-        return parameterizedType.getActualTypeArguments()[0] == contextClazz;
+        return parameterizedType.getActualTypeArguments()[0] == contextClass;
     }
 
-    public static ParameterizedType unwrapModuleBase(Type type) {
-        if (type instanceof Class<?> clazz) {
-            return unwrapModuleBase(clazz.getGenericSuperclass());
+    private static ParameterizedType unwrapModuleBase(Type type) {
+        if (type instanceof Class<?> cl) {
+            return unwrapModuleBase(cl.getGenericSuperclass());
         } else if (type instanceof ParameterizedType parameterizedType) {
             if (parameterizedType.getRawType() == ModuleBase.class) {
                 return parameterizedType;
@@ -100,35 +114,20 @@ public final class CommandUtils {
         throw new UnhandledTypeException(type);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <MODULE extends ModuleBase<?>> Function<Object[], MODULE> getModuleFactory(Class<MODULE> moduleClass) {
-        Constructor<?> constructor = CollectionUtils.single(moduleClass.getConstructors());
-
-        return beans -> {
-            try {
-                if (beans.length == 0) {
-                    return (MODULE) constructor.newInstance();
-                }
-
-                return (MODULE) constructor.newInstance(beans);
-            } catch (Exception ex) {
-                throw new FailedToInstantiateCommandCallback(ex);
-            }
-        };
+    /**
+     * Gets a {@link CommandModule} and all its children.
+     *
+     * @param module The {@link CommandModule} to get it and all its children from.
+     * @return The given {@link CommandModule} and all its children.
+     */
+    public static Stream<CommandModule> flattenModule(CommandModule module) {
+        return Stream.of(module).mapMulti(CommandUtils::flattenModule);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <MODULE extends ModuleBase<?>> BiFunction<MODULE, Object[], Mono<CommandResult>> getCallbackFunction(Method method) {
-        return (module, parameters) -> {
-            try {
-                if (parameters.length == 0) {
-                    return (Mono<CommandResult>) method.invoke(module);
-                }
-
-                return (Mono<CommandResult>) method.invoke(module, parameters);
-            } catch (Exception ex) {
-                throw new MethodInvocationFailedException(ex);
-            }
-        };
+    private static void flattenModule(CommandModule module, Consumer<CommandModule> downStream) {
+        downStream.accept(module);
+        for (var child : module.children) {
+            flattenModule(child, downStream);
+        }
     }
 }

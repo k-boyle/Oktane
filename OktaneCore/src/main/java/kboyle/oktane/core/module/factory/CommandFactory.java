@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.exceptions.FailedToInstantiateCommandCallback;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandParameter;
-import kboyle.oktane.core.module.CommandUtils;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.module.callback.*;
@@ -24,8 +24,6 @@ import java.util.stream.Collectors;
 
 import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
-import static kboyle.oktane.core.module.CommandUtils.getCallbackFunction;
-import static kboyle.oktane.core.module.CommandUtils.getModuleFactory;
 
 public class CommandFactory<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -112,11 +110,11 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     private static boolean isCorrectReturnType(Type returnType) {
         return returnType.equals(CommandResult.class)
             || returnType instanceof ParameterizedType parameterizedType
-            && parameterizedType.getRawType() instanceof Class<?> rawTypeClazz
-            && rawTypeClazz.isAssignableFrom(Mono.class)
+            && parameterizedType.getRawType() instanceof Class<?> rawTypeClass
+            && rawTypeClass.isAssignableFrom(Mono.class)
             && parameterizedType.getActualTypeArguments().length == 1
-            && parameterizedType.getActualTypeArguments()[0] instanceof Class<?> typeArgumentClazz
-            && typeArgumentClazz.isAssignableFrom(CommandResult.class);
+            && parameterizedType.getActualTypeArguments()[0] instanceof Class<?> typeArgumentClass
+            && typeArgumentClass.isAssignableFrom(CommandResult.class);
     }
 
     private static boolean isValidAliases(Aliases moduleAliases, Aliases commandAliases) {
@@ -139,7 +137,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
                 generatedClassPath
             );
 
-            callback = new ReflectedCommandCallback<>(getModuleFactory(moduleClass), getCallbackFunction(method));
+            callback = ReflectedCommandFactory.createCallback(moduleClass, method);
         } catch (Exception ex) {
             throw new FailedToInstantiateCommandCallback(ex);
         }

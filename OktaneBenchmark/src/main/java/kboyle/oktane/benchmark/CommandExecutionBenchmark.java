@@ -2,15 +2,13 @@ package kboyle.oktane.benchmark;
 
 import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
 import kboyle.oktane.core.module.callback.ReflectedCommandCallback;
+import kboyle.oktane.core.module.factory.ReflectedCommandFactoryProxy;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.openjdk.jmh.annotations.*;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-
-import static kboyle.oktane.core.module.CommandUtils.getCallbackFunction;
-import static kboyle.oktane.core.module.CommandUtils.getModuleFactory;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
@@ -54,7 +52,7 @@ public class CommandExecutionBenchmark {
     private static ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createReflectedCallback(String name, Class<?>... parameterTypes) {
         try {
             Method method = GeneratedBenchmarkModule.class.getMethod(name, parameterTypes);
-            return new ReflectedCommandCallback<>(getModuleFactory(GeneratedBenchmarkModule.class), getCallbackFunction(method));
+            return ReflectedCommandFactoryProxy.createCallback(GeneratedBenchmarkModule.class, method);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

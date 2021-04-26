@@ -27,10 +27,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static kboyle.oktane.core.module.CommandUtils.isValidModuleClass;
+import static kboyle.oktane.core.CommandUtils.isValidModuleClass;
 
 /**
  * The entry point for executing commands.
+ *
+ * {@code
+ * CommandHandler.<YourContextType>builder()
+ *     .withModule(YourCommandModule.class)
+ *     .build();
+ * }
  *
  * @param <T> The type of context that's used in commands.
  */
@@ -55,14 +61,24 @@ public class CommandHandler<T extends CommandContext> {
     }
 
     /**
-     * Creates a new builder for the CommandHandler.
+     * Creates a new builder for the {@link CommandHandler}.
      *
-     * @return A new CommandHandler builder.
+     * @return A new {@link CommandHandler.Builder}.
      */
     public static <T extends CommandContext> Builder<T> builder() {
         return new Builder<>();
     }
 
+    /**
+     * Tries to execute a command for the given input.
+     *
+     * @param input The user input to parse.
+     * @param context The {@link CommandContext} to pass into execution.
+     * @return The result of execution.
+     *
+     * @throws NullPointerException when {@code input} is null.
+     * @throws NullPointerException when {@code context} is null.
+     */
     public Mono<Result> execute(String input, T context) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
@@ -115,36 +131,43 @@ public class CommandHandler<T extends CommandContext> {
     }
 
     /**
-     * @return All of the modules that belong to the CommandHandler.
+     * @return All of the top level {@link CommandModule}s that belong to the {@link CommandHandler}.
      */
     public ImmutableList<CommandModule> modules() {
         return modules;
     }
 
     /**
-     * @return All of the commands that belong to the CommandHandler.
+     * @return Recursively gets all top level {@link CommandModule}s and their children that belong to the {@link CommandHandler}.
+     */
+    public Stream<CommandModule> flattenModules() {
+        return modules.stream().flatMap(CommandUtils::flattenModule);
+    }
+
+    /**
+     * @return All of the {@link Command}s that belong to the {@link CommandHandler}.
      */
     public Stream<Command> commands() {
         return modules.stream().flatMap(module -> module.commands.stream());
     }
 
-    private Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClazzes) {
-        if (beanClazzes.isEmpty()) {
+    private Object[] getBeans(CommandContext context, ImmutableList<Class<?>> beanClasses) {
+        if (beanClasses.isEmpty()) {
             return EMPTY_BEANS;
         }
 
-        Object[] beans = new Object[beanClazzes.size()];
-        for (int i = 0; i < beanClazzes.size(); i++) {
-            Class<?> beanClazz = beanClazzes.get(i);
-            if (beanClazz.equals(getClass())) {
+        Object[] beans = new Object[beanClasses.size()];
+        for (int i = 0; i < beanClasses.size(); i++) {
+            Class<?> beanClass = beanClasses.get(i);
+            if (beanClass.equals(getClass())) {
                 beans[i] = this;
                 continue;
             }
 
             beans[i] = Preconditions.checkNotNull(
-                context.beanProvider().getBean(beanClazz),
+                context.beanProvider().getBean(beanClass),
                 "A bean of type %s must be in your provider",
-                beanClazz
+                beanClass
             );
         }
 
@@ -152,7 +175,7 @@ public class CommandHandler<T extends CommandContext> {
     }
 
     /**
-     * A builder for the CommandHandler.
+     * A builder for the {@link CommandHandler}.
      *
      * @param <T> The type of context that's used in commands.
      */
@@ -174,59 +197,52 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
-         * Adds a type parser that will be used by the CommandHandler.
+         * Adds a {@link TypeParser} that will be used by the {@link CommandHandler}.
          *
-         * @param clazz  The class representing the type that the TypeParser is for.
-         * @param parser The TypeParser.
-         * @param <S>    The type that the TypeParser is for.
-         * @return The builder.
+         * @param cl The class representing the type that the {@link TypeParser} is for.
+         * @param parser The {@link TypeParser}.
+         * @param <S> The type that the {@link TypeParser} is for.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code cl} is null.
+         * @throws NullPointerException when {@code parser} is null.
          */
-        public <S> Builder<T> withTypeParser(Class<S> clazz, TypeParser<S> parser) {
-            Preconditions.checkNotNull(clazz, "Clazz cannot be null");
+        public <S> Builder<T> withTypeParser(Class<S> cl, TypeParser<S> parser) {
+            Preconditions.checkNotNull(cl, "cl cannot be null");
             Preconditions.checkNotNull(parser, "Parser cannot be null");
-            this.typeParserByClass.put(clazz, parser);
+            this.typeParserByClass.put(cl, parser);
             return this;
         }
 
         /**
-         * Adds a module that will be used by the CommandBuilder.
+         * Adds a {@link CommandModule} that will be used by the {@link CommandHandler}.
          *
-         * @param moduleClazz The class representing the type of module that you want to add.
-         * @param <S>         The type of module you want to add.
-         * @return The builder.
+         * @param moduleClass The class representing the type of module that you want to add.
+         * @param <S> The type of module you want to add.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code moduleClass} is null.
          */
-        public <S extends ModuleBase<T>> Builder<T> withModule(Class<S> moduleClazz) {
-            Preconditions.checkNotNull(moduleClazz, "moduleClazz cannot be null");
-            this.commandModules.add(moduleClazz);
+        public <S extends ModuleBase<T>> Builder<T> withModule(Class<S> moduleClass) {
+            Preconditions.checkNotNull(moduleClass, "moduleClass cannot be null");
+            this.commandModules.add(moduleClass);
             return this;
         }
 
-        // todo fix
-        /**
-         * Adds all the modules in the same package as the contextClazz.
-         *
-         * @param contextClazz The class representing the type of context used for the CommandHandler.
-         * @return The builder.
-         */
-        public Builder<T> withModules(Class<T> contextClazz) {
-            return withModules(contextClazz, contextClazz.getPackageName());
+        @Deprecated
+        public Builder<T> withModules(Class<T> contextClass) {
+            return withModules(contextClass, contextClass.getPackageName());
         }
 
-        /**
-         * Adds all the modules in the specified package.
-         *
-         * @param contextClazz The class representing the type of context used for the CommandHandler.
-         * @param packageName  The package name to search in.
-         * @return The builder.
-         */
         @SuppressWarnings("UnstableApiUsage")
-        public Builder<T> withModules(Class<T> contextClazz, String packageName) {
+        @Deprecated
+        public Builder<T> withModules(Class<T> contextClass, String packageName) {
             try {
-                ClassPath.from(contextClazz.getClassLoader()).getTopLevelClassesRecursive(packageName)
+                ClassPath.from(contextClass.getClassLoader()).getTopLevelClassesRecursive(packageName)
                     .stream()
                     .map(ClassPath.ClassInfo::load)
-                    .filter(clazz -> isValidModuleClass(contextClazz, clazz))
-                    .forEach(clazz -> withModule(clazz.asSubclass(ModuleBase.class)));
+                    .filter(cl -> isValidModuleClass(contextClass, cl))
+                    .forEach(cl -> withModule(cl.asSubclass(ModuleBase.class)));
 
                 return this;
             } catch (IOException exception) {
@@ -235,10 +251,12 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
-         * Adds the bean provider that will be used to fetch dependencies for singleton modules and preconditions.
+         * Adds the {@link BeanProvider} that will be used to fetch dependencies for singleton {@link CommandModule}s.
          *
-         * @param beanProvider The bean provider.
-         * @return The builder.
+         * @param beanProvider The {@link BeanProvider}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code beanProvider} is null.
          */
         public Builder<T> withBeanProvider(BeanProvider beanProvider) {
             Preconditions.checkNotNull(beanProvider, "beanProvider cannot be null");
@@ -247,10 +265,12 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
-         * Sets the ArgumentParser that will be used, if none is specified then the default will be used.
+         * Sets the {@link ArgumentParser} that will be used, if none is specified then the default will be used.
          *
-         * @param argumentParser The argument parser.
-         * @return The builder.
+         * @param argumentParser The {@link ArgumentParser}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code argumentParser} is null.
          */
         public Builder<T> withArgumentParser(ArgumentParser argumentParser) {
             Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
@@ -258,6 +278,14 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
+        /**
+         * Sets the {@link Tokeniser} that will be used, if none is specified then the default will be used.
+         *
+         * @param tokeniser The {@link Tokeniser}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code tokeniser} is null.
+         */
         public Builder<T> withTokeniser(Tokeniser tokeniser) {
             Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
             this.tokeniser = tokeniser;
@@ -265,9 +293,9 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
-         * Builds the CommandHandler.
+         * Builds the {@link CommandHandler}.
          *
-         * @return The built CommandHandler.
+         * @return The built {@link CommandHandler}.
          */
         public CommandHandler<T> build() {
             List<CommandModule> modules = new ArrayList<>();
@@ -276,8 +304,8 @@ public class CommandHandler<T extends CommandContext> {
                 typeParserByClass
             );
 
-            for (Class<? extends ModuleBase<T>> moduleClazz : commandModules) {
-                CommandModule module = moduleFactory.create(moduleClazz);
+            for (Class<? extends ModuleBase<T>> moduleClass : commandModules) {
+                CommandModule module = moduleFactory.create(moduleClass);
                 modules.add(module);
                 commandMap.map(module);
             }

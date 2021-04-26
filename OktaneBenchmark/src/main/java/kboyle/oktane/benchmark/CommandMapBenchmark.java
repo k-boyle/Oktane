@@ -26,6 +26,6 @@ public class CommandMapBenchmark {
 
     @Benchmark
     public ImmutableList<CommandMatch> commandNotFound() {
-        return COMMAND_MAP.findCommands("not found");
+        return COMMAND_MAP.findCommands("notfound");
     }
 }
