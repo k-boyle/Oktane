@@ -28,7 +28,7 @@ public final class AnyPrecondition implements Precondition {
                         }
                     }
 
-                    return flux.map(result -> failure(getReason(result)));
+                    return flux;
                 },
                 true)
             .collectList()
