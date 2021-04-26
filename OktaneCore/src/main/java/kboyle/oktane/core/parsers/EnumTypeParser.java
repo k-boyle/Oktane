@@ -22,7 +22,7 @@ public class EnumTypeParser<T extends Enum<T>> implements TypeParser<T> {
     private TypeParserResult<T> parse(String input) {
         if (Character.isDigit(input.charAt(0))) {
             try {
-                int ord = Integer.parseInt(input);
+                var ord = Integer.parseInt(input);
                 if (ord >= enumConstants.length) {
                     return failure(
                         "%d is outside of ordinal range for %s [0, %d]",

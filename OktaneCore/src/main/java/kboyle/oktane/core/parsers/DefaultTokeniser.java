@@ -1,9 +1,6 @@
 package kboyle.oktane.core.parsers;
 
-import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.mapping.CommandMatch;
-import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.results.tokeniser.*;
 
 import java.util.ArrayList;
@@ -17,17 +14,17 @@ public class DefaultTokeniser implements Tokeniser {
 
     @Override
     public TokeniserResult tokenise(String input, CommandMatch commandMatch) {
-        Command command = commandMatch.command();
-        int index = commandMatch.argumentStart();
-        int commandEnd = commandMatch.commandEnd();
+        var command = commandMatch.command();
+        var index = commandMatch.argumentStart();
+        var commandEnd = commandMatch.commandEnd();
 
-        int inputLength = input.length();
-        int inputLastIndex = inputLength - 1;
+        var inputLength = input.length();
+        var inputLastIndex = inputLength - 1;
 
-        ImmutableList<CommandParameter> parameters = command.parameters;
-        int parametersSize = parameters.size();
+        var parameters = command.parameters;
+        var parametersSize = parameters.size();
 
-        boolean emptyParameters = parameters.isEmpty();
+        var emptyParameters = parameters.isEmpty();
         if ((index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
             return new TokeniserTooFewTokensResult(command, input, parametersSize);
         }
@@ -41,12 +38,12 @@ public class DefaultTokeniser implements Tokeniser {
         }
 
         List<String> tokens = new ArrayList<>(command.parameters.size());
-        for (int p = 0; p < parametersSize; p++) {
+        for (var p = 0; p < parametersSize; p++) {
             String currentParameter = null;
-            CommandParameter parameter = parameters.get(p);
+            var parameter = parameters.get(p);
 
             for (; index < inputLength; index++) {
-                char currentCharacter = input.charAt(index);
+                var currentCharacter = input.charAt(index);
                 if (currentCharacter == SPACE) {
                     continue;
                 }
@@ -64,9 +61,9 @@ public class DefaultTokeniser implements Tokeniser {
                 currentParameter = input.substring(index);
                 index = inputLength;
             } else {
-                int paramStart = index;
+                var paramStart = index;
                 for (; index < inputLength; index++) {
-                    char currentCharacter = input.charAt(index);
+                    var currentCharacter = input.charAt(index);
 
                     if (currentCharacter == QUOTE) {
                         if (input.charAt(index - 1) == ESCAPE) {
@@ -79,7 +76,7 @@ public class DefaultTokeniser implements Tokeniser {
                         }
 
                         index++;
-                        boolean outerbreak = false;
+                        var outerbreak = false;
                         for (; index < inputLength; index++) {
                             if (input.charAt(index) != QUOTE) {
                                 continue;

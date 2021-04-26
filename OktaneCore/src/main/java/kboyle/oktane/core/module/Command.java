@@ -50,9 +50,9 @@ public class Command {
         this.synchronised = synchronised;
         this.priority = priority;
 
-        List<CommandParameter> builtParameters = new ArrayList<>();
-        for (int i = 0; i < parameters.size(); i++) {
-            CommandParameter commandParameter = parameters.get(i).build(this);
+        var builtParameters = new ArrayList<CommandParameter>();
+        for (var i = 0; i < parameters.size(); i++) {
+            var commandParameter = parameters.get(i).build(this);
             Preconditions.checkState(
                 !commandParameter.remainder || i == parameters.size() - 1,
                 "Parameter %s (%d) of Command %s cannot be remainder only the final parameter can be remainder",
@@ -175,7 +175,7 @@ public class Command {
             Preconditions.checkNotNull(name, "A command name must be specified");
             Preconditions.checkNotNull(commandCallback, "A command callback must be specified");
 
-            ImmutableSet<String> builtAliases = this.aliases.build();
+            var builtAliases = this.aliases.build();
             Preconditions.checkState(
                 isValidAliases(builtAliases, module.groups),
                 "A command must have a non-empty alias if there are no module groups"

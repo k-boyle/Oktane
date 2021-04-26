@@ -1,7 +1,6 @@
 package kboyle.oktane.core.parsers;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.Command;
@@ -29,7 +28,7 @@ public class DefaultArgumentParser implements ArgumentParser {
 
     @Override
     public Mono<ArgumentParserResult> parse(CommandContext context, Command command, List<String> tokens) {
-        ImmutableList<CommandParameter> parameters = command.parameters;
+        var parameters = command.parameters;
 
         if (parameters.isEmpty()) {
             return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
@@ -40,13 +39,13 @@ public class DefaultArgumentParser implements ArgumentParser {
             .flatMap(Function.identity())
             .collectList()
             .map(results -> {
-                boolean allSuccess = results.stream().allMatch(Result::success);
+                var allSuccess = results.stream().allMatch(Result::success);
 
                 if (!allSuccess) {
                     return new ArgumentParserFailedResult(command, results);
                 }
 
-                Object[] arguments = results.stream()
+                var arguments = results.stream()
                     .map(TypeParserResult.class::cast)
                     .map(TypeParserResult::value)
                     .toArray();
@@ -56,13 +55,13 @@ public class DefaultArgumentParser implements ArgumentParser {
     }
 
     private Mono<Result> parse(CommandParameter parameter, CommandContext context, String input) {
-        Class<?> type = parameter.type;
+        var type = parameter.type;
 
         if (type == String.class) {
             return Mono.just(new TypeParserSuccessfulResult<>(input));
         }
 
-        TypeParser<?> parser = parameter.parser;
+        var parser = parameter.parser;
         if (parser == null) {
             parser = Preconditions.checkNotNull(
                 typeParserByClass.get(type),

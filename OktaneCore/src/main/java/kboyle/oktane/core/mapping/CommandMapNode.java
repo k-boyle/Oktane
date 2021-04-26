@@ -23,7 +23,7 @@ class CommandMapNode {
     }
 
     public ImmutableList<CommandMatch> findCommands(String input, int index) {
-        ImmutableList.Builder<CommandMatch> results = ImmutableList.builder();
+        var results = ImmutableList.<CommandMatch>builder();
         while (input.charAt(index) == SPACE) {
             index++;
         }
@@ -36,17 +36,17 @@ class CommandMapNode {
             return;
         }
 
-        int nextSpace = input.indexOf(" ", index);
+        var nextSpace = input.indexOf(" ", index);
 
         if (nextSpace == -1) {
-            String segment = index == 0 ? input : input.substring(index);
-            int lastIndex = input.length() - 1;
+            var segment = index == 0 ? input : input.substring(index);
+            var lastIndex = input.length() - 1;
             handleSegmentAsAlias(results, segment, lastIndex, lastIndex);
         } else {
-            String segment = input.substring(index, nextSpace);
+            var segment = input.substring(index, nextSpace);
             handleSegmentAsAlias(results, segment, nextSpace - 1, nextSpace + 1);
 
-            CommandMapNode commandMapNode = nodeByAlias.get(segment);
+            var commandMapNode = nodeByAlias.get(segment);
             if (commandMapNode != null) {
                 commandMapNode.findCommands(results, input, nextSpace + 1);
             }
@@ -58,10 +58,10 @@ class CommandMapNode {
             String segment,
             int commandEnd,
             int argumentStart) {
-        List<Command> commands = commandsByAlias.get(segment);
+        var commands = commandsByAlias.get(segment);
         if (commands != null) {
             for (int i = 0, commandsSize = commands.size(); i < commandsSize; i++) {
-                Command command = commands.get(i);
+                var command = commands.get(i);
                 results.add(new CommandMatch(command, commandEnd, argumentStart));
             }
         }
@@ -83,7 +83,7 @@ class CommandMapNode {
         public Builder addCommand(Command command, List<String> paths, int index) {
             Preconditions.checkState(!paths.isEmpty(), "Cannot map pathless commands to root");
 
-            String path = paths.get(index);
+            var path = paths.get(index);
             if (index == paths.size() - 1) {
                 commandsByAlias.compute(path, (p, commands) -> {
                     if (commands != null) {
@@ -110,9 +110,9 @@ class CommandMapNode {
         }
 
         private void assertUniqueCommand(Command command, String path, List<Command> commands) {
-            for (Command otherCommand : commands) {
-                Command.Signature commandSignature = command.signature;
-                Command.Signature otherCommandSignature = otherCommand.signature;
+            for (var otherCommand : commands) {
+                var commandSignature = command.signature;
+                var otherCommandSignature = otherCommand.signature;
 
                 Preconditions.checkState(
                     !commandSignature.equals(otherCommandSignature),
@@ -124,7 +124,7 @@ class CommandMapNode {
         }
 
         public CommandMapNode build() {
-            Map<String, CommandMapNode> builtNodeByAlias = this.nodeByAlias.entrySet()
+            var builtNodeByAlias = this.nodeByAlias.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, es -> es.getValue().build()));
             return new CommandMapNode(commandsByAlias, builtNodeByAlias);

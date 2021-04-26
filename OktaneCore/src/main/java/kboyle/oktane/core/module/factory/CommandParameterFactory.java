@@ -24,9 +24,9 @@ public class CommandParameterFactory {
     }
 
     public CommandParameter.Builder createParameter(Parameter parameter) {
-        Class<?> parameterType = parameter.getType();
+        var parameterType = parameter.getType();
 
-        TypeParser<?> parser = typeParserByClass.get(parameterType);
+        var parser = typeParserByClass.get(parameterType);
         if (parser == null && parameterType != String.class) {
             if (parameterType.isEnum()) {
                 parser = typeParserByClass.computeIfAbsent(parameterType, type -> new EnumTypeParser(type));
@@ -35,19 +35,19 @@ public class CommandParameterFactory {
             }
         }
 
-        CommandParameter.Builder parameterBuilder = CommandParameter.builder()
+        var parameterBuilder = CommandParameter.builder()
             .withType(parameterType)
             .withName(parameter.getName())
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
             .withParser(parser);
 
-        Description parameterDescription = method.getAnnotation(Description.class);
+        var parameterDescription = method.getAnnotation(Description.class);
         if (parameterDescription != null) {
             Preconditions.checkState(!Strings.isNullOrEmpty(parameterDescription.value()), "A parameter description must be non-empty.");
             parameterBuilder.withDescription(parameterDescription.value());
         }
 
-        Name parameterName = parameter.getAnnotation(Name.class);
+        var parameterName = parameter.getAnnotation(Name.class);
         if (parameterName != null) {
             Preconditions.checkState(!Strings.isNullOrEmpty(parameterName.value()), "A parameter name must be non-empty.");
             parameterBuilder.withName(parameterName.value());

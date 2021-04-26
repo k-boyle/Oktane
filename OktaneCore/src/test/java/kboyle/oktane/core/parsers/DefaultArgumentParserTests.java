@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -35,8 +34,8 @@ public class DefaultArgumentParserTests {
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     public void testArgumentParser(Command command, List<String> tokens, ArgumentParserResult expectedResult) {
-        DefaultArgumentParser parser = new DefaultArgumentParser(PrimitiveTypeParserFactory.create());
-        Mono<ArgumentParserResult> actualResult = parser.parse(CONTEXT, command, tokens);
+        var parser = new DefaultArgumentParser(PrimitiveTypeParserFactory.create());
+        var actualResult = parser.parse(CONTEXT, command, tokens);
         Assertions.assertEquals(expectedResult, actualResult.block());
     }
 

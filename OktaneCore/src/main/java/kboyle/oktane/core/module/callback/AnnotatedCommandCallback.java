@@ -15,8 +15,8 @@ public abstract class AnnotatedCommandCallback<C extends CommandContext, M exten
     @Override
     public Mono<CommandResult> execute(CommandContext context, Object[] beans, Object[] parameters) {
         try {
-            M module = getModule(beans);
-            C castedContext = (C) context;
+            var module = getModule(beans);
+            var castedContext = (C) context;
             module.setContext(castedContext);
             return execute(module, parameters);
         } catch (Exception ex) {

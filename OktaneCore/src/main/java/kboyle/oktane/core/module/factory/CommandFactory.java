@@ -7,7 +7,6 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.exceptions.FailedToInstantiateCommandCallback;
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.module.callback.*;
@@ -17,7 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,48 +53,48 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             return null;
         }
 
-        Aliases commandAliases = method.getAnnotation(Aliases.class);
+        var commandAliases = method.getAnnotation(Aliases.class);
         Preconditions.checkState(
             isValidAliases(moduleGroups, commandAliases),
             "A command must have aliases if the module has no groups"
         );
 
-        boolean commandSynchronised = method.getAnnotation(Synchronised.class) != null;
+        var commandSynchronised = method.getAnnotation(Synchronised.class) != null;
 
-        Command.Builder commandBuilder = Command.builder()
+        var commandBuilder = Command.builder()
             .withName(method.getName())
             .withSynchronised(commandSynchronised)
             .withCallback(getCallback(method, commandSynchronised));
 
         if (commandAliases != null) {
-            for (String alias : commandAliases.value()) {
+            for (var alias : commandAliases.value()) {
                 commandBuilder.withAlias(alias);
             }
         }
 
-        Name commandName = method.getAnnotation(Name.class);
+        var commandName = method.getAnnotation(Name.class);
         if (commandName != null) {
             Preconditions.checkState(!Strings.isNullOrEmpty(commandName.value()), "A command name must be non-empty.");
             commandBuilder.withName(commandName.value());
         }
 
-        Description commandDescription = method.getAnnotation(Description.class);
+        var commandDescription = method.getAnnotation(Description.class);
         if (commandDescription != null) {
             Preconditions.checkState(!Strings.isNullOrEmpty(commandDescription.value()), "A command description must be non-empty.");
             commandBuilder.withDescription(commandDescription.value());
         }
 
-        Priority priority = method.getAnnotation(Priority.class);
+        var priority = method.getAnnotation(Priority.class);
         if (priority != null) {
             commandBuilder.withPriority(priority.value());
         }
 
         CommandUtils.createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
-        CommandParameterFactory parameterFactory = new CommandParameterFactory(typeParserByClass, method);
-        Parameter[] parameters = method.getParameters();
-        for (Parameter parameter : parameters) {
-            CommandParameter.Builder commandParameter = parameterFactory.createParameter(parameter);
+        var parameterFactory = new CommandParameterFactory(typeParserByClass, method);
+        var parameters = method.getParameters();
+        for (var parameter : parameters) {
+            var commandParameter = parameterFactory.createParameter(parameter);
             commandBuilder.withParameter(commandParameter);
         }
 
@@ -101,7 +102,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     }
 
     private static boolean isValidCommandSignature(Method method) {
-        Type returnType = method.getGenericReturnType();
+        var returnType = method.getGenericReturnType();
         return !isStatic(method.getModifiers())
             && isPublic(method.getModifiers())
             && isCorrectReturnType(returnType);
@@ -124,11 +125,11 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
 
     @SuppressWarnings("unchecked")
     private CommandCallback getCallback(Method method, boolean commandSynchronised) {
-        String generatedClassPath = getGenerateClassName(method);
+        var generatedClassPath = getGenerateClassName(method);
         AnnotatedCommandCallback<CONTEXT, MODULE> callback;
         try {
-            Class<?> commandClass = Class.forName(generatedClassPath);
-            Constructor<?> constructor = commandClass.getConstructors()[0];
+            var commandClass = Class.forName(generatedClassPath);
+            var constructor = commandClass.getConstructors()[0];
             callback = (AnnotatedCommandCallback<CONTEXT, MODULE>) constructor.newInstance();
         } catch (ClassNotFoundException e) {
             logger.warn(
@@ -158,8 +159,8 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     }
 
     private String getGenerateClassName(Method method) {
-        String classPath = unwrap(moduleClass);
-        String parameterNameString = Arrays.stream(method.getParameters())
+        var classPath = unwrap(moduleClass);
+        var parameterNameString = Arrays.stream(method.getParameters())
             .map(parameter ->
                 parameter.getParameterizedType().getTypeName()
                     .replace(".", "0")
@@ -172,7 +173,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     }
 
     private String unwrap(Class<?> cl) {
-        Class<?> enclosing = cl.getEnclosingClass();
+        var enclosing = cl.getEnclosingClass();
 
         if (enclosing == null) {
             return cl.getSimpleName();

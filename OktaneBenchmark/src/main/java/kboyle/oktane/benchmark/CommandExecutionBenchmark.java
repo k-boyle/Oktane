@@ -7,7 +7,6 @@ import kboyle.oktane.core.results.command.CommandResult;
 import org.openjdk.jmh.annotations.*;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
@@ -41,7 +40,7 @@ public class CommandExecutionBenchmark {
     @SuppressWarnings("unchecked")
     private static AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createGeneratedCallback(String name) {
         try {
-            Class<?> cl = Class.forName(name);
+            var cl = Class.forName(name);
             return (AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule>) cl.getConstructors()[0].newInstance();
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,7 +50,7 @@ public class CommandExecutionBenchmark {
 
     private static ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createReflectedCallback(String name, Class<?>... parameterTypes) {
         try {
-            Method method = GeneratedBenchmarkModule.class.getMethod(name, parameterTypes);
+            var method = GeneratedBenchmarkModule.class.getMethod(name, parameterTypes);
             return ReflectedCommandFactoryProxy.createCallback(GeneratedBenchmarkModule.class, method);
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,21 +60,21 @@ public class CommandExecutionBenchmark {
 
     @Benchmark
     public Mono<CommandResult> directNoParameters() {
-        GeneratedBenchmarkModule module = new GeneratedBenchmarkModule();
+        var module = new GeneratedBenchmarkModule();
         module.setContext(CONTEXT);
         return module.noParameters().mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directOneParameter() {
-        GeneratedBenchmarkModule module = new GeneratedBenchmarkModule();
+        var module = new GeneratedBenchmarkModule();
         module.setContext(CONTEXT);
         return module.oneParameter("one").mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directTwoParameters() {
-        GeneratedBenchmarkModule module = new GeneratedBenchmarkModule();
+        var module = new GeneratedBenchmarkModule();
         module.setContext(CONTEXT);
         return module.twoParameters("one", "two").mono();
     }

@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
 import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
-import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
@@ -87,7 +86,7 @@ public class CommandHandler<T extends CommandContext> {
             return COMMAND_NOT_FOUND;
         }
 
-        ImmutableList<CommandMatch> matches = commandMap.findCommands(input);
+        var matches = commandMap.findCommands(input);
 
         if (matches.isEmpty()) {
             return COMMAND_NOT_FOUND;
@@ -108,7 +107,7 @@ public class CommandHandler<T extends CommandContext> {
                     return Mono.just(result0);
                 }
 
-                TokeniserSuccessfulResult result = (TokeniserSuccessfulResult) result0;
+                var result = (TokeniserSuccessfulResult) result0;
                 return argumentParser.parse(context, result.command(), result.tokens());
             })
             .collectList()
@@ -122,9 +121,9 @@ public class CommandHandler<T extends CommandContext> {
     }
 
     private Mono<Result> executeCommand(T context, ArgumentParserSuccessfulResult parserResult) {
-        Command command = parserResult.command();
+        var command = parserResult.command();
         context.command = command;
-        Object[] beans = getBeans(context, command.module.beans);
+        var beans = getBeans(context, command.module.beans);
         return command.commandCallback
             .execute(context, beans, parserResult.parsedArguments())
             .cast(Result.class);
@@ -156,9 +155,9 @@ public class CommandHandler<T extends CommandContext> {
             return EMPTY_BEANS;
         }
 
-        Object[] beans = new Object[beanClasses.size()];
-        for (int i = 0; i < beanClasses.size(); i++) {
-            Class<?> beanClass = beanClasses.get(i);
+        var beans = new Object[beanClasses.size()];
+        for (var i = 0; i < beanClasses.size(); i++) {
+            var beanClass = beanClasses.get(i);
             if (beanClass.equals(getClass())) {
                 beans[i] = this;
                 continue;
@@ -299,13 +298,13 @@ public class CommandHandler<T extends CommandContext> {
          */
         public CommandHandler<T> build() {
             List<CommandModule> modules = new ArrayList<>();
-            CommandModuleFactory<T, ModuleBase<T>> moduleFactory = new CommandModuleFactory<>(
+            var moduleFactory = new CommandModuleFactory<T, ModuleBase<T>>(
                 beanProvider,
                 typeParserByClass
             );
 
-            for (Class<? extends ModuleBase<T>> moduleClass : commandModules) {
-                CommandModule module = moduleFactory.create(moduleClass);
+            for (var moduleClass : commandModules) {
+                var module = moduleFactory.create(moduleClass);
                 modules.add(module);
                 commandMap.map(module);
             }

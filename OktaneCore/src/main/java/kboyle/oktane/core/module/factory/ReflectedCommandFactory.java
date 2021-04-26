@@ -9,7 +9,6 @@ import kboyle.oktane.core.module.callback.ReflectedCommandCallback;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -24,7 +23,7 @@ final class ReflectedCommandFactory {
 
     @SuppressWarnings("unchecked")
     private static <MODULE extends ModuleBase<?>> Function<Object[], MODULE> getModuleFactory(Class<MODULE> moduleClass) {
-        Constructor<?> constructor = CollectionUtils.single(moduleClass.getConstructors());
+        var constructor = CollectionUtils.single(moduleClass.getConstructors());
 
         return beans -> {
             try {

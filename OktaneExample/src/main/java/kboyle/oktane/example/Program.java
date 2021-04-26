@@ -13,16 +13,16 @@ import java.util.stream.Collectors;
 
 public class Program {
     public static void main(String[] args) {
-        CommandHandler<ExampleCommandContext> commandHandler = CommandHandler.<ExampleCommandContext>builder()
+        var commandHandler = CommandHandler.<ExampleCommandContext>builder()
             .withModules(ExampleCommandContext.class)
             .build();
 
-        BeanProvider.Simple beanProvider = BeanProvider.simple()
+        var beanProvider = BeanProvider.simple()
             .add(Random.class, new Random());
 
-        Scanner scanner = new Scanner(System.in);
+        var scanner = new Scanner(System.in);
         while (true) {
-            Result result = commandHandler.execute(scanner.nextLine(), new ExampleCommandContext(beanProvider)).block();
+            var result = commandHandler.execute(scanner.nextLine(), new ExampleCommandContext(beanProvider)).block();
             if (result instanceof CommandMessageResult message) {
                 System.out.println(message.message());
             } else if (result instanceof KillAppCommandResult) {

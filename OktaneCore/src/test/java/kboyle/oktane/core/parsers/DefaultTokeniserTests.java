@@ -45,8 +45,8 @@ public class DefaultTokeniserTests {
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     public void argumentParserTest(Command Command, String arguments, Result expectedResult) {
-        DefaultTokeniser tokeniser = new DefaultTokeniser();
-        Result actualResult = tokeniser.tokenise(arguments, new CommandMatch(Command, 0, 1));
+        var tokeniser = new DefaultTokeniser();
+        var actualResult = tokeniser.tokenise(arguments, new CommandMatch(Command, 0, 1));
         Assertions.assertEquals(expectedResult, actualResult);
     }
 

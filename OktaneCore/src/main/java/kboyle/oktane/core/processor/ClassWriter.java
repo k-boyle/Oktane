@@ -7,7 +7,6 @@ import reactor.core.publisher.Mono;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.StringJoiner;
@@ -24,7 +23,7 @@ public class ClassWriter {
     }
 
     public void write(PrintWriter writer, String callbackClassname, String classPackage, MethodData data) {
-        ExecutableElement method = data.method();
+        var method = data.method();
 
         writer.print("package ");
         writer.print(classPackage);
@@ -87,10 +86,10 @@ public class ClassWriter {
     }
 
     private String unwrap(String containerName, List<? extends VariableElement> parameters) {
-        StringJoiner unwrapped = new StringJoiner(", ");
-        for (int i = 0; i < parameters.size(); i++) {
-            VariableElement parameter = parameters.get(i);
-            TypeMirror type = parameter.asType();
+        var unwrapped = new StringJoiner(", ");
+        for (var i = 0; i < parameters.size(); i++) {
+            var parameter = parameters.get(i);
+            var type = parameter.asType();
             unwrapped.add("(" + type + ") " + containerName + "[" + i + "]");
         }
 

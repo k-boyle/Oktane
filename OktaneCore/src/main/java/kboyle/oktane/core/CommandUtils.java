@@ -44,7 +44,7 @@ public enum CommandUtils {
             .flatMap(precondition -> precondition.run(context, command))
             .collectList()
             .map(results -> {
-                ImmutableList<PreconditionResult> failedResults = results.stream()
+                var failedResults = results.stream()
                     .filter(result -> !result.success())
                     .collect(ImmutableList.toImmutableList());
 
@@ -68,9 +68,9 @@ public enum CommandUtils {
     }
 
     private static Precondition initPrecondition(Require requirement) {
-        Class<? extends Precondition> cl = requirement.precondition();
-        String[] arguments = requirement.arguments();
-        Constructor<?> validConstructor = CollectionUtils.single(cl.getConstructors(), CommandUtils::isValidConstructor);
+        var cl = requirement.precondition();
+        var arguments = requirement.arguments();
+        var validConstructor = CollectionUtils.single(cl.getConstructors(), CommandUtils::isValidConstructor);
 
         try {
             if (arguments.length == 0) {
@@ -84,7 +84,7 @@ public enum CommandUtils {
     }
 
     private static boolean isValidConstructor(Constructor<?> constructor) {
-        Parameter[] parameters = constructor.getParameters();
+        var parameters = constructor.getParameters();
         return parameters.length == 0 || parameters.length == 1 && parameters[0].getType().equals(String[].class);
     }
 
@@ -93,7 +93,7 @@ public enum CommandUtils {
             return false;
         }
 
-        ParameterizedType parameterizedType = unwrapModuleBase(moduleCandidate.getGenericSuperclass());
+        var parameterizedType = unwrapModuleBase(moduleCandidate.getGenericSuperclass());
         if (parameterizedType.getRawType() != ModuleBase.class) {
             return isValidModuleClass(contextClass, (Class<?>) parameterizedType.getRawType());
         }

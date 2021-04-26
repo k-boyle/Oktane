@@ -19,9 +19,9 @@ public class HelpModule extends ModuleBase<ExampleCommandContext> {
 
     @Aliases("help")
     public CommandResult help() {
-        String helpMessage = commandHandler.modules().stream()
+        var helpMessage = commandHandler.modules().stream()
             .map(module -> {
-                String formattedCommands = module.commands.stream()
+                var formattedCommands = module.commands.stream()
                     .flatMap(command -> command.aliases.stream())
                     .map(alias -> "- " + alias)
                     .collect(Collectors.joining("\n"));

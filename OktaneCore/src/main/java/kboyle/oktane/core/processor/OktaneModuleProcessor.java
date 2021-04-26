@@ -11,11 +11,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -42,15 +39,15 @@ public class OktaneModuleProcessor extends AbstractProcessor {
         super.init(processingEnv);
 
         this.types = processingEnv.getTypeUtils();
-        Elements elements = processingEnv.getElementUtils();
+        var elements = processingEnv.getElementUtils();
 
-        TypeElement moduleBase = elements.getTypeElement(ModuleBase.class.getName());
-        TypeElement context = elements.getTypeElement(CommandContext.class.getName());
-        WildcardType baseGeneric = types.getWildcardType(context.asType(), null);
+        var moduleBase = elements.getTypeElement(ModuleBase.class.getName());
+        var context = elements.getTypeElement(CommandContext.class.getName());
+        var baseGeneric = types.getWildcardType(context.asType(), null);
         this.moduleBaseType = types.getDeclaredType(moduleBase, baseGeneric);
 
-        TypeMirror commandResult = elements.getTypeElement(CommandResult.class.getName()).asType();
-        TypeElement mono = elements.getTypeElement(Mono.class.getName());
+        var commandResult = elements.getTypeElement(CommandResult.class.getName()).asType();
+        var mono = elements.getTypeElement(Mono.class.getName());
         this.monoCommandReturnType = types.getDeclaredType(mono, commandResult);
 
         this.commandReturnType = commandResult;
@@ -68,7 +65,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             for (Element commandModule : roundEnv.getElementsAnnotatedWith(annotation)) {
                 print(NOTE, "Processing annotated class %s", commandModule);
 
-                TypeMirror moduleType = commandModule.asType();
+                var moduleType = commandModule.asType();
                 if (!types.isSubtype(moduleType, moduleBaseType)) {
                     print(
                         ERROR,
@@ -106,17 +103,17 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     private boolean createCommandCallback(Element commandModule) {
         print(NOTE, "Processing annotated class %s", commandModule);
 
-        TypeMirror contextType = getContextType(commandModule);
+        var contextType = getContextType(commandModule);
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
             return false;
         }
 
-        ExecutableElement constructor = getConstructor(commandModule);
+        var constructor = getConstructor(commandModule);
 
-        String context = contextType.toString();
+        var context = contextType.toString();
 
-        ClassWriter classWriter = new ClassWriter(commandModule, constructor, context);
+        var classWriter = new ClassWriter(commandModule, constructor, context);
         commandModule.getEnclosedElements().stream()
             .filter(ExecutableElement.class::isInstance)
             .map(ExecutableElement.class::cast)
@@ -129,14 +126,14 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private void createClass(Element commandModule, ClassWriter classWriter, MethodData data) {
-        ExecutableElement method = data.method();
-        String classPackage = getPackage(commandModule);
-        String callbackClassname = getGeneratedClassName(commandModule, method);
+        var method = data.method();
+        var classPackage = getPackage(commandModule);
+        var callbackClassname = getGeneratedClassName(commandModule, method);
 
         try {
-            JavaFileObject javaFileObject = filer.createSourceFile(callbackClassname);
+            var javaFileObject = filer.createSourceFile(callbackClassname);
 
-            try (PrintWriter writer = new PrintWriter(javaFileObject.openWriter())) {
+            try (var writer = new PrintWriter(javaFileObject.openWriter())) {
                 classWriter.write(writer, callbackClassname, classPackage, data);
             }
         } catch (IOException ex) {
@@ -151,12 +148,12 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private String getGeneratedClassName(Element commandModule, ExecutableElement method) {
-        String nestedPath = getNestedPath(commandModule);
+        var nestedPath = getNestedPath(commandModule);
 
-        String parameterNameString = method.getParameters().stream()
+        var parameterNameString = method.getParameters().stream()
             .map(variableElement -> {
-                TypeMirror typeMirror = variableElement.asType();
-                String typeStr = typeMirror.toString();
+                var typeMirror = variableElement.asType();
+                var typeStr = typeMirror.toString();
                 return typeStr.replace(".", "0")
                     .replace("<", "$$")
                     .replace(">", "$$");
@@ -167,7 +164,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private String getPackage(Element element) {
-        Element enclosingElement = element.getEnclosingElement();
+        var enclosingElement = element.getEnclosingElement();
         if (enclosingElement instanceof PackageElement packageElement) {
             return packageElement.toString();
         }
@@ -176,7 +173,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private String getNestedPath(Element commandModule) {
-        Element enclosingElement = commandModule.getEnclosingElement();
+        var enclosingElement = commandModule.getEnclosingElement();
         if (enclosingElement.getKind() == ElementKind.PACKAGE) {
             return commandModule.getSimpleName().toString();
         }
@@ -210,8 +207,8 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private MethodData getMethodData(ExecutableElement element) {
-        TypeMirror returnType = element.getReturnType();
-        boolean monoReturn = types.isSameType(returnType, monoCommandReturnType);
+        var returnType = element.getReturnType();
+        var monoReturn = types.isSameType(returnType, monoCommandReturnType);
 
         return new MethodData(
             element,

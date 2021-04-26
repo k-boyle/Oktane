@@ -25,7 +25,7 @@ public class DiceModule extends ModuleBase<ExampleCommandContext> {
     }
 
     public CommandResult roll(int number, int sides, List<Integer> tits) {
-        String results = IntStream.range(0, number).map(i -> random.nextInt(sides) + 1)
+        var results = IntStream.range(0, number).map(i -> random.nextInt(sides) + 1)
             .boxed()
             .map(String::valueOf)
             .collect(Collectors.joining(", "));

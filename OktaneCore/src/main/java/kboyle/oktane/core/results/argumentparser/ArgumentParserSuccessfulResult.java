@@ -16,7 +16,7 @@ public record ArgumentParserSuccessfulResult(Command command, Object[] parsedArg
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(command);
+        var result = Objects.hash(command);
         result = 31 * result + Arrays.hashCode(parsedArguments);
         return result;
     }
