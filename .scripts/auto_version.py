@@ -21,10 +21,12 @@ snapshot_patch += 1
 
 if stable_minor > snapshot_minor:
     snapshot_minor = stable_minor
-    snapshot_patch = 1
+    snapshot_patch = stable_patch + 1
 
 if stable_major > snapshot_major:
     snapshot_major = stable_major
+    snapshot_minor = stable_minor
+    snapshot_patch = stable_patch + 1
 
 
 print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch}-SNAPSHOT')
