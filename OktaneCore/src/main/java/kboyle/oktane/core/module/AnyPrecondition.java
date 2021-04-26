@@ -2,7 +2,6 @@ package kboyle.oktane.core.module;
 
 import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.results.FailedResult;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
 import reactor.core.publisher.Flux;
@@ -39,9 +38,5 @@ public final class AnyPrecondition implements Precondition {
 
                 return new PreconditionsFailedResult(results);
             });
-    }
-
-    private String getReason(PreconditionResult result) {
-        return result instanceof FailedResult failed ? failed.reason() : "Missing failure reason";
     }
 }
