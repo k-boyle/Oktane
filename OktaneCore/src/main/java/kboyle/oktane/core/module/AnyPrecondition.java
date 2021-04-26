@@ -24,7 +24,7 @@ public final class AnyPrecondition implements Precondition {
                     if (signal.hasValue()) {
                         PreconditionResult result = signal.get();
                         if (result.success()) {
-                            return Flux.just(success());
+                            return Flux.just(result);
                         }
                     }
 
