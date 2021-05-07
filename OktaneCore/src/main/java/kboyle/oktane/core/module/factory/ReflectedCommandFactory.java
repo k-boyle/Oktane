@@ -42,11 +42,18 @@ final class ReflectedCommandFactory {
     private static <MODULE extends ModuleBase<?>> BiFunction<MODULE, Object[], Mono<CommandResult>> getCallbackFunction(Method method) {
         return (module, parameters) -> {
             try {
+                Object result;
                 if (parameters.length == 0) {
-                    return (Mono<CommandResult>) method.invoke(module);
+                    result = method.invoke(module);
+                } else {
+                    result = method.invoke(module, parameters);
                 }
 
-                return (Mono<CommandResult>) method.invoke(module, parameters);
+                if (result instanceof CommandResult commandResult) {
+                    return Mono.just(commandResult);
+                }
+
+                return (Mono<CommandResult>) result;
             } catch (Exception ex) {
                 throw new MethodInvocationFailedException(ex);
             }
