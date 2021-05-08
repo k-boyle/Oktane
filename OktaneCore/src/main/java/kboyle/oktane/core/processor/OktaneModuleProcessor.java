@@ -17,12 +17,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 
-@SupportedAnnotationTypes("kboyle.oktane.core.processor.OktaneModule")
+@SupportedAnnotationTypes("kboyle.oktane.core.module.annotations.Aliases")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
 @AutoService(Processor.class)
 public class OktaneModuleProcessor extends AbstractProcessor {
@@ -59,37 +60,12 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         print(NOTE, "");
 
-        for (TypeElement annotation : annotations) {
-            print(NOTE, "Generating modules for annotation %s", annotation);
+        var allSuccess = roundEnv.getRootElements().stream()
+            .mapMulti(this::flattenElement)
+            .allMatch(this::createCommandCallback);
 
-            for (Element commandModule : roundEnv.getElementsAnnotatedWith(annotation)) {
-                print(NOTE, "Processing annotated class %s", commandModule);
-
-                var moduleType = commandModule.asType();
-                if (!types.isSubtype(moduleType, moduleBaseType)) {
-                    print(
-                        ERROR,
-                        "Module \"%s\" is annotated but doesn't extend %s",
-                        commandModule.getSimpleName(),
-                        moduleBaseType
-                    );
-
-                    return false;
-                }
-
-                if (commandModule.getModifiers().contains(Modifier.ABSTRACT)) {
-                    print(
-                        NOTE,
-                        "Module \"%s\" is abstract, skipping",
-                        moduleType
-                    );
-                    continue;
-                }
-
-                if (!createCommandCallback(commandModule)) {
-                    return false;
-                }
-            }
+        if (!allSuccess) {
+            return false;
         }
 
         print(NOTE, "");
@@ -98,6 +74,26 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
     private void print(Diagnostic.Kind kind, String message, Object... args) {
         processingEnv.getMessager().printMessage(kind, String.format(message, args));
+    }
+
+    private void flattenElement(Element element, Consumer<Element> downstream) {
+        if (!isPotentialModule(element)) {
+            print(NOTE, "%s is not a potential module, skipping", element);
+            return;
+        }
+
+        downstream.accept(element);
+        for (var enclosedElement : element.getEnclosedElements()) {
+            if (enclosedElement instanceof TypeElement) {
+                flattenElement(enclosedElement, downstream);
+            }
+        }
+    }
+
+    private boolean isPotentialModule(Element element) {
+        return types.isSubtype(element.asType(), moduleBaseType)
+            && !element.getModifiers().contains(Modifier.ABSTRACT)
+            && element.getModifiers().contains(Modifier.PUBLIC);
     }
 
     private boolean createCommandCallback(Element commandModule) {
@@ -192,11 +188,11 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     private TypeMirror getContextType(Element element) {
         if (element instanceof TypeElement typeElement) {
             if (typeElement.getSuperclass() instanceof DeclaredType declaredType) {
-                 if (types.isSameType(types.erasure(moduleBaseType), types.erasure(declaredType))) {
-                     return declaredType.getTypeArguments().get(0);
-                 }
+                if (types.isSameType(types.erasure(moduleBaseType), types.erasure(declaredType))) {
+                    return declaredType.getTypeArguments().get(0);
+                }
 
-                 return getContextType(declaredType.asElement());
+                return getContextType(declaredType.asElement());
             }
 
             print(ERROR, "Unknown Element found %s", typeElement);

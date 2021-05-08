@@ -132,8 +132,8 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             var constructor = commandClass.getConstructors()[0];
             callback = (AnnotatedCommandCallback<CONTEXT, MODULE>) constructor.newInstance();
         } catch (ClassNotFoundException e) {
-            logger.warn(
-                "Failed to find a class for method {} using {}",
+            logger.error(
+                "Failed to find a class for method {} using {}, using reflection fallback",
                 method,
                 generatedClassPath
             );

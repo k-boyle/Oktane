@@ -3,13 +3,11 @@ package kboyle.oktane.example.modules;
 import kboyle.oktane.core.CommandHandler;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.Aliases;
-import kboyle.oktane.core.processor.OktaneModule;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.example.ExampleCommandContext;
 
 import java.util.stream.Collectors;
 
-@OktaneModule
 public class HelpModule extends ModuleBase<ExampleCommandContext> {
     private final CommandHandler<ExampleCommandContext> commandHandler;
 

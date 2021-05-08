@@ -74,7 +74,7 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
             moduleBuilder.withName(moduleName.value());
         }
 
-        var commandFactory = new CommandFactory<CONTEXT, MODULE>(
+        var commandFactory = new CommandFactory<>(
             typeParserByClass,
             moduleClass,
             singleton,
