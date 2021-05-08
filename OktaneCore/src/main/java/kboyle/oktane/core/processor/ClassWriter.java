@@ -46,6 +46,7 @@ public class ClassWriter {
         writer.println("> {");
 
         writer.println("\t@Override");
+        writer.println("\t@SuppressWarnings(\"unchecked\")");
         writer.print("\tpublic Mono<CommandResult> execute(");
         writer.print(commandModule);
         writer.println(" module, Object[] parameters) {");
@@ -72,6 +73,7 @@ public class ClassWriter {
         writer.println();
 
         writer.println("\t@Override");
+        writer.println("\t@SuppressWarnings(\"unchecked\")");
         writer.print("\tpublic ");
         writer.print(commandModule);
         writer.println(" getModule(Object[] beans) {");

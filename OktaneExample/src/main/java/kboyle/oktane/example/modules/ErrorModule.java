@@ -4,13 +4,11 @@ import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.Aliases;
 import kboyle.oktane.core.module.annotations.Require;
 import kboyle.oktane.core.module.annotations.RequireAny;
-import kboyle.oktane.core.processor.OktaneModule;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.example.ExampleCommandContext;
 import kboyle.oktane.example.preconditions.FailurePrecondition;
 import kboyle.oktane.example.preconditions.HiPrecondition;
 
-@OktaneModule
 public class ErrorModule extends ModuleBase<ExampleCommandContext> {
     @Aliases("error")
     public CommandResult error() {

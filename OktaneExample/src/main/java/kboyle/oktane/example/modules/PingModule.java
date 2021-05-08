@@ -4,13 +4,11 @@ import kboyle.oktane.core.module.annotations.Aliases;
 import kboyle.oktane.core.module.annotations.Description;
 import kboyle.oktane.core.module.annotations.Name;
 import kboyle.oktane.core.module.annotations.Remainder;
-import kboyle.oktane.core.processor.OktaneModule;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.example.ExampleEnum;
 
 @Name("Ping Module")
 @Description("A module with various... useful... ping commands")
-@OktaneModule
 public class PingModule extends ExampleModuleBase {
     @Name("Ping")
     @Aliases("ping")
@@ -38,5 +36,12 @@ public class PingModule extends ExampleModuleBase {
     @Description("Echos the chosen enum")
     public CommandResult ping(@Name("Enum") ExampleEnum exampleEnum) {
         return message("ping " + exampleEnum);
+    }
+
+    public static class Nested extends ExampleModuleBase {
+        @Aliases("nested")
+        public CommandResult nested() {
+            return nop();
+        }
     }
 }
