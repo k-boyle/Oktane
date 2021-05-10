@@ -42,6 +42,20 @@ public class DefaultTokeniserTests {
         .addParameter(String.class, false)
         .build();
 
+    private static final Command OPTIONAL_STRING = new TestCommandBuilder()
+        .addOptionalParameter(String.class, null)
+        .build();
+
+    private static final Command OPTIONAL_STRING_OPTIONAL_STRING = new TestCommandBuilder()
+        .addOptionalParameter(String.class, null)
+        .addOptionalParameter(String.class, null)
+        .build();
+
+    private static final Command STRING_OPTIONAL_STRING = new TestCommandBuilder()
+        .addParameter(String.class, false)
+        .addOptionalParameter(String.class, null)
+        .build();
+
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     public void argumentParserTest(Command Command, String arguments, Result expectedResult) {
@@ -166,6 +180,41 @@ public class DefaultTokeniserTests {
                 STRING_NOT_ARG_REMAINDER,
                 " \\\\\\",
                 new TokeniserSuccessfulResult(STRING_NOT_ARG_REMAINDER, List.of("\\\\"))
+            ),
+            Arguments.of(
+                OPTIONAL_STRING,
+                " ",
+                new TokeniserSuccessfulResult(OPTIONAL_STRING, List.of())
+            ),
+            Arguments.of(
+                OPTIONAL_STRING,
+                " string",
+                new TokeniserSuccessfulResult(OPTIONAL_STRING, List.of("string"))
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_OPTIONAL_STRING,
+                " ",
+                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of())
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_OPTIONAL_STRING,
+                " string",
+                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of("string"))
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_OPTIONAL_STRING,
+                " string1 string2",
+                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of("string1", "string2"))
+            ),
+            Arguments.of(
+                STRING_OPTIONAL_STRING,
+                " string",
+                new TokeniserSuccessfulResult(STRING_OPTIONAL_STRING, List.of("string"))
+            ),
+            Arguments.of(
+                STRING_OPTIONAL_STRING,
+                " string1 string2",
+                new TokeniserSuccessfulResult(STRING_OPTIONAL_STRING, List.of("string1", "string2"))
             )
         );
     }

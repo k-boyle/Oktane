@@ -15,6 +15,11 @@ public class TestCommandBuilder {
         return this;
     }
 
+    public TestCommandBuilder addOptionalParameter(Class<?> type, String defaultValue) {
+        this.parameters.add(CommandParameter.builder().withName("").withType(type).withDefaultValue(defaultValue));
+        return this;
+    }
+
     public Command build() {
         return new Command(
             "",

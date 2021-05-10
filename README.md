@@ -32,15 +32,14 @@ public class OktaneCommandContext extends CommandContext {
 **Module Creation**
 
 To define a class as a module the class just needs to extend `ModuleBase<T>`.
-The `@OktaneModule` annotation is used to mark classes for the annotation processor.
+The `@Aliases` annotation is used to force an annotation processor to run.
 Methods that are **public** and return `CommandResult` or `Mono<CommandResult>` are designated as commands.
-When the module is marked as  `@OktaneModule` a class will be generated that corresponds to each command method which will be used to invoke the commands at runtime,
+When a class extends `ModuleBase<T>` a class will be generated that corresponds to each command method which will be used to invoke the commands at runtime,
 this approach means that there is no overhead vs a direct method call,
 if the module is not annotated then reflection will be used to invoke the methods (this is some magnitudes slower).
 The `Aliases` annotation tells the `CommandHandler` what strings to map to this method.
 
 ```java
-@OktaneModule
 public class OktaneCommandModule extends ModuleBase<OktaneCommandContext> {
     @Aliases({"echo", "e"})
     public CommandResult pingPong(@Remainder String input) {
@@ -147,7 +146,6 @@ public class RequireOwnerPrecondition implements Precondition {
 Beans can be injected into module using the `BeanProvider`, any constructor arguments will be passed into the module on instantiation, the `CommandHandler`
 will inject itself and does not need to be added to a provider.
 ```java
-@OktaneModule
 public class OktaneCommandModule extends ModuleBase<OktaneCommandContext> {
     private final CommandHandler<OktaneCommandContext> commandHandler;
     private final UserService userService;
