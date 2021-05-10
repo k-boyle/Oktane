@@ -91,7 +91,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
 
         CommandUtils.createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
-        var parameterFactory = new CommandParameterFactory(typeParserByClass, method);
+        var parameterFactory = new CommandParameterFactory(typeParserByClass);
         var parameters = method.getParameters();
         for (var parameter : parameters) {
             var commandParameter = parameterFactory.createParameter(parameter);

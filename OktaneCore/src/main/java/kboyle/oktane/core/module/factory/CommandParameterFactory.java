@@ -11,17 +11,14 @@ import kboyle.oktane.core.module.annotations.Remainder;
 import kboyle.oktane.core.parsers.EnumTypeParser;
 import kboyle.oktane.core.parsers.TypeParser;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Map;
 
 public class CommandParameterFactory {
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
-    private final Method method;
 
-    public CommandParameterFactory(Map<Class<?>, TypeParser<?>> typeParserByClass, Method method) {
+    public CommandParameterFactory(Map<Class<?>, TypeParser<?>> typeParserByClass) {
         this.typeParserByClass = typeParserByClass;
-        this.method = method;
     }
 
     public CommandParameter.Builder createParameter(Parameter parameter) {
