@@ -1,5 +1,6 @@
 package kboyle.oktane.core.parsers;
 
+import com.google.common.base.Defaults;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
@@ -15,7 +16,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.function.Function;
 
 public class DefaultArgumentParser implements ArgumentParser {
     private static final Object[] EMPTY = new Object[0];
@@ -34,9 +34,22 @@ public class DefaultArgumentParser implements ArgumentParser {
             return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
         }
 
-        return Flux.fromIterable(tokens)
-            .zipWithIterable(parameters, (token, parameter) -> parse(parameter, context, token))
-            .flatMap(Function.identity())
+        return Flux.range(0, parameters.size())
+            .flatMap(i -> {
+                var parameter = parameters.get(i);
+                var token = getNextToken(tokens, i);
+
+                if (token == null) {
+                    Preconditions.checkState(parameter.optional, "A non-optional parameter with a null token should not be possible");
+                    token = parameter.defaultValue.orElse(null);
+                }
+
+                if (token == null) {
+                    return new TypeParserSuccessfulResult<>(Defaults.defaultValue(parameter.type)).mono();
+                }
+
+                return parse(parameter, context, token);
+            })
             .collectList()
             .map(results -> {
                 var allSuccess = results.stream().allMatch(Result::success);
@@ -52,6 +65,14 @@ public class DefaultArgumentParser implements ArgumentParser {
 
                 return new ArgumentParserSuccessfulResult(command, arguments);
             });
+    }
+
+    private String getNextToken(List<String> tokens, int index) {
+        if (index >= tokens.size()) {
+            return null;
+        }
+
+        return tokens.get(index);
     }
 
     private Mono<Result> parse(CommandParameter parameter, CommandContext context, String input) {

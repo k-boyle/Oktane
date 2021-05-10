@@ -29,6 +29,22 @@ public class DefaultArgumentParserTests {
         .addParameter(String.class, false)
         .build();
 
+    private static final Command OPTIONAL_STRING_NO_DEFAULT = new TestCommandBuilder()
+        .addOptionalParameter(String.class, null)
+        .build();
+
+    private static final Command OPTIONAL_STRING_DEFAULT = new TestCommandBuilder()
+        .addOptionalParameter(String.class, "default value")
+        .build();
+
+    private static final Command OPTIONAL_INT_NO_DEFAULT = new TestCommandBuilder()
+        .addOptionalParameter(int.class, null)
+        .build();
+
+    private static final Command OPTIONAL_INT_DEFAULT = new TestCommandBuilder()
+        .addOptionalParameter(int.class, "20")
+        .build();
+
     private static final CommandContext CONTEXT = new TestCommandContext();
 
     @ParameterizedTest
@@ -60,6 +76,46 @@ public class DefaultArgumentParserTests {
                 INT_ARG,
                 List.of("notint"),
                 new ArgumentParserFailedResult(INT_ARG, List.of(new TypeParserFailedResult<Integer>("Failed to parse notint as class java.lang.Integer")))
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_NO_DEFAULT,
+                List.of(),
+                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { null })
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_NO_DEFAULT,
+                List.of("string"),
+                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { "string" })
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_DEFAULT,
+                List.of(),
+                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { "default value" })
+            ),
+            Arguments.of(
+                OPTIONAL_STRING_DEFAULT,
+                List.of("string"),
+                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { "string" })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_NO_DEFAULT,
+                List.of(),
+                new ArgumentParserSuccessfulResult(OPTIONAL_INT_NO_DEFAULT, new Object[] { 0 })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_NO_DEFAULT,
+                List.of("10"),
+                new ArgumentParserSuccessfulResult(OPTIONAL_INT_NO_DEFAULT, new Object[] { 10 })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_DEFAULT,
+                List.of(),
+                new ArgumentParserSuccessfulResult(OPTIONAL_INT_DEFAULT, new Object[] { 20 })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_DEFAULT,
+                List.of("10"),
+                new ArgumentParserSuccessfulResult(OPTIONAL_INT_DEFAULT, new Object[] { 10 })
             )
         );
     }
