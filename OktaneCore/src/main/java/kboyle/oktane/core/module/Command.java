@@ -30,6 +30,7 @@ public class Command {
     public final CommandModule module;
     public final boolean synchronised;
     public final int priority;
+    public final int optionalStart;
 
     Command(
             String name,
@@ -63,6 +64,25 @@ public class Command {
             builtParameters.add(commandParameter);
         }
 
+        int optionalStart = -1;
+        for (int i = 0; i < builtParameters.size(); i++) {
+            var currentOptional = builtParameters.get(i).optional;
+            if (!currentOptional) {
+                continue;
+            }
+
+            Preconditions.checkState(
+                i == builtParameters.size() - 1 || builtParameters.get(i + 1).optional,
+                "An optional parameter cannot be followed by a non-optional one"
+            );
+
+            if (optionalStart == -1) {
+                optionalStart = i;
+            }
+        }
+
+        this.optionalStart = optionalStart;
+
         this.signature = new Signature(
             !builtParameters.isEmpty() && builtParameters.get(builtParameters.size() - 1).remainder,
             builtParameters.stream()
@@ -80,6 +100,7 @@ public class Command {
 
     /**
      * Runs the preconditions that belong to this command.
+     *
      * @param context The context to pass to the preconditions.
      * @return The result of executing the preconditions.
      */

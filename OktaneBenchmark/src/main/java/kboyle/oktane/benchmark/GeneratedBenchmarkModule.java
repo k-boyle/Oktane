@@ -2,10 +2,8 @@ package kboyle.oktane.benchmark;
 
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.Aliases;
-import kboyle.oktane.core.processor.OktaneModule;
 import kboyle.oktane.core.results.command.CommandResult;
 
-@OktaneModule
 public class GeneratedBenchmarkModule extends ModuleBase<BenchmarkContext> {
     @Aliases("none")
     public CommandResult noParameters() {

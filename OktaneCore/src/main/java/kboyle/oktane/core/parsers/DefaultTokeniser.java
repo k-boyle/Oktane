@@ -17,6 +17,7 @@ public class DefaultTokeniser implements Tokeniser {
         var command = commandMatch.command();
         var index = commandMatch.argumentStart();
         var commandEnd = commandMatch.commandEnd();
+        var optionalStart = command.optionalStart;
 
         var inputLength = input.length();
         var inputLastIndex = inputLength - 1;
@@ -25,7 +26,7 @@ public class DefaultTokeniser implements Tokeniser {
         var parametersSize = parameters.size();
 
         var emptyParameters = parameters.isEmpty();
-        if ((index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
+        if (optionalStart == - 1 && (index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
             return new TokeniserTooFewTokensResult(command, input, parametersSize);
         }
 
@@ -51,6 +52,10 @@ public class DefaultTokeniser implements Tokeniser {
                 if (currentCharacter != ESCAPE || input.charAt(index - 1) == ESCAPE) {
                     break;
                 }
+            }
+
+            if (optionalStart != -1 && index >= optionalStart && index >= inputLastIndex) {
+                return new TokeniserSuccessfulResult(command, tokens);
             }
 
             if (index > inputLastIndex) {

@@ -6,6 +6,7 @@ import kboyle.oktane.core.exceptions.MissingTypeParserException;
 import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.module.annotations.Description;
 import kboyle.oktane.core.module.annotations.Name;
+import kboyle.oktane.core.module.annotations.Optional;
 import kboyle.oktane.core.module.annotations.Remainder;
 import kboyle.oktane.core.parsers.EnumTypeParser;
 import kboyle.oktane.core.parsers.TypeParser;
@@ -41,18 +42,17 @@ public class CommandParameterFactory {
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
             .withParser(parser);
 
-        var parameterDescription = method.getAnnotation(Description.class);
-        if (parameterDescription != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(parameterDescription.value()), "A parameter description must be non-empty.");
-            parameterBuilder.withDescription(parameterDescription.value());
+        for (var annotation : parameter.getAnnotations()) {
+            if (annotation instanceof Description description) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(description.value()), "A parameter description must be non-empty.");
+                parameterBuilder.withDescription(description.value());
+            } else if (annotation instanceof Name name) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(name.value()), "A parameter name must be non-empty.");
+                parameterBuilder.withName(name.value());
+            } else if (annotation instanceof Optional optional) {
+                parameterBuilder.withDefaultValue(optional.defaultValue());
+            }
         }
-
-        var parameterName = parameter.getAnnotation(Name.class);
-        if (parameterName != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(parameterName.value()), "A parameter name must be non-empty.");
-            parameterBuilder.withName(parameterName.value());
-        }
-
         return parameterBuilder;
     }
 }
