@@ -17,7 +17,11 @@ public class CommandMap {
     }
 
     public ImmutableList<CommandMatch> findCommands(String input) {
-        return rootNode.findCommands(input, 0);
+        return findCommands(input, 0);
+    }
+
+    public ImmutableList<CommandMatch> findCommands(String input, int startIndex) {
+        return rootNode.findCommands(input, startIndex);
     }
 
     public static Builder builder() {

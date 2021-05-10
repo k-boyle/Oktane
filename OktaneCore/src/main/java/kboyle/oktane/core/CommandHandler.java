@@ -79,14 +79,31 @@ public class CommandHandler<T extends CommandContext> {
      * @throws NullPointerException when {@code context} is null.
      */
     public Mono<Result> execute(String input, T context) {
+        return execute(input, context, 0);
+    }
+
+    /**
+     * Tries to execute a command for the given input.
+     *
+     * @param input The user input to parse.
+     * @param context The {@link CommandContext} to pass into execution.
+     * @param startIndex The index to start parsing the {@code input} from.
+     * @return The result of execution.
+     *
+     * @throws NullPointerException when {@code input} is null.
+     * @throws NullPointerException when {@code context} is null.
+     * @throws IllegalStateException when {@code startIndex} < 0.
+     */
+    public Mono<Result> execute(String input, T context, int startIndex) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
+        Preconditions.checkState(startIndex > -1);
 
         if (input.isEmpty()) {
             return COMMAND_NOT_FOUND;
         }
 
-        var matches = commandMap.findCommands(input);
+        var matches = commandMap.findCommands(input, startIndex);
 
         if (matches.isEmpty()) {
             return COMMAND_NOT_FOUND;
