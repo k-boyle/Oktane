@@ -228,13 +228,11 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
-        @Deprecated
         public Builder<T> withModules(Class<T> contextClass) {
             return withModules(contextClass, contextClass.getPackageName());
         }
 
         @SuppressWarnings("UnstableApiUsage")
-        @Deprecated
         public Builder<T> withModules(Class<T> contextClass, String packageName) {
             try {
                 ClassPath.from(contextClass.getClassLoader()).getTopLevelClassesRecursive(packageName)
