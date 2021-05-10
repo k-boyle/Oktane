@@ -3,7 +3,8 @@
 [![OSS Snapshot](https://img.shields.io/nexus/s/com.github.k-boyle/Oktane?label=snapshot&server=https%3A%2F%2Foss.sonatype.org%2F&style=for-the-badge)](https://oss.sonatype.org/#nexus-search;quick~oktane)
 
 Oktane is a high performance, highly configurable Java command framework used to map strings to methods, and execute them.
-It is built upon the [Reactor](https://projectreactor.io/) framework to allow easy integration with reactive projects, such as [Discord4J](https://github.com/Discord4J/Discord4J)
+It is built upon the [Reactor](https://projectreactor.io/) framework to allow easy integration with reactive projects, such as [Discord4J](https://github.com/Discord4J/Discord4J).
+
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
 Example usage can be seen in the OktaneExample module, and an example using Discord4J and Spring [here](https://github.com/k-boyle/degenerate).
