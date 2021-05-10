@@ -19,7 +19,7 @@ public final class CommandParameter {
     public final boolean optional;
     public final Optional<String> defaultValue;
 
-    public CommandParameter(
+    CommandParameter(
             Class<?> type,
             Optional<String> description,
             String name,
