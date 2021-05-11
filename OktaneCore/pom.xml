@@ -17,7 +17,7 @@
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
-        <reactor-core.version>3.4.5</reactor-core.version>
+        <reactor-core.version>3.4.6</reactor-core.version>
 
         <auto-service-annotations.version>1.0</auto-service-annotations.version>
     </properties>
