@@ -12,6 +12,8 @@ import kboyle.oktane.core.results.Result;
 import kboyle.oktane.discord4j.parsers.ChannelTypeParser;
 import kboyle.oktane.discord4j.parsers.RoleTypeParser;
 import kboyle.oktane.discord4j.parsers.UserTypeParser;
+import kboyle.oktane.discord4j.precondition.RequireBotOwner;
+import kboyle.oktane.discord4j.precondition.RequirePermission;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
@@ -35,7 +37,9 @@ public class DiscordCommandHandler<CONTEXT extends DiscordCommandContext> {
             .withTypeParser(VoiceChannel.class, new ChannelTypeParser<>(VoiceChannel.class))
             .withTypeParser(User.class, new UserTypeParser<>(User.class))
             .withTypeParser(Member.class, new UserTypeParser<>(Member.class))
-            .withTypeParser(Role.class, new RoleTypeParser<>());
+            .withTypeParser(Role.class, new RoleTypeParser<>())
+            .withPreconditionFactory(new RequirePermission.Factory())
+            .withPreconditionFactory(new RequireBotOwner.Factory());
         commandHandlerConsumer.accept(builder);
         return new DiscordCommandHandler<>(builder.build());
     }
