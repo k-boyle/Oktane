@@ -2,6 +2,7 @@ package kboyle.oktane.core.module.factory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.CommandUtils;
@@ -11,6 +12,7 @@ import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.module.callback.*;
 import kboyle.oktane.core.parsers.TypeParser;
+import kboyle.oktane.core.precondition.PreconditionFactory;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import static java.lang.reflect.Modifier.isStatic;
 public class CommandFactory<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
     private final Class<MODULE> moduleClass;
     private final boolean singleton;
@@ -36,11 +39,13 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     private final BeanProvider beanProvider;
 
     public CommandFactory(
+            ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass,
             Map<Class<?>, TypeParser<?>> typeParserByClass,
             Class<MODULE> moduleClass,
             boolean singleton,
             Object moduleLock,
             BeanProvider beanProvider) {
+        this.preconditionFactoryByClass = preconditionFactoryByClass;
         this.typeParserByClass = typeParserByClass;
         this.moduleClass = moduleClass;
         this.singleton = singleton;
@@ -53,41 +58,44 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             return null;
         }
 
-        var commandAliases = method.getAnnotation(Aliases.class);
-        Preconditions.checkState(
-            isValidAliases(moduleGroups, commandAliases),
-            "A command must have aliases if the module has no groups"
-        );
-
-        var commandSynchronised = method.getAnnotation(Synchronised.class) != null;
-
         var commandBuilder = Command.builder()
-            .withName(method.getName())
-            .withSynchronised(commandSynchronised)
-            .withCallback(getCallback(method, commandSynchronised));
+            .withName(method.getName());
 
-        if (commandAliases != null) {
-            for (var alias : commandAliases.value()) {
-                commandBuilder.withAlias(alias);
+        boolean synchronised = false;
+        for (var annotation : method.getAnnotations()) {
+            if (annotation instanceof Aliases aliases) {
+                Preconditions.checkState(
+                    isValidAliases(moduleGroups, aliases),
+                    "A command must have aliases if the module has no groups"
+                );
+
+                for (var alias : aliases.value()) {
+                    commandBuilder.withAlias(alias);
+                }
+            } else if (annotation instanceof Synchronised) {
+                commandBuilder.synchronised();
+                synchronised = true;
+            } else if (annotation instanceof Name name) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(name.value()), "A command name must be non-empty.");
+                commandBuilder.withName(name.value());
+            } else if (annotation instanceof Description description) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(description.value()), "A command description must be non-empty.");
+                commandBuilder.withDescription(description.value());
+            } else if (annotation instanceof Priority priority) {
+                commandBuilder.withPriority(priority.value());
+            } else {
+                var preconditionFactory = preconditionFactoryByClass.get(annotation.annotationType());
+                if (preconditionFactory != null) {
+                    var precondition = Preconditions.checkNotNull(
+                        preconditionFactory.createPrecondition0(annotation),
+                        "A PreconditionFactory cannot return null"
+                    );
+                    commandBuilder.withPrecondition(precondition);
+                }
             }
         }
 
-        var commandName = method.getAnnotation(Name.class);
-        if (commandName != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(commandName.value()), "A command name must be non-empty.");
-            commandBuilder.withName(commandName.value());
-        }
-
-        var commandDescription = method.getAnnotation(Description.class);
-        if (commandDescription != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(commandDescription.value()), "A command description must be non-empty.");
-            commandBuilder.withDescription(commandDescription.value());
-        }
-
-        var priority = method.getAnnotation(Priority.class);
-        if (priority != null) {
-            commandBuilder.withPriority(priority.value());
-        }
+        commandBuilder.withCallback(getCallback(method, synchronised));
 
         CommandUtils.createPreconditions(method).forEach(commandBuilder::withPrecondition);
 
@@ -119,8 +127,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     }
 
     private static boolean isValidAliases(Aliases moduleAliases, Aliases commandAliases) {
-        return commandAliases != null && commandAliases.value().length > 0
-            || moduleAliases != null && moduleAliases.value().length > 0;
+        return commandAliases.value().length > 0 || moduleAliases != null && moduleAliases.value().length > 0;
     }
 
     @SuppressWarnings("unchecked")

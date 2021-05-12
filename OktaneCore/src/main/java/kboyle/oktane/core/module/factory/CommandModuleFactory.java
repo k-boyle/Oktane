@@ -2,6 +2,7 @@ package kboyle.oktane.core.module.factory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.CommandUtils;
@@ -9,6 +10,7 @@ import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.parsers.TypeParser;
+import kboyle.oktane.core.precondition.PreconditionFactory;
 
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -20,10 +22,15 @@ import static java.lang.reflect.Modifier.isStatic;
 public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends ModuleBase<CONTEXT>> {
     private final BeanProvider beanProvider;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
+    private final ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
 
-    public CommandModuleFactory(BeanProvider beanProvider, Map<Class<?>, TypeParser<?>> typeParserByClass) {
+    public CommandModuleFactory(
+            BeanProvider beanProvider,
+            Map<Class<?>, TypeParser<?>> typeParserByClass,
+            ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
+        this.preconditionFactoryByClass = preconditionFactoryByClass;
     }
 
     public <MODULE extends BASE> CommandModule create(Class<MODULE> moduleClass) {
@@ -47,34 +54,45 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
             moduleBuilder.withBean(parameterType);
         }
 
-        var moduleGroups = moduleClass.getAnnotation(Aliases.class);
-        if (moduleGroups != null) {
-            for (var group : moduleGroups.value()) {
-                moduleBuilder.withGroup(group);
+        Aliases groups = null;
+        boolean singleton = false;
+        boolean synchronised = false;
+        for (var annotation : moduleClass.getAnnotations()) {
+            if (annotation instanceof Aliases aliases) {
+                groups = aliases;
+                for (var group : groups.value()) {
+                    moduleBuilder.withGroup(group);
+                }
+            } else if (annotation instanceof Description description) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(description.value()), "A module description must be non-empty.");
+                moduleBuilder.withDescription(description.value());
+            } else if (annotation instanceof Name name) {
+                Preconditions.checkState(!Strings.isNullOrEmpty(name.value()), "A module name must be non-empty.");
+                moduleBuilder.withName(name.value());
+            } else if (annotation instanceof Singleton) {
+                singleton = true;
+                moduleBuilder.singleton();
+            } else if (annotation instanceof Synchronised) {
+                synchronised = true;
+                moduleBuilder.synchronised();
+            } else {
+                var preconditionFactory = preconditionFactoryByClass.get(annotation.annotationType());
+                if (preconditionFactory != null) {
+                    var precondition = Preconditions.checkNotNull(
+                        preconditionFactory.createPrecondition0(annotation),
+                        "A PreconditionFactory cannot return null"
+                    );
+                    moduleBuilder.withPrecondition(precondition);
+                }
             }
         }
 
-        var singleton = moduleClass.getAnnotation(Singleton.class) != null;
-        var moduleSynchronised = moduleClass.getAnnotation(Synchronised.class) != null;
-        moduleBuilder.withSingleton(singleton);
-        moduleBuilder.withSynchronised(moduleSynchronised);
-        var moduleLock = moduleSynchronised ? new Object() : null;
-
-        var moduleDescription = moduleClass.getAnnotation(Description.class);
-        if (moduleDescription != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(moduleDescription.value()), "A module description must be non-empty.");
-            moduleBuilder.withDescription(moduleDescription.value());
-        }
+        var moduleLock = synchronised ? new Object() : null;
 
         CommandUtils.createPreconditions(moduleClass).forEach(moduleBuilder::withPrecondition);
 
-        var moduleName = moduleClass.getAnnotation(Name.class);
-        if (moduleName != null) {
-            Preconditions.checkState(!Strings.isNullOrEmpty(moduleName.value()), "A module name must be non-empty.");
-            moduleBuilder.withName(moduleName.value());
-        }
-
         var commandFactory = new CommandFactory<>(
+            preconditionFactoryByClass,
             typeParserByClass,
             moduleClass,
             singleton,
@@ -84,7 +102,7 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
 
         var methods = moduleClass.getMethods();
         for (var method : methods) {
-            var command = commandFactory.createCommand(moduleGroups, method);
+            var command = commandFactory.createCommand(groups, method);
             if (command != null) {
                 moduleBuilder.withCommand(command);
             }

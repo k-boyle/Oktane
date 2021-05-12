@@ -9,8 +9,10 @@ import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.CommandModuleFactory;
 import kboyle.oktane.core.parsers.*;
+import kboyle.oktane.core.precondition.PreconditionFactory;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
@@ -199,6 +201,7 @@ public class CommandHandler<T extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<Class<? extends ModuleBase<T>>> commandModules;
+        private final Map<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
 
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
@@ -208,6 +211,7 @@ public class CommandHandler<T extends CommandContext> {
             this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
+            this.preconditionFactoryByClass = new HashMap<>();
             this.beanProvider = BeanProvider.empty();
             this.tokeniser = new DefaultTokeniser();
         }
@@ -307,6 +311,21 @@ public class CommandHandler<T extends CommandContext> {
         }
 
         /**
+         * Adds a {@link PreconditionFactory} that will be used to instantiate preconditions.
+         *
+         * @param factory The {@link PreconditionFactory} that will be used instead of {@link Precondition} of the given type.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code factory} is null.
+         */
+        public Builder<T> withPreconditionFactory(PreconditionFactory<?> factory) {
+            Preconditions.checkNotNull(factory, "factory cannot be null");
+            var type = Preconditions.checkNotNull(factory.annotationType(), "A PreconditionFactory cannot return a null type");
+            this.preconditionFactoryByClass.put(type, factory);
+            return this;
+        }
+
+        /**
          * Builds the {@link CommandHandler}.
          *
          * @return The built {@link CommandHandler}.
@@ -315,7 +334,8 @@ public class CommandHandler<T extends CommandContext> {
             List<CommandModule> modules = new ArrayList<>();
             var moduleFactory = new CommandModuleFactory<T, ModuleBase<T>>(
                 beanProvider,
-                typeParserByClass
+                new HashMap<>(typeParserByClass),
+                ImmutableMap.copyOf(preconditionFactoryByClass)
             );
 
             for (var moduleClass : commandModules) {

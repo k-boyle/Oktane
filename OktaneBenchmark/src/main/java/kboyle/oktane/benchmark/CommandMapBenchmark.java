@@ -10,6 +10,7 @@ import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.factory.CommandModuleFactory;
 import org.openjdk.jmh.annotations.*;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Fork(1)
 public class CommandMapBenchmark {
-    private static final CommandModule MODULE = new CommandModuleFactory<BenchmarkContext, ModuleBase<BenchmarkContext>>(BeanProvider.empty(), ImmutableMap.of())
+    private static final CommandModule MODULE = new CommandModuleFactory<BenchmarkContext, ModuleBase<BenchmarkContext>>(BeanProvider.empty(), Map.of(), ImmutableMap.of())
         .create(GeneratedBenchmarkModule.class);
 
     private static final CommandMap COMMAND_MAP = CommandMap.builder()

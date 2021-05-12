@@ -12,13 +12,14 @@ import kboyle.oktane.core.parsers.EnumTypeParser;
 import kboyle.oktane.core.parsers.TypeParser;
 
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CommandParameterFactory {
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
 
     public CommandParameterFactory(Map<Class<?>, TypeParser<?>> typeParserByClass) {
-        this.typeParserByClass = typeParserByClass;
+        this.typeParserByClass = new HashMap<>(typeParserByClass);
     }
 
     public CommandParameter.Builder createParameter(Parameter parameter) {
