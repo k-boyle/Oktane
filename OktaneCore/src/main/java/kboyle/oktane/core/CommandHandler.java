@@ -11,8 +11,9 @@ import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.CommandModuleFactory;
+import kboyle.oktane.core.module.factory.PreconditionFactory;
+import kboyle.oktane.core.module.factory.PreconditionFactoryMap;
 import kboyle.oktane.core.parsers.*;
-import kboyle.oktane.core.precondition.PreconditionFactory;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
@@ -201,7 +202,7 @@ public class CommandHandler<T extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<Class<? extends ModuleBase<T>>> commandModules;
-        private final Map<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
+        private final PreconditionFactoryMap preconditionFactoryMap;
 
         private BeanProvider beanProvider;
         private ArgumentParser argumentParser;
@@ -211,7 +212,7 @@ public class CommandHandler<T extends CommandContext> {
             this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
-            this.preconditionFactoryByClass = new HashMap<>();
+            this.preconditionFactoryMap = new PreconditionFactoryMap();
             this.beanProvider = BeanProvider.empty();
             this.tokeniser = new DefaultTokeniser();
         }
@@ -319,9 +320,7 @@ public class CommandHandler<T extends CommandContext> {
          * @throws NullPointerException when {@code factory} is null.
          */
         public Builder<T> withPreconditionFactory(PreconditionFactory<?> factory) {
-            Preconditions.checkNotNull(factory, "factory cannot be null");
-            var type = Preconditions.checkNotNull(factory.annotationType(), "A PreconditionFactory cannot return a null type");
-            this.preconditionFactoryByClass.put(type, factory);
+            preconditionFactoryMap.put(factory);
             return this;
         }
 
@@ -335,7 +334,7 @@ public class CommandHandler<T extends CommandContext> {
             var moduleFactory = new CommandModuleFactory<T, ModuleBase<T>>(
                 beanProvider,
                 new HashMap<>(typeParserByClass),
-                ImmutableMap.copyOf(preconditionFactoryByClass)
+                preconditionFactoryMap.copy()
             );
 
             for (var moduleClass : commandModules) {

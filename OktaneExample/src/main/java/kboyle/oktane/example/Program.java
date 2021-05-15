@@ -5,6 +5,8 @@ import kboyle.oktane.core.CommandHandler;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.command.CommandMessageResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
+import kboyle.oktane.example.preconditions.RequireFailure;
+import kboyle.oktane.example.preconditions.RequireHi;
 import kboyle.oktane.example.results.KillAppCommandResult;
 
 import java.util.Random;
@@ -15,6 +17,8 @@ public class Program {
     public static void main(String[] args) {
         var commandHandler = CommandHandler.<ExampleCommandContext>builder()
             .withModules(ExampleCommandContext.class)
+            .withPreconditionFactory(new RequireFailure.Factory())
+            .withPreconditionFactory(new RequireHi.Factory())
             .build();
 
         var beanProvider = BeanProvider.simple()

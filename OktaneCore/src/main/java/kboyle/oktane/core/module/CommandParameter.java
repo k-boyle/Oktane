@@ -1,5 +1,6 @@
 package kboyle.oktane.core.module;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import kboyle.oktane.core.parsers.TypeParser;
 
@@ -40,6 +41,13 @@ public final class CommandParameter {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .toString();
     }
 
     public static class Builder {

@@ -1,5 +1,6 @@
 package kboyle.oktane.core.module;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -79,6 +80,13 @@ public class CommandModule {
                 })
             )
             .orElseGet(() -> CommandUtils.runPreconditions(context, command, preconditions));
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .toString();
     }
 
     public static class Builder {

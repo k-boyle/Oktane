@@ -2,12 +2,10 @@ package kboyle.oktane.example.modules;
 
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.Aliases;
-import kboyle.oktane.core.module.annotations.Require;
-import kboyle.oktane.core.module.annotations.RequireAny;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.example.ExampleCommandContext;
-import kboyle.oktane.example.preconditions.FailurePrecondition;
-import kboyle.oktane.example.preconditions.HiPrecondition;
+import kboyle.oktane.example.preconditions.RequireFailure;
+import kboyle.oktane.example.preconditions.RequireHi;
 
 public class ErrorModule extends ModuleBase<ExampleCommandContext> {
     @Aliases("error")
@@ -21,17 +19,16 @@ public class ErrorModule extends ModuleBase<ExampleCommandContext> {
     }
 
     @Aliases("precon")
-    @Require(precondition = FailurePrecondition.class, arguments = "10")
-    @Require(precondition = FailurePrecondition.class, arguments = "20")
+    @RequireFailure(10)
     public CommandResult precon() {
         return nop();
     }
 
     @Aliases("or")
-    @RequireAny({
-        @Require(precondition = HiPrecondition.class, arguments = "hi"),
-        @Require(precondition = HiPrecondition.class, arguments = "bye")
-    })
+    @RequireHi(value = "hi", group = "group1")
+    @RequireHi(value = "bye", group = "group1")
+    @RequireHi(value = "hi", group = "group2")
+    @RequireHi(value = "bye", group = "group2")
     public CommandResult or() {
         return nop();
     }

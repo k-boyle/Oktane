@@ -7,7 +7,7 @@ It is built upon the [Reactor](https://projectreactor.io/) framework to allow ea
 
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
-Example usage can be seen in the OktaneExample module, and an example using Discord4J and Spring [here](https://github.com/k-boyle/degenerate).
+Guides can be found on the Wiki, and example usage can be seen in the OktaneExample module, and an example using Discord4J and Spring [here](https://github.com/k-boyle/degenerate).
 
 # Usage #
 
@@ -85,7 +85,6 @@ Modules and commands can be configured a fair amount.
                                                                                 // CommandHandler#modules, and CommandHandler#commands 
 @Description("This is a command module")                                        // Can be used in help displays
 @Aliases({"a", "b"})                                                            // commands inside a group must have the group prefix to execute, e.g. "a echo"
-@Require(precondition = RequireOwnerPrecondition.class)                         // The preconditions to run to determine whether a module is executable or not
 @Singleton                                                                      // Makes the module a singleton (transient by default)
 @Synchronised                                                                   // Makes it so that all commands in the module are synchronised on a shared lock
 public class OktaneCommandModule extends ModuleBase<OktaneCommandContext> {
@@ -93,7 +92,6 @@ public class OktaneCommandModule extends ModuleBase<OktaneCommandContext> {
     @Name("Echo Command")                                                       // Can be used in help displays
     @Description("Echos input")                                                 // Can be used in help displays
     @Aliases({"echo", "e"})                                                     // Defines the different aliases that can invoke the command
-    @Require(precondition = ChannelPrecondition.class, arguments = "general")   // The preconditions to run to determine whether the command is executable
     @Synchronised                                                               // Makes it so that the command is locally synchronised (public CommandResult synchronised ...)
     public CommandResult pingPong(
             @Name("User Input")                                                 // Can be used in help displays       
@@ -121,24 +119,6 @@ public class UserTypeParser implements TypeParser<User> {
             .switchOnEmpty(failure("Failed to parse %s as a valid user", input).mono());
     }
 } 
-```
-
-**Preconditions**
-
-Preconditions can be used to add permissions to your commands.
-During module creation the `CommandHandler` will instantiate any preconditions using reflection.
-Preconditions are singletons per command.
-```java
-public class RequireOwnerPrecondition implements Precondition {
-    public Mono<PreconditionResult> run(CommandContext context, Command command) {
-        OktaneCommandContext context = (OktaneCommandContext) c;
-        if (context.user().equals("Kieran")) {
-            return success().mono();
-        }
-        
-        return failure("Only Kieran can execute this command.").mono();
-    }
-}
 ```
 
 **Dependency Injection**
