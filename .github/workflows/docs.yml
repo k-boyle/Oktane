@@ -3,7 +3,6 @@ name: docs
 on:
   push:
     branches: [ master ]
-    paths: [ '**.java' ]
 
 jobs:
   api-website:
