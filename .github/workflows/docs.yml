@@ -24,7 +24,7 @@ jobs:
         run: |
           rm -rf OktaneCore
           mkdir OktaneCore
-          cp -rf OktaneCore/target/site/apidocs/. OktaneCore
+          cp -rf /home/runner/work/Oktane/Oktane/OktaneCore/target/site/apidocs/. OktaneCore
 
       - name: Tidy up the javadocs
         id: tidy
