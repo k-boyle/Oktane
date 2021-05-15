@@ -69,7 +69,7 @@ public class PreconditionFactoryMap {
         } else {
             var factory = preconditionFactoryByClass.get(annotationType);
             if (factory != null) {
-                factory.createPrecondition0(annotation, preconditionConsumer);
+                factory.createPrecondition(annotation, preconditionConsumer);
             }
         }
     }
