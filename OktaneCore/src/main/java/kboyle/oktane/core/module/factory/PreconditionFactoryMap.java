@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+/**
+ * A map for mapping {@link Annotation}s to {@link PreconditionFactory}s.
+ */
 public class PreconditionFactoryMap {
     private final Map<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
     private final Map<Class<?>, Class<?>> annotationClassByRepeatingClass;
@@ -27,6 +30,11 @@ public class PreconditionFactoryMap {
         this.annotationClassByRepeatingClass = ImmutableMap.copyOf(annotationClassByRepeatingClass);
     }
 
+    /**
+     * Adds the given {@code factory} to the map.
+     *
+     * @param factory The factory to add.
+     */
     public void put(PreconditionFactory<?> factory) {
         Preconditions.checkNotNull(factory, "factory cannot be null");
         var supportedType = Preconditions.checkNotNull(factory.supportedType(), "supportedType cannot be null");
@@ -39,6 +47,12 @@ public class PreconditionFactoryMap {
         preconditionFactoryByClass.put(supportedType, factory);
     }
 
+    /**
+     * Calls the {@link PreconditionFactory} for the given {@code annotation}, if applicable.
+     *
+     * @param annotation The {@link Annotation} to handle.
+     * @param preconditionConsumer The consumer to pass into the {@link PreconditionFactory}
+     */
     public void handle(Annotation annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
         var annotationType = annotation.annotationType();
         var repeatedType = annotationClassByRepeatingClass.get(annotationType);
@@ -60,6 +74,11 @@ public class PreconditionFactoryMap {
         }
     }
 
+    /**
+     * Clones the map.
+     *
+     * @return An immutable copy of the map.
+     */
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public PreconditionFactoryMap clone() {
         return new PreconditionFactoryMap(preconditionFactoryByClass, annotationClassByRepeatingClass);
