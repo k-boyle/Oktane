@@ -95,7 +95,7 @@ public class CommandHandler<T extends CommandContext> {
      *
      * @throws NullPointerException when {@code input} is null.
      * @throws NullPointerException when {@code context} is null.
-     * @throws IllegalStateException when {@code startIndex} < 0.
+     * @throws IllegalStateException when {@code startIndex} &lt; 0.
      */
     public Mono<Result> execute(String input, T context, int startIndex) {
         Preconditions.checkNotNull(input);
