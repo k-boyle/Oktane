@@ -23,6 +23,9 @@ jobs:
       - name: Copy to Documentation Website Location
         run: |
           rm -rf docs
+          mkdir docs
+          mkdir docs/OktaneCore
+          mkdir docs/Oktane4J
           cp -rf OktaneCore/target/site/apidocs/. docs/OktaneCore
           cp -rf Oktane4J/target/site/apidocs/. docs/Oktane4J
 
