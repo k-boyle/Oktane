@@ -23,7 +23,8 @@ jobs:
       - name: Copy to Documentation Website Location
         run: |
           rm -rf docs
-          cp -rf target/site/apidocs/. docs
+          cp -rf OktaneCore/target/site/apidocs/. docs/OktaneCore
+          cp -rf Oktane4J/target/site/apidocs/. docs/Oktane4J
 
       - name: Tidy up the javadocs
         id: tidy
