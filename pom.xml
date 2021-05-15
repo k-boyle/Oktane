@@ -138,6 +138,9 @@
                 <configuration>
                     <release>${maven.compiler.target}</release>
                     <doclint>none</doclint>
+                    <excludes>
+
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

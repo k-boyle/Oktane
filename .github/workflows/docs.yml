@@ -18,7 +18,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Build docs with Maven
-        run: mvn javadoc:javadoc
+        run: mvn javadoc:aggregate -pl :OktaneCore,:Oktane4J
 
       - name: Copy to Documentation Website Location
         run: |
