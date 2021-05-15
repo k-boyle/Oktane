@@ -18,16 +18,13 @@ jobs:
           distribution: 'adopt'
 
       - name: Build docs with Maven
-        run: mvn javadoc:aggregate -pl :OktaneCore,:Oktane4J
+        run: mvn javadoc:aggregate -pl :OktaneCore
 
       - name: Copy to Documentation Website Location
         run: |
           rm -rf OktaneCore
-#          rm -rf Oktane4J
           mkdir OktaneCore
-#          mkdir Oktane4J
           cp -rf OktaneCore/target/site/apidocs/. docs/OktaneCore
-#          cp -rf Oktane4J/target/site/apidocs/. Oktane4J
 
       - name: Tidy up the javadocs
         id: tidy
