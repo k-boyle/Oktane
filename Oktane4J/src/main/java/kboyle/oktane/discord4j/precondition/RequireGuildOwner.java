@@ -15,35 +15,35 @@ import java.util.function.BiConsumer;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface RequireBotOwner {
-    String group() default "";
+public @interface RequireGuildOwner {
+    String group();
 
-    class BotOwnerPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
+    class GuildOwnerPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
         @Override
         public Mono<PreconditionResult> run(CONTEXT context, Command command) {
-            return context.client().getApplicationInfo()
-                .map(info -> context.user()
+            return context.guild()
+                .map(guild -> context.user()
                     .map(author -> {
-                        if (author.getId().equals(info.getOwnerId())) {
+                        if (author.getId().equals(guild.getId())) {
                             return success();
                         }
 
-                        return failure("Only the bot owner can execute this command");
+                        return failure("Only the guild owner can execute this command.");
                     })
                     .orElseGet(() -> failure("Missing message author on message %s", context.message().getId()))
                 );
         }
     }
 
-    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequireBotOwner> {
+    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequireGuildOwner> {
         @Override
-        public Class<RequireBotOwner> supportedType() {
-            return RequireBotOwner.class;
+        public Class<RequireGuildOwner> supportedType() {
+            return RequireGuildOwner.class;
         }
 
         @Override
-        public void createGrouped(RequireBotOwner annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
-            preconditionConsumer.accept(annotation.group(), new BotOwnerPrecondition<CONTEXT>());
+        public void createGrouped(RequireGuildOwner annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
+            preconditionConsumer.accept(annotation.group(), new GuildOwnerPrecondition<CONTEXT>());
         }
     }
 }

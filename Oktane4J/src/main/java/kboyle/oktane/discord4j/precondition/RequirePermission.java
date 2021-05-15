@@ -6,40 +6,33 @@ import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
-import kboyle.oktane.core.precondition.PreconditionFactory;
+import kboyle.oktane.core.module.factory.PreconditionFactory;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import reactor.core.publisher.Mono;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
+import java.util.function.BiConsumer;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
+@Repeatable(RequirePermission.Repeatable.class)
 public @interface RequirePermission {
     PermissionTarget target();
     Permission[] permissions();
+    String group() default "";
 
-    class Factory extends PreconditionFactory<RequirePermission> {
-        @Override
-        public Class<RequirePermission> annotationType() {
-            return RequirePermission.class;
-        }
-
-        @Override
-        public Precondition createPrecondition(RequirePermission annotation) {
-            // how does this compile??
-            return new RequirePermissionPrecondition<>(PermissionSet.of(annotation.permissions()), annotation.target());
-        }
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ ElementType.TYPE, ElementType.METHOD })
+    @interface Repeatable {
+        RequirePermission[] value();
     }
 
-    class RequirePermissionPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
+    class PermissionPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
         private final PermissionSet permissions;
         private final PermissionTarget target;
 
-        public RequirePermissionPrecondition(PermissionSet permissions, PermissionTarget target) {
+        public PermissionPrecondition(PermissionTarget target, PermissionSet permissions) {
             this.permissions = permissions;
             this.target = target;
         }
@@ -63,6 +56,19 @@ public @interface RequirePermission {
                 case USER -> context.member();
                 case BOT -> context.guild().flatMap(Guild::getSelfMember);
             };
+        }
+    }
+
+    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequirePermission> {
+        @Override
+        public Class<RequirePermission> supportedType() {
+            return RequirePermission.class;
+        }
+
+        @Override
+        public void createGrouped(RequirePermission annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
+            var permissions = PermissionSet.of(annotation.permissions());
+            preconditionConsumer.accept(annotation.group(), new PermissionPrecondition<CONTEXT>(annotation.target(), permissions));
         }
     }
 }

@@ -13,6 +13,7 @@ import kboyle.oktane.discord4j.parsers.ChannelTypeParser;
 import kboyle.oktane.discord4j.parsers.RoleTypeParser;
 import kboyle.oktane.discord4j.parsers.UserTypeParser;
 import kboyle.oktane.discord4j.precondition.RequireBotOwner;
+import kboyle.oktane.discord4j.precondition.RequireGuildOwner;
 import kboyle.oktane.discord4j.precondition.RequirePermission;
 import reactor.core.publisher.Mono;
 
@@ -27,8 +28,15 @@ public class DiscordCommandHandler<CONTEXT extends DiscordCommandContext> {
     }
 
     public static <CONTEXT extends DiscordCommandContext> DiscordCommandHandler<CONTEXT> create(Consumer<CommandHandler.Builder<CONTEXT>> commandHandlerConsumer) {
-        var builder = CommandHandler.<CONTEXT>builder()
-            .withTypeParser(Channel.class, new ChannelTypeParser<>(Channel.class))
+        var builder = CommandHandler.<CONTEXT>builder();
+        addTypeParsers(builder);
+        addPreconditionFactories(builder);
+        commandHandlerConsumer.accept(builder);
+        return new DiscordCommandHandler<>(builder.build());
+    }
+
+    private static <CONTEXT extends DiscordCommandContext> void addTypeParsers(CommandHandler.Builder<CONTEXT> builder) {
+        builder.withTypeParser(Channel.class, new ChannelTypeParser<>(Channel.class))
             .withTypeParser(TextChannel.class, new ChannelTypeParser<>(TextChannel.class))
             .withTypeParser(MessageChannel.class, new ChannelTypeParser<>(MessageChannel.class))
             .withTypeParser(PrivateChannel.class, new ChannelTypeParser<>(PrivateChannel.class))
@@ -37,11 +45,13 @@ public class DiscordCommandHandler<CONTEXT extends DiscordCommandContext> {
             .withTypeParser(VoiceChannel.class, new ChannelTypeParser<>(VoiceChannel.class))
             .withTypeParser(User.class, new UserTypeParser<>(User.class))
             .withTypeParser(Member.class, new UserTypeParser<>(Member.class))
-            .withTypeParser(Role.class, new RoleTypeParser<>())
-            .withPreconditionFactory(new RequirePermission.Factory())
-            .withPreconditionFactory(new RequireBotOwner.Factory());
-        commandHandlerConsumer.accept(builder);
-        return new DiscordCommandHandler<>(builder.build());
+            .withTypeParser(Role.class, new RoleTypeParser<>());
+    }
+
+    private static <CONTEXT extends DiscordCommandContext> void addPreconditionFactories(CommandHandler.Builder<CONTEXT> builder) {
+        builder.withPreconditionFactory(new RequirePermission.Factory<CONTEXT>())
+            .withPreconditionFactory(new RequireBotOwner.Factory<CONTEXT>())
+            .withPreconditionFactory(new RequireGuildOwner.Factory<CONTEXT>());
     }
 
     public CommandHandler<CONTEXT> innerHandler() {
