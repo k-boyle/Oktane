@@ -12,7 +12,6 @@ import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -54,11 +53,6 @@ public enum CommandUtils {
 
                 return new PreconditionsFailedResult(failedResults);
             });
-    }
-
-    private static boolean isValidConstructor(Constructor<?> constructor) {
-        var parameters = constructor.getParameters();
-        return parameters.length == 0 || parameters.length == 1 && parameters[0].getType().equals(String[].class);
     }
 
     static <T extends CommandContext> boolean isValidModuleClass(Class<T> contextClass, Class<?> moduleCandidate) {

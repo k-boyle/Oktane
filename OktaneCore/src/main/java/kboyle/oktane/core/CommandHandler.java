@@ -334,7 +334,7 @@ public class CommandHandler<T extends CommandContext> {
             var moduleFactory = new CommandModuleFactory<T, ModuleBase<T>>(
                 beanProvider,
                 new HashMap<>(typeParserByClass),
-                preconditionFactoryMap.clone()
+                preconditionFactoryMap.copy()
             );
 
             for (var moduleClass : commandModules) {

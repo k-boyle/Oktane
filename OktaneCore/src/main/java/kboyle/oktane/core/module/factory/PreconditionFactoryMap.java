@@ -75,12 +75,11 @@ public class PreconditionFactoryMap {
     }
 
     /**
-     * Clones the map.
+     * Copies the map.
      *
      * @return An immutable copy of the map.
      */
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
-    public PreconditionFactoryMap clone() {
+    public PreconditionFactoryMap copy() {
         return new PreconditionFactoryMap(preconditionFactoryByClass, annotationClassByRepeatingClass);
     }
 }
