@@ -1,24 +1,21 @@
 package kboyle.oktane.core;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
-import kboyle.oktane.core.exceptions.FailedToInstantiatePreconditionException;
 import kboyle.oktane.core.exceptions.UnhandledTypeException;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.Precondition;
-import kboyle.oktane.core.module.annotations.Require;
-import kboyle.oktane.core.module.annotations.RequireAny;
-import kboyle.oktane.core.precondition.AnyPrecondition;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.core.results.precondition.PreconditionSuccessfulResult;
 import kboyle.oktane.core.results.precondition.PreconditionsFailedResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.*;
-import java.util.Arrays;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -57,48 +54,6 @@ public enum CommandUtils {
 
                 return new PreconditionsFailedResult(failedResults);
             });
-    }
-
-    /**
-     * Creates all of the {@link Precondition}s from the {@link Require} annotations on the element.
-     *
-     * @param element The element to search for annotations on.
-     * @return The created {@link Precondition}
-     */
-    public static Stream<Precondition> createPreconditions(AnnotatedElement element) {
-        return Streams.concat(getANDPreconditions(element), getORPreconditions(element));
-    }
-
-    private static Stream<Precondition> getANDPreconditions(AnnotatedElement element) {
-        return Arrays.stream(element.getAnnotationsByType(Require.class))
-            .map(CommandUtils::initPrecondition);
-    }
-
-    private static Stream<Precondition> getORPreconditions(AnnotatedElement element) {
-        return Arrays.stream(element.getAnnotationsByType(RequireAny.class))
-            .map(CommandUtils::createAnyPrecondition);
-    }
-
-    private static AnyPrecondition createAnyPrecondition(RequireAny any) {
-        return new AnyPrecondition(Arrays.stream(any.value())
-            .map(CommandUtils::initPrecondition)
-            .collect(ImmutableList.toImmutableList()));
-    }
-
-    private static Precondition initPrecondition(Require requirement) {
-        var cl = requirement.precondition();
-        var arguments = requirement.arguments();
-        var validConstructor = CollectionUtils.single(cl.getConstructors(), CommandUtils::isValidConstructor);
-
-        try {
-            if (arguments.length == 0) {
-                return (Precondition) validConstructor.newInstance();
-            }
-
-            return (Precondition) validConstructor.newInstance((Object) arguments);
-        } catch (Exception ex) {
-            throw new FailedToInstantiatePreconditionException(cl, ex);
-        }
     }
 
     private static boolean isValidConstructor(Constructor<?> constructor) {

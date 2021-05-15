@@ -2,15 +2,16 @@ package kboyle.oktane.core.module.factory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.parsers.TypeParser;
-import kboyle.oktane.core.precondition.PreconditionFactory;
+import kboyle.oktane.core.precondition.AnyPrecondition;
 
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -18,19 +19,20 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
+import static kboyle.oktane.core.module.factory.PreconditionFactory.NO_GROUP;
 
 public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends ModuleBase<CONTEXT>> {
     private final BeanProvider beanProvider;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
-    private final ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
+    private final PreconditionFactoryMap preconditionFactoryMap;
 
     public CommandModuleFactory(
             BeanProvider beanProvider,
             Map<Class<?>, TypeParser<?>> typeParserByClass,
-            ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass) {
+            PreconditionFactoryMap preconditionFactoryMap) {
         this.beanProvider = beanProvider;
         this.typeParserByClass = typeParserByClass;
-        this.preconditionFactoryByClass = preconditionFactoryByClass;
+        this.preconditionFactoryMap = preconditionFactoryMap;
     }
 
     public <MODULE extends BASE> CommandModule create(Class<MODULE> moduleClass) {
@@ -57,6 +59,7 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
         Aliases groups = null;
         boolean singleton = false;
         boolean synchronised = false;
+        var preconditionsByGroup = HashMultimap.<Object, Precondition>create();
         for (var annotation : moduleClass.getAnnotations()) {
             if (annotation instanceof Aliases aliases) {
                 groups = aliases;
@@ -76,23 +79,19 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
                 synchronised = true;
                 moduleBuilder.synchronised();
             } else {
-                var preconditionFactory = preconditionFactoryByClass.get(annotation.annotationType());
-                if (preconditionFactory != null) {
-                    var precondition = Preconditions.checkNotNull(
-                        preconditionFactory.createPrecondition0(annotation),
-                        "A PreconditionFactory cannot return null"
-                    );
-                    moduleBuilder.withPrecondition(precondition);
-                }
+                preconditionFactoryMap.handle(annotation, preconditionsByGroup::put);
             }
         }
 
+        preconditionsByGroup.removeAll(NO_GROUP).forEach(moduleBuilder::withPrecondition);
+        preconditionsByGroup.asMap().values().stream()
+            .map(preconditionCollection -> new AnyPrecondition(ImmutableList.copyOf(preconditionCollection)))
+            .forEach(moduleBuilder::withPrecondition);
+
         var moduleLock = synchronised ? new Object() : null;
 
-        CommandUtils.createPreconditions(moduleClass).forEach(moduleBuilder::withPrecondition);
-
         var commandFactory = new CommandFactory<>(
-            preconditionFactoryByClass,
+            preconditionFactoryMap,
             typeParserByClass,
             moduleClass,
             singleton,

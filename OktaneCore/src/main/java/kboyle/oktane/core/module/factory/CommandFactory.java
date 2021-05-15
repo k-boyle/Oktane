@@ -2,17 +2,18 @@ package kboyle.oktane.core.module.factory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.exceptions.FailedToInstantiateCommandCallback;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.annotations.*;
 import kboyle.oktane.core.module.callback.*;
 import kboyle.oktane.core.parsers.TypeParser;
-import kboyle.oktane.core.precondition.PreconditionFactory;
+import kboyle.oktane.core.precondition.AnyPrecondition;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,12 @@ import java.util.stream.Collectors;
 
 import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
+import static kboyle.oktane.core.module.factory.PreconditionFactory.NO_GROUP;
 
 public class CommandFactory<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass;
+    private final PreconditionFactoryMap preconditionFactoryMap;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
     private final Class<MODULE> moduleClass;
     private final boolean singleton;
@@ -39,13 +41,13 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
     private final BeanProvider beanProvider;
 
     public CommandFactory(
-            ImmutableMap<Class<?>, PreconditionFactory<?>> preconditionFactoryByClass,
+            PreconditionFactoryMap preconditionFactoryMap,
             Map<Class<?>, TypeParser<?>> typeParserByClass,
             Class<MODULE> moduleClass,
             boolean singleton,
             Object moduleLock,
             BeanProvider beanProvider) {
-        this.preconditionFactoryByClass = preconditionFactoryByClass;
+        this.preconditionFactoryMap = preconditionFactoryMap;
         this.typeParserByClass = typeParserByClass;
         this.moduleClass = moduleClass;
         this.singleton = singleton;
@@ -62,6 +64,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             .withName(method.getName());
 
         boolean synchronised = false;
+        var preconditionsByGroup = HashMultimap.<Object, Precondition>create();
         for (var annotation : method.getAnnotations()) {
             if (annotation instanceof Aliases aliases) {
                 Preconditions.checkState(
@@ -84,20 +87,16 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             } else if (annotation instanceof Priority priority) {
                 commandBuilder.withPriority(priority.value());
             } else {
-                var preconditionFactory = preconditionFactoryByClass.get(annotation.annotationType());
-                if (preconditionFactory != null) {
-                    var precondition = Preconditions.checkNotNull(
-                        preconditionFactory.createPrecondition0(annotation),
-                        "A PreconditionFactory cannot return null"
-                    );
-                    commandBuilder.withPrecondition(precondition);
-                }
+                preconditionFactoryMap.handle(annotation, preconditionsByGroup::put);
             }
         }
 
-        commandBuilder.withCallback(getCallback(method, synchronised));
+        preconditionsByGroup.removeAll(NO_GROUP).forEach(commandBuilder::withPrecondition);
+        preconditionsByGroup.asMap().values().stream()
+            .map(preconditionCollection -> new AnyPrecondition(ImmutableList.copyOf(preconditionCollection)))
+            .forEach(commandBuilder::withPrecondition);
 
-        CommandUtils.createPreconditions(method).forEach(commandBuilder::withPrecondition);
+        commandBuilder.withCallback(getCallback(method, synchronised));
 
         var parameterFactory = new CommandParameterFactory(typeParserByClass);
         var parameters = method.getParameters();
