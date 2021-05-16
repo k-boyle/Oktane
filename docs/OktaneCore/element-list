@@ -1,0 +1,17 @@
+kboyle.oktane.core
+kboyle.oktane.core.exceptions
+kboyle.oktane.core.mapping
+kboyle.oktane.core.module
+kboyle.oktane.core.module.annotations
+kboyle.oktane.core.module.callback
+kboyle.oktane.core.module.factory
+kboyle.oktane.core.parsers
+kboyle.oktane.core.precondition
+kboyle.oktane.core.processor
+kboyle.oktane.core.results
+kboyle.oktane.core.results.argumentparser
+kboyle.oktane.core.results.command
+kboyle.oktane.core.results.precondition
+kboyle.oktane.core.results.search
+kboyle.oktane.core.results.tokeniser
+kboyle.oktane.core.results.typeparser
