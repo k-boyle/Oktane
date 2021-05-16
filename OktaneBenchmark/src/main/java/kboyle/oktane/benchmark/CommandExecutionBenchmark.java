@@ -1,5 +1,6 @@
 package kboyle.oktane.benchmark;
 
+import kboyle.oktane.core.module.ModuleBaseProxy;
 import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
 import kboyle.oktane.core.module.callback.ReflectedCommandCallback;
 import kboyle.oktane.core.module.factory.ReflectedCommandFactoryProxy;
@@ -61,21 +62,21 @@ public class CommandExecutionBenchmark {
     @Benchmark
     public Mono<CommandResult> directNoParameters() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.noParameters().mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directOneParameter() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.oneParameter("one").mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directTwoParameters() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.twoParameters("one", "two").mono();
     }
 

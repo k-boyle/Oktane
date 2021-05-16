@@ -2,6 +2,7 @@ package kboyle.oktane.example;
 
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandHandler;
+import kboyle.oktane.core.prefix.CharPrefix;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.command.CommandMessageResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
@@ -9,6 +10,7 @@ import kboyle.oktane.example.preconditions.RequireFailure;
 import kboyle.oktane.example.preconditions.RequireHi;
 import kboyle.oktane.example.results.KillAppCommandResult;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -19,6 +21,7 @@ public class Program {
             .withModules(ExampleCommandContext.class)
             .withPreconditionFactory(new RequireFailure.Factory())
             .withPreconditionFactory(new RequireHi.Factory())
+            .withPrefixHandler(context -> List.of(new CharPrefix<>('!')))
             .build();
 
         var beanProvider = BeanProvider.simple()

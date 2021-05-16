@@ -9,7 +9,7 @@ import kboyle.oktane.discord4j.Snowflakes;
 import reactor.core.publisher.Mono;
 
 public class RoleTypeParser<CONTEXT extends DiscordCommandContext> extends DiscordTypeParser<CONTEXT, Role> {
-    private final Mono<TypeParserResult<Role>> NOT_IN_GUILD = failure("Roles can only be parsed within a guild context").mono();
+    private final Mono<TypeParserResult<Role>> notInGuild = failure("Roles can only be parsed within a guild context").mono();
 
     @Override
     public Mono<TypeParserResult<Role>> parse(CONTEXT context, Command command, String input) {
@@ -25,6 +25,6 @@ public class RoleTypeParser<CONTEXT extends DiscordCommandContext> extends Disco
                     )
             )
             .map(this::success)
-            .switchIfEmpty(NOT_IN_GUILD);
+            .switchIfEmpty(notInGuild);
     }
 }

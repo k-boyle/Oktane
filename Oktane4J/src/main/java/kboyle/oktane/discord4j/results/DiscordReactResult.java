@@ -6,7 +6,7 @@ import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.results.SuccessfulResult;
 import reactor.core.publisher.Mono;
 
-public class DiscordReactResult extends DiscordResult implements SuccessfulResult {
+public class DiscordReactResult implements DiscordResult, SuccessfulResult {
     private final Command command;
     private final Message message;
     private final ReactionEmoji reactionEmoji;

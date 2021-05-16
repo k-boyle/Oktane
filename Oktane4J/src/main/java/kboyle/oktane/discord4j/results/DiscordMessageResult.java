@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
-public class DiscordMessageResult extends DiscordResult implements SuccessfulResult {
+public class DiscordMessageResult implements DiscordResult, SuccessfulResult {
     private final Command command;
     private final MessageChannel channel;
     private final Consumer<MessageCreateSpec> messageCreateSpecConsumer;

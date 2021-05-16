@@ -2,6 +2,7 @@ package kboyle.oktane.core.module.callback;
 
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.ModuleBase;
+import kboyle.oktane.core.module.ModuleBaseProxy;
 import kboyle.oktane.core.results.command.CommandExceptionResult;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
@@ -17,7 +18,7 @@ public abstract class AnnotatedCommandCallback<C extends CommandContext, M exten
         try {
             var module = getModule(beans);
             var castedContext = (C) context;
-            module.setContext(castedContext);
+            ModuleBaseProxy.setContext(module, castedContext);
             return execute(module, parameters);
         } catch (Exception ex) {
             return Mono.just(new CommandExceptionResult(context.command(), ex));
