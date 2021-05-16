@@ -6,6 +6,7 @@ import requests
 args = sys.argv[1:]
 group = args[0]
 artefact = args[1]
+commit_message = args[2]
 
 search_req = requests.get(f'https://oss.sonatype.org/service/local/lucene/search?g={group}&a={artefact}')
 response = ElementTree.fromstring(search_req.content)
@@ -17,16 +18,15 @@ latest_stable = first_artefact.find('latestRelease').text
 stable_major, stable_minor, stable_patch = [int(x) for x in latest_stable.split('.')]
 snapshot_major, snapshot_minor, snapshot_patch = [int(x) for x in latest_snapshot.split('.')]
 
-snapshot_patch += 1
+snapshot_major = max(snapshot_major, stable_major)
+snapshot_minor = max(snapshot_minor, stable_minor)
+snapshot_patch = max(snapshot_patch, stable_patch)
 
-if stable_minor > snapshot_minor:
-    snapshot_minor = stable_minor
-    snapshot_patch = stable_patch + 1
-
-if stable_major > snapshot_major:
-    snapshot_major = stable_major
-    snapshot_minor = stable_minor
-    snapshot_patch = stable_patch + 1
-
+if commit_message.startswith('patch:'):
+    snapshot_minor += 1
+elif commit_message.startswith('minor:'):
+    snapshot_minor += 1
+elif commit_message.startswith('major:'):
+    snapshot_major += 1
 
 print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch}-SNAPSHOT')
