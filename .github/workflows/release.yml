@@ -13,10 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: test
-        run: |
-          - echo ${{ github.ref }}
-
       - name: Setup Python
         if: "!startsWith(github.ref, 'refs/tags/') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
         uses: actions/setup-python@v2
@@ -33,7 +29,7 @@ jobs:
             echo "version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
 
       - name: Get Tag Verion
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release' && github.event.action == 'created'
         run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: JDK16 Setup
