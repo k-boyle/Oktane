@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches: [ master ]
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        if: "!startsWith(github.ref, 'refs/tags/v') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Get Snapshot Verion
+        if: "!startsWith(github.ref, 'refs/tags/v') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
+        env:
+          commit_message: ${{ github.event.head_commit.message }}
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install -r .scripts/requirements.txt
+            echo "version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
+
+      - name: Get Tag Verion
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: JDK16 Setup
+        if: ${{ env.version }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+
+      - shell: bash
+        if: ${{ env.version }}
+        name: Importing Private GPG Key
+        env:
+          gpg_private_key: ${{ secrets.gpg_private_key }}
+        run: |
+          printf "%s" "$gpg_private_key" | gpg --import --batch --yes
+
+      - name: Deployment
+        if: ${{ env.version }}
+        env:
+          gpg_passphrase: ${{ secrets.gpg_passphrase }}
+          ossrh_login: ${{ secrets.ossrh_login }}
+          ossrh_pass: ${{ secrets.ossrh_pass }}
+          version: ${{ env.version }}
+        run: |
+          mvn versions:set -DnewVersion="$version"
+          mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am

@@ -1,4 +1,4 @@
-name: docs
+name: Javadocs
 
 on:
   push:
@@ -18,29 +18,16 @@ jobs:
           distribution: 'adopt'
 
       - name: Build docs with Maven
-        run: mvn javadoc:aggregate -pl :OktaneCore
+        run: mvn javadoc:aggregate
 
       - name: Copy to Documentation Website Location
         run: |
-          rm -rf OktaneCore
-          mkdir OktaneCore
-          cp -rf "/home/runner/work/Oktane/Oktane/OktaneCore/target/site/apidocs/"* OktaneCore
+          rm -rf docs
+          mkdir docs
+          cp -rf target/site/apidocs docs
 
-      - name: Tidy up the javadocs
-        id: tidy
-        uses: cicirello/javadoc-cleanup@v1
+      - name: GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.3
         with:
-          path-to-root: .
-
-      - name: Log javadoc-cleanup output
-        run: |
-          echo "modified-count = ${{ steps.tidy.outputs.modified-count }}"
-
-      - name: Commit documentation changes
-        run: |
-          if [[ `git status --porcelain` ]]; then
-            git config --global user.name 'Kieran Boyle'
-            git config --global user.email 'kayrenhi@gmail.com'
-            git add -A
-            git commit -m "Automated API website updates."
-          fi
+          branch: gh-pages
+          folder: docs/apidocs
