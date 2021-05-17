@@ -7,7 +7,7 @@ It is built upon the [Reactor](https://projectreactor.io/) framework to allow ea
 
 Inspired by [Qmmands](https://github.com/quahu/qmmands).
 
-Guides can be found on the Wiki, and example usage can be seen in the OktaneExample module, and an example using Discord4J and Spring [here](https://github.com/k-boyle/degenerate).
+Guides can be found on the [Wiki](https://github.com/k-boyle/Oktane/wiki), Javadocs on [gh-pages](https://k-boyle.github.io/Oktane/), example usage can be seen in the OktaneExample module, and an example using Discord4J and Spring [here](https://github.com/k-boyle/degenerate).
 
 # Usage #
 
