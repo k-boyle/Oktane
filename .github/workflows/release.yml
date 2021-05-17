@@ -29,7 +29,7 @@ jobs:
             echo "version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
 
       - name: Get Tag Verion
-        if: github.event_name == 'release' && github.event.action == 'created'
+        if: github.event.name == 'release' && github.event.action == 'created'
         run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: JDK16 Setup
