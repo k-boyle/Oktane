@@ -250,14 +250,40 @@ public class CommandHandler<T extends CommandContext> {
             return this;
         }
 
+        @Deprecated
         public Builder<T> withModules(Class<T> contextClass) {
             return withModules(contextClass, contextClass.getPackageName());
         }
 
         @SuppressWarnings("UnstableApiUsage")
+        @Deprecated
         public Builder<T> withModules(Class<T> contextClass, String packageName) {
             try {
                 ClassPath.from(contextClass.getClassLoader()).getTopLevelClassesRecursive(packageName)
+                    .stream()
+                    .map(ClassPath.ClassInfo::load)
+                    .filter(cl -> isValidModuleClass(contextClass, cl))
+                    .forEach(cl -> withModule(cl.asSubclass(ModuleBase.class)));
+
+                return this;
+            } catch (IOException exception) {
+                throw new RuntimeIOException(exception);
+            }
+        }
+
+        /**
+         * Adds all the {@link CommandModule}'s that link in the same package as the {@code moduleClass}.
+         *
+         * @param moduleClass The module that lives in the same package as your other modules.
+         * @param contextClass The class of the type of {@link CommandContext} that your modules derive from.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws RuntimeIOException if the attempt to read class path resources (jar files or directories) failed.
+         */
+        @SuppressWarnings("UnstableApiUsage")
+        public <MODULE extends ModuleBase<T>> Builder<T> withModules(Class<MODULE> moduleClass, Class<T> contextClass) {
+            try {
+                ClassPath.from(moduleClass.getClassLoader()).getTopLevelClasses(moduleClass.getPackageName())
                     .stream()
                     .map(ClassPath.ClassInfo::load)
                     .filter(cl -> isValidModuleClass(contextClass, cl))
