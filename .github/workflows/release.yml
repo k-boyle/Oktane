@@ -54,6 +54,7 @@ jobs:
           ossrh_login: ${{ secrets.ossrh_login }}
           ossrh_pass: ${{ secrets.ossrh_pass }}
           version: ${{ env.version }}
+          MAVEN_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
         run: |
           mvn versions:set -DnewVersion="$version"
           mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am
