@@ -3,18 +3,18 @@ package kboyle.oktane.core;
 import kboyle.oktane.core.module.Command;
 
 /**
- * Represents a pojo that will be used for passing state in commands.
+ * Represents a POJO that will be used for passing state in commands.
  */
-public abstract class CommandContext {
+public class CommandContext {
     private final BeanProvider beanProvider;
 
     Command command;
 
-    protected CommandContext(BeanProvider beanProvider) {
+    public CommandContext(BeanProvider beanProvider) {
         this.beanProvider = beanProvider;
     }
 
-    protected CommandContext() {
+    public CommandContext() {
         this(BeanProvider.empty());
     }
 

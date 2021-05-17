@@ -1,0 +1,33 @@
+name: Javadocs
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  api-website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+
+      - name: Set up the Java JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+
+      - name: Build docs with Maven
+        run: mvn javadoc:aggregate
+
+      - name: Copy to Documentation Website Location
+        run: |
+          rm -rf docs
+          mkdir docs
+          cp -rf target/site/apidocs docs
+
+      - name: GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.3
+        with:
+          branch: gh-pages
+          folder: docs/apidocs
