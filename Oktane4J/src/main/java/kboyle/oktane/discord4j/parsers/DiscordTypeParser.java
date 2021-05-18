@@ -7,6 +7,12 @@ import kboyle.oktane.core.results.typeparser.TypeParserResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import reactor.core.publisher.Mono;
 
+/**
+ * A base class that extends {@link TypeParser} that restricts the {@link CommandContext} to {@link DiscordCommandContext}.
+ *
+ * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
+ * @param <T> The type to parse.
+ */
 public abstract class DiscordTypeParser<CONTEXT extends DiscordCommandContext, T> implements TypeParser<T> {
     @SuppressWarnings("unchecked")
     @Override

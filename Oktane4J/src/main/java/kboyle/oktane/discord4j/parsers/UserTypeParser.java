@@ -9,6 +9,12 @@ import kboyle.oktane.discord4j.Mentions;
 import kboyle.oktane.discord4j.Snowflakes;
 import reactor.core.publisher.Mono;
 
+/**
+ * A {@link DiscordTypeParser} for parsing {@link User}'s.
+ *
+ * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
+ * @param <USER> The type of {@link User} to parse.
+ */
 public class UserTypeParser<CONTEXT extends DiscordCommandContext, USER extends User> extends DiscordTypeParser<CONTEXT, USER> {
     private final Class<USER> userClass;
 

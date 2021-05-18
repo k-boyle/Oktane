@@ -9,6 +9,12 @@ import kboyle.oktane.discord4j.Mentions;
 import kboyle.oktane.discord4j.Snowflakes;
 import reactor.core.publisher.Mono;
 
+/**
+ * A {@link DiscordTypeParser} for parsing Discord {@link Channel}'s.
+ *
+ * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
+ * @param <CHANNEL> The type of {@link Channel} to parse.
+ */
 public class ChannelTypeParser<CONTEXT extends DiscordCommandContext, CHANNEL extends Channel> extends DiscordTypeParser<CONTEXT, CHANNEL> {
     private final Class<CHANNEL> channelClass;
 

@@ -8,6 +8,11 @@ import kboyle.oktane.discord4j.Mentions;
 import kboyle.oktane.discord4j.Snowflakes;
 import reactor.core.publisher.Mono;
 
+/**
+ * A {@link DiscordTypeParser} for parsing {@link Role}'s.
+ *
+ * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
+ */
 public class RoleTypeParser<CONTEXT extends DiscordCommandContext> extends DiscordTypeParser<CONTEXT, Role> {
     private final Mono<TypeParserResult<Role>> notInGuild = failure("Roles can only be parsed within a guild context").mono();
 
