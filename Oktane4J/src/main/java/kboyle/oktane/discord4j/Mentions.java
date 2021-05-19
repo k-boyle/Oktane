@@ -6,17 +6,19 @@ import discord4j.common.util.Snowflake;
 import java.util.Optional;
 
 public enum Mentions {
-    USER('@', '!'),
-    ROLE('@', '&'),
-    CHANNEL('#', '\0'),
+    USER('@', '!', true),
+    ROLE('@', '&', false),
+    CHANNEL('#', '\0', false),
     ;
 
     private final char identifier1;
     private final char identifier2;
+    private final boolean identifier2Optional;
 
-    Mentions(char identifier1, char identifier2) {
+    Mentions(char identifier1, char identifier2, boolean identifier2Optional) {
         this.identifier1 = identifier1;
         this.identifier2 = identifier2;
+        this.identifier2Optional = identifier2Optional;
     }
 
     public Optional<Snowflake> parse(String str) {
@@ -40,13 +42,16 @@ public enum Mentions {
             return Optional.empty();
         }
 
-        var open = startIndex;
+        var open = startIndex + 2;
         if (identifier2 != '\0') {
-            if (str.charAt(startIndex + 2) != identifier2) {
+            var identifier2Present = str.charAt(startIndex + 2) == identifier2;
+            if (!identifier2Optional && !identifier2Present) {
                 return Optional.empty();
             }
 
-            open++;
+            if (identifier2Present) {
+                open++;
+            }
         }
 
         var close = str.lastIndexOf('>');
