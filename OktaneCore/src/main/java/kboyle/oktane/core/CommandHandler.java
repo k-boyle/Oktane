@@ -277,14 +277,40 @@ public class CommandHandler<CONTEXT extends CommandContext> {
             return this;
         }
 
-        public Builder<CONTEXT> withModules(Class<CONTEXT> contextClass) {
+        @Deprecated
+        public Builder<T> withModules(Class<CONTEXT> contextClass) {
             return withModules(contextClass, contextClass.getPackageName());
         }
 
         @SuppressWarnings("UnstableApiUsage")
+        @Deprecated
         public Builder<CONTEXT> withModules(Class<CONTEXT> contextClass, String packageName) {
             try {
                 ClassPath.from(contextClass.getClassLoader()).getTopLevelClassesRecursive(packageName)
+                    .stream()
+                    .map(ClassPath.ClassInfo::load)
+                    .filter(cl -> isValidModuleClass(contextClass, cl))
+                    .forEach(cl -> withModule(cl.asSubclass(ModuleBase.class)));
+
+                return this;
+            } catch (IOException exception) {
+                throw new RuntimeIOException(exception);
+            }
+        }
+
+        /**
+         * Adds all the {@link CommandModule}'s that link in the same package as the {@code moduleClass}.
+         *
+         * @param moduleClass The module that lives in the same package as your other modules.
+         * @param contextClass The class of the type of {@link CommandContext} that your modules derive from.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws RuntimeIOException if the attempt to read class path resources (jar files or directories) failed.
+         */
+        @SuppressWarnings("UnstableApiUsage")
+        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModules(Class<MODULE> moduleClass, Class<CONTEXT> contextClass) {
+            try {
+                ClassPath.from(moduleClass.getClassLoader()).getTopLevelClasses(moduleClass.getPackageName())
                     .stream()
                     .map(ClassPath.ClassInfo::load)
                     .filter(cl -> isValidModuleClass(contextClass, cl))

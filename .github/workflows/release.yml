@@ -14,13 +14,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Python
-        if: "!startsWith(github.ref, 'refs/tags/v') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
+        if: "!startsWith(github.ref, 'refs/tags/') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
       - name: Get Snapshot Verion
-        if: "!startsWith(github.ref, 'refs/tags/v') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
+        if: "!startsWith(github.ref, 'refs/tags/') && (startsWith(github.event.head_commit.message, 'patch:') || startsWith(github.event.head_commit.message, 'minor:') || startsWith(github.event.head_commit.message, 'major:'))"
         env:
           commit_message: ${{ github.event.head_commit.message }}
         run: |
@@ -29,7 +29,7 @@ jobs:
             echo "version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
 
       - name: Get Tag Verion
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'release' && github.event.action == 'created'
         run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: JDK16 Setup
@@ -54,6 +54,7 @@ jobs:
           ossrh_login: ${{ secrets.ossrh_login }}
           ossrh_pass: ${{ secrets.ossrh_pass }}
           version: ${{ env.version }}
+          MAVEN_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
         run: |
           mvn versions:set -DnewVersion="$version"
           mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore -am

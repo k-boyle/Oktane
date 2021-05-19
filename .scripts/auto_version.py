@@ -27,8 +27,11 @@ snapshot_patch = max(snapshot_patch, stable_patch)
 if commit_message.startswith('patch:'):
     snapshot_patch += 1
 elif commit_message.startswith('minor:'):
+    snapshot_patch = 0
     snapshot_minor += 1
 elif commit_message.startswith('major:'):
+    snapshot_patch = 0
+    snapshot_minor = 1
     snapshot_major += 1
 
 print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch}-SNAPSHOT')
