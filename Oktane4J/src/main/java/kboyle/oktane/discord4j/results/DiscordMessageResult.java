@@ -10,12 +10,12 @@ import java.util.function.Consumer;
 
 public class DiscordMessageResult implements DiscordResult, SuccessfulResult {
     private final Command command;
-    private final MessageChannel channel;
+    private final Mono<MessageChannel> channel;
     private final Consumer<MessageCreateSpec> messageCreateSpecConsumer;
 
     public DiscordMessageResult(
             Command command,
-            MessageChannel channel,
+            Mono<MessageChannel> channel,
             Consumer<MessageCreateSpec> messageCreateSpecConsumer) {
         this.command = command;
         this.channel = channel;
@@ -24,7 +24,7 @@ public class DiscordMessageResult implements DiscordResult, SuccessfulResult {
 
     @Override
     public Mono<Void> execute() {
-        return channel.createMessage(messageCreateSpecConsumer).then();
+        return channel.flatMap(channel -> channel.createMessage(messageCreateSpecConsumer)).then();
     }
 
     @Override

@@ -10,7 +10,6 @@ import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import kboyle.oktane.discord4j.results.DiscordMessageResult;
-import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
@@ -26,15 +25,12 @@ public abstract class DiscordModuleBase<CONTEXT extends DiscordCommandContext> e
      * @param content The message to send.
      * @return A {@link CommandResult} representing a reply to the user.
      */
-    protected Mono<CommandResult> reply(String content) {
-        return context().channel()
-            .map(channel ->
-                new DiscordMessageResult(
-                    context().command(),
-                    channel,
-                    baseConsumer().andThen(spec -> spec.setContent(content))
-                )
-            );
+    protected CommandResult reply(String content) {
+        return new DiscordMessageResult(
+            context().command(),
+            context().channel(),
+            baseConsumer().andThen(spec -> spec.setContent(content))
+        );
     }
 
     /**
@@ -43,15 +39,12 @@ public abstract class DiscordModuleBase<CONTEXT extends DiscordCommandContext> e
      * @param messageCreateSpecConsumer The spec to use for the {@link Message}.
      * @return A {@link CommandResult} representing a reply to the user.
      */
-    protected Mono<CommandResult> reply(Consumer<MessageCreateSpec> messageCreateSpecConsumer) {
-        return context().channel()
-            .map(channel ->
-                new DiscordMessageResult(
-                    context().command(),
-                    channel,
-                    baseConsumer().andThen(messageCreateSpecConsumer)
-                )
-            );
+    protected CommandResult reply(Consumer<MessageCreateSpec> messageCreateSpecConsumer) {
+        return new DiscordMessageResult(
+            context().command(),
+            context().channel(),
+            baseConsumer().andThen(messageCreateSpecConsumer)
+        );
     }
 
     /**
@@ -60,14 +53,11 @@ public abstract class DiscordModuleBase<CONTEXT extends DiscordCommandContext> e
      * @param embedCreateSpecConsumer The spec to use for the {@link Embed}.
      * @return A {@link CommandResult} representing an {@link Embed} reply to the user.
      */
-    protected Mono<CommandResult> embed(Consumer<EmbedCreateSpec> embedCreateSpecConsumer) {
-        return context().channel()
-            .map(channel ->
-                new DiscordMessageResult(
-                    context().command(),
-                    channel,
-                    baseConsumer().andThen(spec -> spec.setEmbed(embedCreateSpecConsumer))
-                )
+    protected CommandResult embed(Consumer<EmbedCreateSpec> embedCreateSpecConsumer) {
+        return new DiscordMessageResult(
+                context().command(),
+                context().channel(),
+                baseConsumer().andThen(spec -> spec.setEmbed(embedCreateSpecConsumer))
             );
     }
 

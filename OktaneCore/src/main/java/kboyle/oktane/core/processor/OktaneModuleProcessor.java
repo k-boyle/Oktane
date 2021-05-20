@@ -99,7 +99,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     private boolean createCommandCallback(Element commandModule) {
         print(NOTE, "Processing annotated class %s", commandModule);
 
-        var contextType = getContextType(commandModule);
+        var contextType = getContextType(commandModule.asType());
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
             return false;
@@ -185,21 +185,23 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .orElseThrow();
     }
 
-    private TypeMirror getContextType(Element element) {
-        if (element instanceof TypeElement typeElement) {
-            if (typeElement.getSuperclass() instanceof DeclaredType declaredType) {
-                if (types.isSameType(types.erasure(moduleBaseType), types.erasure(declaredType))) {
-                    return declaredType.getTypeArguments().get(0);
-                }
+    private TypeMirror getContextType(TypeMirror type) {
+        return types.directSupertypes(type).stream()
+            .<TypeMirror>mapMulti(this::getContextType)
+            .findFirst()
+            .orElse(null);
+    }
 
-                return getContextType(declaredType.asElement());
-            }
-
-            print(ERROR, "Unknown Element found %s", typeElement);
+    private void getContextType(TypeMirror type, Consumer<TypeMirror> downstream) {
+        if (types.isSameType(types.erasure(moduleBaseType), types.erasure(type)) && type instanceof DeclaredType declaredType) {
+            var contextType = declaredType.getTypeArguments().get(0);
+            downstream.accept(contextType);
+            return;
         }
 
-        print(ERROR, "Unknown Element found %s", element);
-        return null;
+        for (var superType : types.directSupertypes(type)) {
+            getContextType(superType, downstream);
+        }
     }
 
     private MethodData getMethodData(ExecutableElement element) {

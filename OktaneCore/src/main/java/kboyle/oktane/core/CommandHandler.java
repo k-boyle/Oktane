@@ -278,7 +278,7 @@ public class CommandHandler<CONTEXT extends CommandContext> {
         }
 
         @Deprecated
-        public Builder<T> withModules(Class<CONTEXT> contextClass) {
+        public Builder<CONTEXT> withModules(Class<CONTEXT> contextClass) {
             return withModules(contextClass, contextClass.getPackageName());
         }
 
