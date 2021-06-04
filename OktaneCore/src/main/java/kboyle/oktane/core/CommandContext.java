@@ -8,7 +8,6 @@ import java.util.Optional;
 /**
  * Represents a POJO that will be used for passing state in commands.
  */
-@SuppressWarnings("rawtypes")
 public class CommandContext {
     private final BeanProvider beanProvider;
 

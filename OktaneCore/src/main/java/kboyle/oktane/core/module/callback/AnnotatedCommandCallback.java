@@ -8,11 +8,11 @@ import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
 public abstract class AnnotatedCommandCallback<C extends CommandContext, M extends ModuleBase<C>> implements CommandCallback {
-    protected abstract M getModule(Object[] beans);
+    public abstract M getModule(Object[] beans);
 
-    protected abstract Mono<CommandResult> execute(M module, Object[] parameters);
+    public abstract Mono<CommandResult> execute(M module, Object[] parameters);
 
-    protected abstract C getContext(CommandContext context);
+    public abstract C getContext(CommandContext context);
 
     @Override
     public Mono<CommandResult> execute(CommandContext context, Object[] beans, Object[] parameters) {

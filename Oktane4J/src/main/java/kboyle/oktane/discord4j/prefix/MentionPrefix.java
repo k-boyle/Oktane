@@ -4,6 +4,7 @@ import discord4j.common.util.Snowflake;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import kboyle.oktane.discord4j.Mentions;
 
+import java.util.Objects;
 import java.util.function.BiPredicate;
 
 public class MentionPrefix extends DiscordPrefix {
@@ -12,9 +13,11 @@ public class MentionPrefix extends DiscordPrefix {
     }
 
     private final BiPredicate<Snowflake, Snowflake> snowflakePredicate;
+    private Snowflake snowflake;
 
     public MentionPrefix(Snowflake snowflake) {
         this.snowflakePredicate = (left, right) -> left.equals(snowflake);
+        this.snowflake = snowflake;
     }
 
     public MentionPrefix() {
@@ -38,10 +41,20 @@ public class MentionPrefix extends DiscordPrefix {
 
     @Override
     public Object value() {
-        return null;
+        return String.format("<@%d>", snowflake == null ? -1 : snowflake.asLong());
     }
 
     public static MentionPrefix bot() {
         return SingletonHolder.INSTANCE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return this == o || o instanceof MentionPrefix other && Objects.equals(snowflake, other.snowflake);
+    }
+
+    @Override
+    public int hashCode() {
+        return snowflake != null ? snowflake.hashCode() : -1;
     }
 }

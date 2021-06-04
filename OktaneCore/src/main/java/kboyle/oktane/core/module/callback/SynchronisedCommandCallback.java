@@ -23,7 +23,7 @@ public class SynchronisedCommandCallback<C extends CommandContext, M extends Mod
     }
 
     @Override
-    protected C getContext(CommandContext context) {
+    public C getContext(CommandContext context) {
         return delegate.getContext(context);
     }
 }

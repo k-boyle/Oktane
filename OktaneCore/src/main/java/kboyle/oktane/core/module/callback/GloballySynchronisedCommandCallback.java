@@ -15,19 +15,19 @@ public class GloballySynchronisedCommandCallback<C extends CommandContext, M ext
     }
 
     @Override
-    protected M getModule(Object[] beans) {
+    public M getModule(Object[] beans) {
         return delegate.getModule(beans);
     }
 
     @Override
-    protected Mono<CommandResult> execute(M module, Object[] parameters) {
+    public Mono<CommandResult> execute(M module, Object[] parameters) {
         synchronized (lock) {
             return delegate.execute(module, parameters);
         }
     }
 
     @Override
-    protected C getContext(CommandContext context) {
+    public C getContext(CommandContext context) {
         return delegate.getContext(context);
     }
 }

@@ -43,7 +43,7 @@ import static java.lang.reflect.Modifier.isPublic;
  *     .build();
  * }
  */
-public class CommandHandler {
+public class CommandHandler<CONTEXT extends CommandContext> {
     private static final Mono<Result> COMMAND_NOT_FOUND = Mono.just(CommandNotFoundResult.get());
     private static final Object[] EMPTY_BEANS = new Object[0];
 
@@ -71,8 +71,8 @@ public class CommandHandler {
      *
      * @return A new {@link CommandHandler.Builder}.
      */
-    public static Builder builder() {
-        return new Builder();
+    public static <CONTEXT extends CommandContext> Builder<CONTEXT> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -85,7 +85,7 @@ public class CommandHandler {
      * @throws NullPointerException when {@code input} is null.
      * @throws NullPointerException when {@code context} is null.
      */
-    public Mono<Result> execute(String input, CommandContext context) {
+    public Mono<Result> execute(String input, CONTEXT context) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
@@ -112,7 +112,7 @@ public class CommandHandler {
      * @throws NullPointerException when {@code context} is null.
      * @throws IllegalStateException when {@code startIndex} &lt; 0.
      */
-    public Mono<Result> execute(String input, CommandContext context, int startIndex) {
+    public Mono<Result> execute(String input, CONTEXT context, int startIndex) {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
         Preconditions.checkState(startIndex > -1);
@@ -157,7 +157,7 @@ public class CommandHandler {
             );
     }
 
-    private Mono<Result> executeCommand(CommandContext context, ArgumentParserSuccessfulResult parserResult) {
+    private Mono<Result> executeCommand(CONTEXT context, ArgumentParserSuccessfulResult parserResult) {
         var command = parserResult.command();
         context.command = command;
         var beans = getBeans(context, command.module.beans);
@@ -222,10 +222,10 @@ public class CommandHandler {
     /**
      * A builder for the {@link CommandHandler}.
      */
-    public static class Builder {
+    public static class Builder<CONTEXT extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
-        private final List<Class<? extends ModuleBase<?>>> commandModules;
+        private final List<Class<? extends ModuleBase<CONTEXT>>> commandModules;
         private final PreconditionFactoryMap preconditionFactoryMap;
 
         private BeanProvider beanProvider;
@@ -248,13 +248,13 @@ public class CommandHandler {
          *
          * @param cl The class representing the type that the {@link TypeParser} is for.
          * @param parser The {@link TypeParser}.
-         * @param <S> The type that the {@link TypeParser} is for.
+         * @param <TARGET> The type that the {@link TypeParser} is for.
          * @return The {@link CommandHandler.Builder}.
          *
          * @throws NullPointerException when {@code cl} is null.
          * @throws NullPointerException when {@code parser} is null.
          */
-        public <S> Builder withTypeParser(Class<S> cl, TypeParser<S> parser) {
+        public <TARGET> Builder<CONTEXT> withTypeParser(Class<TARGET> cl, TypeParser<TARGET> parser) {
             Preconditions.checkNotNull(cl, "cl cannot be null");
             Preconditions.checkNotNull(parser, "Parser cannot be null");
             this.typeParserByClass.put(cl, parser);
@@ -265,12 +265,12 @@ public class CommandHandler {
          * Adds a {@link CommandModule} that will be used by the {@link CommandHandler}.
          *
          * @param moduleClass The class representing the type of module that you want to add.
-         * @param <S> The type of module you want to add.
+         * @param <MODULE> The type of module you want to add.
          * @return The {@link CommandHandler.Builder}.
          *
          * @throws NullPointerException when {@code moduleClass} is null.
          */
-        public <S extends ModuleBase<?>> Builder withModule(Class<S> moduleClass) {
+        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModule(Class<MODULE> moduleClass) {
             Preconditions.checkNotNull(moduleClass, "moduleClass cannot be null");
             this.commandModules.add(moduleClass);
             return this;
@@ -279,13 +279,15 @@ public class CommandHandler {
         /**
          * Adds all the {@link CommandModule}'s that link in the same package as the {@code moduleClass}.
          *
+         * <b>This method is not type safe and will add modules that don't inherit from {@code ModuleBase<CONTEXT>}</b>
+         *
          * @param moduleClass The module that lives in the same package as your other modules.
          * @return The {@link CommandHandler.Builder}.
          *
          * @throws RuntimeIOException if the attempt to read class path resources (jar files or directories) failed.
          */
         @SuppressWarnings("UnstableApiUsage")
-        public <MODULE extends ModuleBase<?>> Builder withModules(Class<MODULE> moduleClass) {
+        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModules(Class<MODULE> moduleClass) {
             try {
                 ClassPath.from(moduleClass.getClassLoader()).getTopLevelClasses(moduleClass.getPackageName())
                     .stream()
@@ -307,7 +309,7 @@ public class CommandHandler {
          *
          * @throws NullPointerException when {@code beanProvider} is null.
          */
-        public Builder withBeanProvider(BeanProvider beanProvider) {
+        public Builder<CONTEXT> withBeanProvider(BeanProvider beanProvider) {
             Preconditions.checkNotNull(beanProvider, "beanProvider cannot be null");
             this.beanProvider = beanProvider;
             return this;
@@ -321,7 +323,7 @@ public class CommandHandler {
          *
          * @throws NullPointerException when {@code argumentParser} is null.
          */
-        public Builder withArgumentParser(ArgumentParser argumentParser) {
+        public Builder<CONTEXT> withArgumentParser(ArgumentParser argumentParser) {
             Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
             this.argumentParser = argumentParser;
             return this;
@@ -335,7 +337,7 @@ public class CommandHandler {
          *
          * @throws NullPointerException when {@code tokeniser} is null.
          */
-        public Builder withTokeniser(Tokeniser tokeniser) {
+        public Builder<CONTEXT> withTokeniser(Tokeniser tokeniser) {
             Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
             this.tokeniser = tokeniser;
             return this;
@@ -349,7 +351,7 @@ public class CommandHandler {
          *
          * @throws NullPointerException when {@code factory} is null.
          */
-        public Builder withPreconditionFactory(PreconditionFactory<?> factory) {
+        public Builder<CONTEXT> withPreconditionFactory(PreconditionFactory<?> factory) {
             preconditionFactoryMap.put(factory);
             return this;
         }
@@ -360,7 +362,7 @@ public class CommandHandler {
          * @param prefixHandler The {@link PrefixHandler} to use.
          * @return The {@link CommandHandler.Builder}.
          */
-        public Builder withPrefixHandler(PrefixHandler prefixHandler) {
+        public Builder<CONTEXT> withPrefixHandler(PrefixHandler prefixHandler) {
             Preconditions.checkNotNull(prefixHandler, "prefixProvider cannot be null");
             this.prefixHandler = prefixHandler;
             return this;
@@ -371,9 +373,9 @@ public class CommandHandler {
          *
          * @return The built {@link CommandHandler}.
          */
-        public CommandHandler build() {
+        public CommandHandler<CONTEXT> build() {
             List<CommandModule> modules = new ArrayList<>();
-            var moduleFactory = new CommandModuleFactory(
+            var moduleFactory = new CommandModuleFactory<CONTEXT, ModuleBase<CONTEXT>>(
                 beanProvider,
                 new HashMap<>(typeParserByClass),
                 preconditionFactoryMap.copy()
@@ -389,7 +391,13 @@ public class CommandHandler {
                 argumentParser = new DefaultArgumentParser(ImmutableMap.copyOf(typeParserByClass));
             }
 
-            return new CommandHandler(commandMap.build(), argumentParser, tokeniser, ImmutableList.copyOf(modules), prefixHandler);
+            return new CommandHandler<>(
+                commandMap.build(),
+                argumentParser,
+                tokeniser,
+                ImmutableList.copyOf(modules),
+                prefixHandler
+            );
         }
     }
 }

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class Program {
     public static void main(String[] args) {
-        var commandHandler = CommandHandler.builder()
+        var commandHandler = CommandHandler.<ExampleCommandContext>builder()
             .withModules(PingModule.class)
             .withPreconditionFactory(new RequireFailure.Factory())
             .withPreconditionFactory(new RequireHi.Factory())
