@@ -10,6 +10,7 @@ import kboyle.oktane.example.modules.PingModule;
 import kboyle.oktane.example.preconditions.RequireFailure;
 import kboyle.oktane.example.preconditions.RequireHi;
 import kboyle.oktane.example.results.KillAppCommandResult;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Random;
@@ -18,11 +19,11 @@ import java.util.stream.Collectors;
 
 public class Program {
     public static void main(String[] args) {
-        var commandHandler = CommandHandler.<ExampleCommandContext>builder()
-            .withModules(PingModule.class, ExampleCommandContext.class)
+        var commandHandler = CommandHandler.builder()
+            .withModules(PingModule.class)
             .withPreconditionFactory(new RequireFailure.Factory())
             .withPreconditionFactory(new RequireHi.Factory())
-            .withPrefixHandler(context -> List.of(new CharPrefix<>('!')))
+            .withPrefixHandler(context -> Mono.just(List.of(new CharPrefix('!'))))
             .build();
 
         var beanProvider = BeanProvider.simple()
@@ -37,7 +38,10 @@ public class Program {
                 System.out.println("Kill app...");
                 break;
             } else if (result instanceof CommandMatchFailedResult commandMatchFailedResult) {
-                System.out.println(commandMatchFailedResult.failedResults().stream().map(Result::toString).collect(Collectors.joining("\n")));
+                var results = commandMatchFailedResult.failedResults().stream()
+                    .map(Result::toString)
+                    .collect(Collectors.joining("\n"));
+                System.out.println(results);
             } else {
                 System.out.println("Got result: " + result);
             }

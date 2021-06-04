@@ -2,6 +2,7 @@ package kboyle.oktane.core.prefix;
 
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.PrefixHandler;
+import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,16 +13,16 @@ import java.util.Set;
  *
  * @param <CONTEXT> The type of {@link CommandContext} to use.
  */
-public class DefaultPrefixHandler<CONTEXT extends CommandContext> implements PrefixHandler<CONTEXT> {
-    private final Set<Prefix<CONTEXT>> prefixes;
+public class DefaultPrefixHandler implements PrefixHandler {
+    private final Set<Prefix> prefixes;
 
     public DefaultPrefixHandler() {
         prefixes = new HashSet<>();
     }
 
     @Override
-    public Collection<Prefix<CONTEXT>> get(CommandContext context) {
-        return prefixes;
+    public Mono<Collection<Prefix>> get(CommandContext context) {
+        return Mono.just(prefixes);
     }
 
     /**
@@ -30,7 +31,7 @@ public class DefaultPrefixHandler<CONTEXT extends CommandContext> implements Pre
      * @param prefix The {@link Prefix} to add.
      * @return The {@link DefaultPrefixHandler}.
      */
-    public DefaultPrefixHandler<CONTEXT> addPrefix(Prefix<CONTEXT> prefix) {
+    public DefaultPrefixHandler addPrefix(Prefix prefix) {
         prefixes.add(prefix);
         return this;
     }

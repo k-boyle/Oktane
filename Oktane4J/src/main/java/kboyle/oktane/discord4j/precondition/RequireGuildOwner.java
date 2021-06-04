@@ -18,9 +18,9 @@ import java.util.function.BiConsumer;
 public @interface RequireGuildOwner {
     String group();
 
-    class GuildOwnerPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
+    class GuildOwnerPrecondition extends DiscordPrecondition {
         @Override
-        public Mono<PreconditionResult> run(CONTEXT context, Command command) {
+        public Mono<PreconditionResult> run(DiscordCommandContext context, Command command) {
             return context.guild()
                 .map(guild -> context.user()
                     .map(author -> {
@@ -35,7 +35,7 @@ public @interface RequireGuildOwner {
         }
     }
 
-    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequireGuildOwner> {
+    class Factory extends PreconditionFactory<RequireGuildOwner> {
         @Override
         public Class<RequireGuildOwner> supportedType() {
             return RequireGuildOwner.class;
@@ -43,7 +43,7 @@ public @interface RequireGuildOwner {
 
         @Override
         public void createGrouped(RequireGuildOwner annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
-            preconditionConsumer.accept(annotation.group(), new GuildOwnerPrecondition<CONTEXT>());
+            preconditionConsumer.accept(annotation.group(), new GuildOwnerPrecondition());
         }
     }
 }

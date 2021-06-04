@@ -24,7 +24,7 @@ public class ChannelTypeParser<CONTEXT extends DiscordCommandContext, CHANNEL ex
 
     @Override
     public Mono<TypeParserResult<CHANNEL>> parse(CONTEXT context, Command command, String input) {
-        var channelId = Mentions.CHANNEL.parse(input)
+        var channelId = Mentions.CHANNEL.parseExact(input)
             .or(() -> Snowflakes.parse(input));
 
         return channelId.map(id -> context.client().getChannelById(id))

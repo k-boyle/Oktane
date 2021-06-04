@@ -9,9 +9,9 @@ import kboyle.oktane.example.ExampleCommandContext;
 import java.util.stream.Collectors;
 
 public class HelpModule extends ModuleBase<ExampleCommandContext> {
-    private final CommandHandler<ExampleCommandContext> commandHandler;
+    private final CommandHandler commandHandler;
 
-    public HelpModule(CommandHandler<ExampleCommandContext> commandHandler) {
+    public HelpModule(CommandHandler commandHandler) {
         this.commandHandler = commandHandler;
     }
 

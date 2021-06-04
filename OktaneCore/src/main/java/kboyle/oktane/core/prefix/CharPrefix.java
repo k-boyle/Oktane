@@ -8,7 +8,7 @@ import kboyle.oktane.core.CommandContext;
  *
  * @param <CONTEXT>
  */
-public class CharPrefix<CONTEXT extends CommandContext> implements Prefix<CONTEXT> {
+public class CharPrefix implements Prefix {
     private final String prefix;
 
     public CharPrefix(char prefix) {
@@ -16,11 +16,16 @@ public class CharPrefix<CONTEXT extends CommandContext> implements Prefix<CONTEX
     }
 
     @Override
-    public int find(CONTEXT context) {
+    public int find(CommandContext context) {
         var input = context.input();
         return input.length() > 1 && input.startsWith(String.valueOf(prefix))
             ? 1
             : -1;
+    }
+
+    @Override
+    public Object value() {
+        return prefix;
     }
 
     @Override
@@ -32,7 +37,7 @@ public class CharPrefix<CONTEXT extends CommandContext> implements Prefix<CONTEX
 
     @Override
     public boolean equals(Object o) {
-        return this == o || o instanceof CharPrefix<?> other && other.prefix.equals(prefix);
+        return this == o || o instanceof CharPrefix other && other.prefix.equals(prefix);
     }
 
     @Override

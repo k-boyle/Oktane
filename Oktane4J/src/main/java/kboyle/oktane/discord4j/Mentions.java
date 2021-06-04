@@ -21,19 +21,11 @@ public enum Mentions {
         this.identifier2Optional = identifier2Optional;
     }
 
-    public Optional<Snowflake> parse(String str) {
-        return parse(str, 0, str.length() - 1);
+    public Optional<Snowflake> parseExact(String str) {
+        return parseExact(str, 0, str.length() - 1);
     }
 
-    public Optional<Snowflake> parseFrom(String str, int startIndex) {
-        return parse(str, startIndex, str.length() - 1);
-    }
-
-    public Optional<Snowflake> parseTo(String str, int endIndex) {
-        return parse(str, 0, endIndex);
-    }
-
-    public Optional<Snowflake> parse(String str, int startIndex, int endIndex) {
+    public Optional<Snowflake> parseExact(String str, int startIndex, int endIndex) {
         Preconditions.checkState(startIndex >= 0, "startIndex must be positive");
         Preconditions.checkState(startIndex < endIndex, "endIndex must be greater than startIndex");
         Preconditions.checkState(endIndex < str.length(), "endIndex must not exceed str's last index");
@@ -42,24 +34,24 @@ public enum Mentions {
             return Optional.empty();
         }
 
-        var open = startIndex + 2;
+        var left = startIndex + 2;
         if (identifier2 != '\0') {
-            var identifier2Present = str.charAt(startIndex + 2) == identifier2;
+            var identifier2Present = str.charAt(left) == identifier2;
             if (!identifier2Optional && !identifier2Present) {
                 return Optional.empty();
             }
 
             if (identifier2Present) {
-                open++;
+                left++;
             }
         }
 
-        var close = str.lastIndexOf('>');
-        if (close == -1 || close != str.length() - 1 || close > endIndex) {
+        var right = str.indexOf('>', left);
+        if (right == -1 || right < endIndex) {
             return Optional.empty();
         }
 
-        var strId = str.substring(open, close);
+        var strId = str.substring(left, right);
 
         try {
             return Optional.of(Snowflake.of(strId));

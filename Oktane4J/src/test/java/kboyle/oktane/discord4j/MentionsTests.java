@@ -14,7 +14,7 @@ public class MentionsTests {
     @ParameterizedTest
     @MethodSource("testMentionsSource")
     public void testMentions(Mentions mention, String input, Optional<Snowflake> expectedSnowflake) {
-        var actualSnowflake = mention.parse(input);
+        var actualSnowflake = mention.parseExact(input);
         Assertions.assertEquals(expectedSnowflake, actualSnowflake);
     }
 

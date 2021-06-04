@@ -28,7 +28,7 @@ public @interface RequirePermission {
         RequirePermission[] value();
     }
 
-    class PermissionPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
+    class PermissionPrecondition extends DiscordPrecondition {
         private final PermissionSet permissions;
         private final PermissionTarget target;
 
@@ -38,7 +38,7 @@ public @interface RequirePermission {
         }
 
         @Override
-        public Mono<PreconditionResult> run(CONTEXT context, Command command) {
+        public Mono<PreconditionResult> run(DiscordCommandContext context, Command command) {
             return getTarget(context)
                 .flatMap(member -> context.textChannel().flatMap(channel -> channel.getEffectivePermissions(member.getId())))
                 .map(targetPerms -> {
@@ -51,7 +51,7 @@ public @interface RequirePermission {
                 .switchIfEmpty(failure("This command can only be executed in a guild").mono());
         }
 
-        private Mono<Member> getTarget(CONTEXT context) {
+        private Mono<Member> getTarget(DiscordCommandContext context) {
             return switch (target) {
                 case USER -> context.member();
                 case BOT -> context.guild().flatMap(Guild::getSelfMember);
@@ -59,7 +59,7 @@ public @interface RequirePermission {
         }
     }
 
-    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequirePermission> {
+    class Factory extends PreconditionFactory<RequirePermission> {
         @Override
         public Class<RequirePermission> supportedType() {
             return RequirePermission.class;
@@ -68,7 +68,7 @@ public @interface RequirePermission {
         @Override
         public void createGrouped(RequirePermission annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
             var permissions = PermissionSet.of(annotation.permissions());
-            preconditionConsumer.accept(annotation.group(), new PermissionPrecondition<CONTEXT>(annotation.target(), permissions));
+            preconditionConsumer.accept(annotation.group(), new PermissionPrecondition(annotation.target(), permissions));
         }
     }
 }

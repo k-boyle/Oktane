@@ -1,5 +1,7 @@
 package kboyle.oktane.core.processor;
 
+import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.exceptions.InvalidContextTypeException;
 import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
@@ -34,6 +36,8 @@ public class ClassWriter {
         importClass(Mono.class, writer);
         importClass(CommandResult.class, writer);
         importClass(AnnotatedCommandCallback.class, writer);
+        importClass(CommandContext.class, writer);
+        importClass(InvalidContextTypeException.class, writer);
 
         writer.println();
 
@@ -47,7 +51,7 @@ public class ClassWriter {
 
         writer.println("\t@Override");
         writer.println("\t@SuppressWarnings(\"unchecked\")");
-        writer.print("\tpublic Mono<CommandResult> execute(");
+        writer.print("\tprotected Mono<CommandResult> execute(");
         writer.print(commandModule);
         writer.println(" module, Object[] parameters) {");
 
@@ -74,7 +78,7 @@ public class ClassWriter {
 
         writer.println("\t@Override");
         writer.println("\t@SuppressWarnings(\"unchecked\")");
-        writer.print("\tpublic ");
+        writer.print("\tprotected ");
         writer.print(commandModule);
         writer.println(" getModule(Object[] beans) {");
         writer.print("\t\treturn new ");
@@ -82,6 +86,22 @@ public class ClassWriter {
         writer.print("(");
         writer.print(unwrap("beans", constructor.getParameters()));
         writer.println(");");
+        writer.println("\t}");
+
+        writer.println("\t@Override");
+        writer.print("\tprotected ");
+        writer.print(context);
+        writer.println(" getContext(CommandContext context) {");
+        writer.print("\t\tif (context instanceof ");
+        writer.print(context);
+        writer.println(" casted) {");
+        writer.println("\t\t\treturn casted;");
+        writer.println("\t\t}");
+        writer.println();
+
+        writer.print("\t\tthrow new InvalidContextTypeException(");
+        writer.print(context);
+        writer.println(".class, context.getClass());");
         writer.println("\t}");
 
         writer.print("}");

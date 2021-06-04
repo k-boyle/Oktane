@@ -24,7 +24,7 @@ public class UserTypeParser<CONTEXT extends DiscordCommandContext, USER extends 
 
     @Override
     public Mono<TypeParserResult<USER>> parse(CONTEXT context, Command command, String input) {
-        var userId = Mentions.USER.parse(input)
+        var userId = Mentions.USER.parseExact(input)
             .or(() -> Snowflakes.parse(input));
 
         return userId.map(id ->

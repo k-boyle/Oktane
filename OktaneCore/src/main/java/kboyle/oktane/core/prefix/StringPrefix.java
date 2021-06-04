@@ -9,7 +9,7 @@ import kboyle.oktane.core.CommandContext;
  *
  * @param <CONTEXT> The type of {@link CommandContext}.
  */
-public class StringPrefix<CONTEXT extends CommandContext> implements Prefix<CONTEXT> {
+public class StringPrefix implements Prefix {
     private final String prefix;
 
     public StringPrefix(String prefix) {
@@ -17,11 +17,16 @@ public class StringPrefix<CONTEXT extends CommandContext> implements Prefix<CONT
     }
 
     @Override
-    public int find(CONTEXT context) {
+    public int find(CommandContext context) {
         var input = context.input();
         return input.length() > prefix.length() && input.startsWith(prefix)
             ? prefix.length()
             : -1;
+    }
+
+    @Override
+    public Object value() {
+        return prefix;
     }
 
     @Override
@@ -33,7 +38,7 @@ public class StringPrefix<CONTEXT extends CommandContext> implements Prefix<CONT
 
     @Override
     public boolean equals(Object o) {
-        return this == o || o instanceof StringPrefix<?> other && other.prefix.equals(prefix);
+        return this == o || o instanceof StringPrefix other && other.prefix.equals(prefix);
     }
 
     @Override

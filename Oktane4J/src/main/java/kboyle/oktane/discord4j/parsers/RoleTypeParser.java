@@ -18,7 +18,7 @@ public class RoleTypeParser<CONTEXT extends DiscordCommandContext> extends Disco
 
     @Override
     public Mono<TypeParserResult<Role>> parse(CONTEXT context, Command command, String input) {
-        var roleId = Mentions.ROLE.parse(input)
+        var roleId = Mentions.ROLE.parseExact(input)
             .or(() -> Snowflakes.parse(input));
 
         return context.guild().flatMap(guild ->

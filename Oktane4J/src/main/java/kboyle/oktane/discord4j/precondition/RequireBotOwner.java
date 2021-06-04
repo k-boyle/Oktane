@@ -18,9 +18,9 @@ import java.util.function.BiConsumer;
 public @interface RequireBotOwner {
     String group() default "";
 
-    class BotOwnerPrecondition<CONTEXT extends DiscordCommandContext> extends DiscordPrecondition<CONTEXT> {
+    class BotOwnerPrecondition extends DiscordPrecondition {
         @Override
-        public Mono<PreconditionResult> run(CONTEXT context, Command command) {
+        public Mono<PreconditionResult> run(DiscordCommandContext context, Command command) {
             return context.client().getApplicationInfo()
                 .map(info -> context.user()
                     .map(author -> {
@@ -35,7 +35,7 @@ public @interface RequireBotOwner {
         }
     }
 
-    class Factory<CONTEXT extends DiscordCommandContext> extends PreconditionFactory<RequireBotOwner> {
+    class Factory extends PreconditionFactory<RequireBotOwner> {
         @Override
         public Class<RequireBotOwner> supportedType() {
             return RequireBotOwner.class;
@@ -43,7 +43,7 @@ public @interface RequireBotOwner {
 
         @Override
         public void createGrouped(RequireBotOwner annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
-            preconditionConsumer.accept(annotation.group(), new BotOwnerPrecondition<CONTEXT>());
+            preconditionConsumer.accept(annotation.group(), new BotOwnerPrecondition());
         }
     }
 }
