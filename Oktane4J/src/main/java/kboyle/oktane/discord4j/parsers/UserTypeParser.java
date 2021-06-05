@@ -12,10 +12,9 @@ import reactor.core.publisher.Mono;
 /**
  * A {@link DiscordTypeParser} for parsing {@link User}'s.
  *
- * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
  * @param <USER> The type of {@link User} to parse.
  */
-public class UserTypeParser<CONTEXT extends DiscordCommandContext, USER extends User> extends DiscordTypeParser<CONTEXT, USER> {
+public class UserTypeParser<USER extends User> extends DiscordTypeParser<USER> {
     private final Class<USER> userClass;
 
     public UserTypeParser(Class<USER> userClass) {
@@ -23,7 +22,7 @@ public class UserTypeParser<CONTEXT extends DiscordCommandContext, USER extends 
     }
 
     @Override
-    public Mono<TypeParserResult<USER>> parse(CONTEXT context, Command command, String input) {
+    public Mono<TypeParserResult<USER>> parse(DiscordCommandContext context, Command command, String input) {
         var userId = Mentions.USER.parseExact(input)
             .or(() -> Snowflakes.parse(input));
 

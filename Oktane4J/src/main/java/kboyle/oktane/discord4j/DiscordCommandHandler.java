@@ -45,7 +45,7 @@ public class DiscordCommandHandler<CONTEXT extends DiscordCommandContext> {
             .withTypeParser(VoiceChannel.class, new ChannelTypeParser<>(VoiceChannel.class))
             .withTypeParser(User.class, new UserTypeParser<>(User.class))
             .withTypeParser(Member.class, new UserTypeParser<>(Member.class))
-            .withTypeParser(Role.class, new RoleTypeParser<>());
+            .withTypeParser(Role.class, new RoleTypeParser());
     }
 
     private static <CONTEXT extends DiscordCommandContext> void addPreconditionFactories(CommandHandler.Builder<CONTEXT> builder) {

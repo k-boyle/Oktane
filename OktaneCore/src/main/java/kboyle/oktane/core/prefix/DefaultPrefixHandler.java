@@ -10,8 +10,6 @@ import java.util.Set;
 
 /**
  * Represents the default implementation of a {@link PrefixHandler}.
- *
- * @param <CONTEXT> The type of {@link CommandContext} to use.
  */
 public class DefaultPrefixHandler implements PrefixHandler {
     private final Set<Prefix> prefixes;

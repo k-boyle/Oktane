@@ -12,10 +12,9 @@ import reactor.core.publisher.Mono;
 /**
  * A {@link DiscordTypeParser} for parsing Discord {@link Channel}'s.
  *
- * @param <CONTEXT> The type of {@link DiscordCommandContext} to use.
  * @param <CHANNEL> The type of {@link Channel} to parse.
  */
-public class ChannelTypeParser<CONTEXT extends DiscordCommandContext, CHANNEL extends Channel> extends DiscordTypeParser<CONTEXT, CHANNEL> {
+public class ChannelTypeParser<CHANNEL extends Channel> extends DiscordTypeParser<CHANNEL> {
     private final Class<CHANNEL> channelClass;
 
     public ChannelTypeParser(Class<CHANNEL> channelClass) {
@@ -23,7 +22,7 @@ public class ChannelTypeParser<CONTEXT extends DiscordCommandContext, CHANNEL ex
     }
 
     @Override
-    public Mono<TypeParserResult<CHANNEL>> parse(CONTEXT context, Command command, String input) {
+    public Mono<TypeParserResult<CHANNEL>> parse(DiscordCommandContext context, Command command, String input) {
         var channelId = Mentions.CHANNEL.parseExact(input)
             .or(() -> Snowflakes.parse(input));
 

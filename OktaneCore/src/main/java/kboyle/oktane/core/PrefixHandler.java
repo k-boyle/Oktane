@@ -8,8 +8,6 @@ import java.util.Collection;
 
 /**
  * Represents a way to handle {@link Prefix}'s.
- *
- * @param <CONTEXT> The type of {@link CommandContext} to use.
  */
 @FunctionalInterface
 public interface PrefixHandler {

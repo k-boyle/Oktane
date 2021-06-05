@@ -4,8 +4,6 @@ import kboyle.oktane.core.CommandContext;
 
 /**
  * Represents a prefix for an input to passed to {@link kboyle.oktane.core.CommandHandler#execute(String, CommandContext)}.
- *
- * @param <CONTEXT> The type of {@link CommandContext} to use.
  */
 public interface Prefix {
     /**

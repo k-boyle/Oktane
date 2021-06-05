@@ -6,8 +6,6 @@ import kboyle.oktane.core.CommandContext;
 
 /**
  * Represents a {@link String} prefix.
- *
- * @param <CONTEXT> The type of {@link CommandContext}.
  */
 public class StringPrefix implements Prefix {
     private final String prefix;
