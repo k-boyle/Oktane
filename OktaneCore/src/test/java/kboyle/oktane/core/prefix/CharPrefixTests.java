@@ -8,10 +8,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-public class CharPrefixTests {
+class CharPrefixTests {
     @ParameterizedTest
     @MethodSource("charPrefixTestSource")
-    public void charPrefixTest(CharPrefix prefix, String input, int expectedOutcome) {
+    void charPrefixTest(CharPrefix prefix, String input, int expectedOutcome) {
         var context = new ProxyCommandContext(input);
         Assertions.assertEquals(expectedOutcome, prefix.find(context));
     }

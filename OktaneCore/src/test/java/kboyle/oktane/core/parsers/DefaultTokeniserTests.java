@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class DefaultTokeniserTests {
+class DefaultTokeniserTests {
     private static final Command INT_ARG_NOT_REMAINDER = new TestCommandBuilder()
         .addParameter(int.class, false)
         .build();
@@ -58,7 +58,7 @@ public class DefaultTokeniserTests {
 
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
-    public void argumentParserTest(Command Command, String arguments, Result expectedResult) {
+    void argumentParserTest(Command Command, String arguments, Result expectedResult) {
         var tokeniser = new DefaultTokeniser();
         var actualResult = tokeniser.tokenise(arguments, new CommandMatch(Command, 0, 1));
         Assertions.assertEquals(expectedResult, actualResult);
