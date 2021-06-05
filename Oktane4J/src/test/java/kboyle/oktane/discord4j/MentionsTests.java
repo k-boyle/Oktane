@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class MentionsTests {
+class MentionsTests {
     @ParameterizedTest
     @MethodSource("testMentionsSource")
-    public void testMentions(Mentions mention, String input, Optional<Snowflake> expectedSnowflake) {
+    void testMentions(Mentions mention, String input, Optional<Snowflake> expectedSnowflake) {
         var actualSnowflake = mention.parseExact(input);
         Assertions.assertEquals(expectedSnowflake, actualSnowflake);
     }

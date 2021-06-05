@@ -4,9 +4,9 @@ import discord4j.common.util.Snowflake;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class SnowflakesTests {
+class SnowflakesTests {
     @Test
-    public void testCorrectSnowflakeIsParsed() {
+    void testCorrectSnowflakeIsParsed() {
         var originalStr = "84291986575613952";
         var parsed = Snowflakes.parse(originalStr);
         Assertions.assertTrue(parsed.isPresent());
@@ -14,7 +14,7 @@ public class SnowflakesTests {
     }
 
     @Test
-    public void testSnowflakesReturnsEmptyOnInvalidString() {
+    void testSnowflakesReturnsEmptyOnInvalidString() {
         var originalStr = "not a long";
         var parsed = Snowflakes.parse(originalStr);
         Assertions.assertTrue(parsed.isEmpty());
