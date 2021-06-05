@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class DefaultArgumentParserTests {
+class DefaultArgumentParserTests {
     private static final Command INT_ARG = new TestCommandBuilder()
         .addParameter(int.class, false)
         .build();
@@ -49,7 +49,7 @@ public class DefaultArgumentParserTests {
 
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
-    public void testArgumentParser(Command command, List<String> tokens, ArgumentParserResult expectedResult) {
+    void testArgumentParser(Command command, List<String> tokens, ArgumentParserResult expectedResult) {
         var parser = new DefaultArgumentParser(PrimitiveTypeParserFactory.create());
         var actualResult = parser.parse(CONTEXT, command, tokens);
         Assertions.assertEquals(expectedResult, actualResult.block());

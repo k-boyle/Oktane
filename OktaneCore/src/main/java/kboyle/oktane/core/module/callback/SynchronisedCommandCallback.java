@@ -21,4 +21,9 @@ public class SynchronisedCommandCallback<C extends CommandContext, M extends Mod
     public M getModule(Object[] beans) {
         return delegate.getModule(beans);
     }
+
+    @Override
+    public C getContext(CommandContext context) {
+        return delegate.getContext(context);
+    }
 }

@@ -1,8 +1,7 @@
 package kboyle.oktane.benchmark;
 
+import kboyle.oktane.core.module.ModuleBaseProxy;
 import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
-import kboyle.oktane.core.module.callback.ReflectedCommandCallback;
-import kboyle.oktane.core.module.factory.ReflectedCommandFactoryProxy;
 import kboyle.oktane.core.results.command.CommandResult;
 import org.openjdk.jmh.annotations.*;
 import reactor.core.publisher.Mono;
@@ -18,10 +17,6 @@ public class CommandExecutionBenchmark {
     private static final AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> GENERATED_ONE_PARAMETER_CALLBACK;
     private static final AnnotatedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> GENERATED_TWO_PARAMETERS_CALLBACK;
 
-    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_NO_PARAMETERS_CALLBACK;
-    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_ONE_PARAMETER_CALLBACK;
-    private static final ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> REFLECTED_TWO_PARAMETERS_CALLBACK;
-
     private static final BenchmarkContext CONTEXT = new BenchmarkContext();
     private static final Object[] EMPTY = new Object[0];
     private static final Object[] ONE = new Object[] { "one" };
@@ -31,10 +26,6 @@ public class CommandExecutionBenchmark {
         GENERATED_NO_PARAMETERS_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$noParameters$");
         GENERATED_ONE_PARAMETER_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$oneParameter$java0lang0String");
         GENERATED_TWO_PARAMETERS_CALLBACK = createGeneratedCallback("kboyle.oktane.benchmark.GeneratedBenchmarkModule$twoParameters$java0lang0String_java0lang0String");
-
-        REFLECTED_NO_PARAMETERS_CALLBACK = createReflectedCallback("noParameters");
-        REFLECTED_ONE_PARAMETER_CALLBACK = createReflectedCallback("oneParameter", String.class);
-        REFLECTED_TWO_PARAMETERS_CALLBACK = createReflectedCallback("twoParameters", String.class, String.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,34 +39,24 @@ public class CommandExecutionBenchmark {
         }
     }
 
-    private static ReflectedCommandCallback<BenchmarkContext, GeneratedBenchmarkModule> createReflectedCallback(String name, Class<?>... parameterTypes) {
-        try {
-            var method = GeneratedBenchmarkModule.class.getMethod(name, parameterTypes);
-            return ReflectedCommandFactoryProxy.createCallback(GeneratedBenchmarkModule.class, method);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     @Benchmark
     public Mono<CommandResult> directNoParameters() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.noParameters().mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directOneParameter() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.oneParameter("one").mono();
     }
 
     @Benchmark
     public Mono<CommandResult> directTwoParameters() {
         var module = new GeneratedBenchmarkModule();
-        module.setContext(CONTEXT);
+        ModuleBaseProxy.setContext(module, CONTEXT);
         return module.twoParameters("one", "two").mono();
     }
 
@@ -92,20 +73,5 @@ public class CommandExecutionBenchmark {
     @Benchmark
     public Mono<CommandResult> generatedTwoParameters() {
         return GENERATED_TWO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, TWO);
-    }
-
-    @Benchmark
-    public Mono<CommandResult> reflectedNoParameters() {
-        return REFLECTED_NO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, EMPTY);
-    }
-
-    @Benchmark
-    public Mono<CommandResult> reflectedOneParameter() {
-        return REFLECTED_ONE_PARAMETER_CALLBACK.execute(CONTEXT, EMPTY, ONE);
-    }
-
-    @Benchmark
-    public Mono<CommandResult> reflectedTwoParameters() {
-        return REFLECTED_TWO_PARAMETERS_CALLBACK.execute(CONTEXT, EMPTY, TWO);
     }
 }

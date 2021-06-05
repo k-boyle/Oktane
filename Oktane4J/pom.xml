@@ -15,12 +15,29 @@
         <sonar.projectKey>k-boyle_Oktane4J</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+        <discord4j.version>3.1.5</discord4j.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.github.k-boyle</groupId>
             <artifactId>OktaneCore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.discord4j</groupId>
+            <artifactId>discord4j-core</artifactId>
+            <version>${discord4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

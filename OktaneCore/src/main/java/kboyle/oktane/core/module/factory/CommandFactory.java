@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.BeanProvider;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.exceptions.FailedToFindGeneratedCallbackException;
 import kboyle.oktane.core.exceptions.FailedToInstantiateCommandCallback;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.ModuleBase;
@@ -15,8 +16,6 @@ import kboyle.oktane.core.module.callback.*;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.precondition.AnyPrecondition;
 import kboyle.oktane.core.results.command.CommandResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
@@ -31,8 +30,6 @@ import static java.lang.reflect.Modifier.isStatic;
 import static kboyle.oktane.core.module.factory.PreconditionFactory.NO_GROUP;
 
 public class CommandFactory<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final PreconditionFactoryMap preconditionFactoryMap;
     private final Map<Class<?>, TypeParser<?>> typeParserByClass;
     private final Class<MODULE> moduleClass;
@@ -138,13 +135,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
             var constructor = commandClass.getConstructors()[0];
             callback = (AnnotatedCommandCallback<CONTEXT, MODULE>) constructor.newInstance();
         } catch (ClassNotFoundException e) {
-            logger.error(
-                "Failed to find a class for method {} using {}, using reflection fallback",
-                method,
-                generatedClassPath
-            );
-
-            callback = ReflectedCommandFactory.createCallback(moduleClass, method);
+           throw new FailedToFindGeneratedCallbackException(method, generatedClassPath);
         } catch (Exception ex) {
             throw new FailedToInstantiateCommandCallback(ex);
         }

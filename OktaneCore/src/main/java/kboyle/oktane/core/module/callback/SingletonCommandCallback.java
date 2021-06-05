@@ -24,4 +24,9 @@ public class SingletonCommandCallback<C extends CommandContext, M extends Module
     public M getModule(Object[] beans) {
         return module;
     }
+
+    @Override
+    public C getContext(CommandContext context) {
+        return delegate.getContext(context);
+    }
 }

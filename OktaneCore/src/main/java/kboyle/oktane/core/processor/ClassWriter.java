@@ -1,5 +1,7 @@
 package kboyle.oktane.core.processor;
 
+import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.exceptions.InvalidContextTypeException;
 import kboyle.oktane.core.module.callback.AnnotatedCommandCallback;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
@@ -34,6 +36,8 @@ public class ClassWriter {
         importClass(Mono.class, writer);
         importClass(CommandResult.class, writer);
         importClass(AnnotatedCommandCallback.class, writer);
+        importClass(CommandContext.class, writer);
+        importClass(InvalidContextTypeException.class, writer);
 
         writer.println();
 
@@ -82,6 +86,30 @@ public class ClassWriter {
         writer.print("(");
         writer.print(unwrap("beans", constructor.getParameters()));
         writer.println(");");
+        writer.println("\t}");
+
+        writer.println();
+
+        writer.println("\t@Override");
+        writer.print("\tpublic ");
+        writer.print(context);
+        writer.println(" getContext(CommandContext context) {");
+
+        if (context.equals(CommandContext.class.getName())) {
+            writer.println("\t\treturn context;");
+        } else {
+            writer.print("\t\tif (context instanceof ");
+            writer.print(context);
+            writer.println(" casted) {");
+            writer.println("\t\t\treturn casted;");
+            writer.println("\t\t}");
+            writer.println();
+
+            writer.print("\t\tthrow new InvalidContextTypeException(");
+            writer.print(context);
+            writer.println(".class, context.getClass());");
+        }
+
         writer.println("\t}");
 
         writer.print("}");
