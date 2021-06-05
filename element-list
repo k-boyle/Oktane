@@ -9,6 +9,7 @@ kboyle.oktane.core.module.callback
 kboyle.oktane.core.module.factory
 kboyle.oktane.core.parsers
 kboyle.oktane.core.precondition
+kboyle.oktane.core.prefix
 kboyle.oktane.core.processor
 kboyle.oktane.core.results
 kboyle.oktane.core.results.argumentparser
@@ -17,6 +18,12 @@ kboyle.oktane.core.results.precondition
 kboyle.oktane.core.results.search
 kboyle.oktane.core.results.tokeniser
 kboyle.oktane.core.results.typeparser
+kboyle.oktane.discord4j
+kboyle.oktane.discord4j.module
+kboyle.oktane.discord4j.parsers
+kboyle.oktane.discord4j.precondition
+kboyle.oktane.discord4j.prefix
+kboyle.oktane.discord4j.results
 kboyle.oktane.example
 kboyle.oktane.example.modules
 kboyle.oktane.example.preconditions
