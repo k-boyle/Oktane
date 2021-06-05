@@ -5,7 +5,6 @@ import kboyle.oktane.core.prefix.Prefix;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 /**
  * Represents a way to handle {@link Prefix}'s.
@@ -13,7 +12,7 @@ import java.util.function.Function;
  * @param <CONTEXT> The type of {@link CommandContext} to use.
  */
 @FunctionalInterface
-public interface PrefixHandler extends Function<CommandContext, Mono<Collection<Prefix>>> {
+public interface PrefixHandler {
     /**
      * Gets the {@link Prefix}'s for the given {@link CommandContext}.
      *
@@ -21,16 +20,6 @@ public interface PrefixHandler extends Function<CommandContext, Mono<Collection<
      * @return A collection of {@link Prefix}'s.
      */
     Mono<Collection<Prefix>> get(CommandContext context);
-
-    /**
-     * A proxy function for {@link #get(CommandContext)}.
-     *
-     * @param context The current execution {@link CommandContext}.
-     * @return A collection of {@link Prefix}'s.
-     */
-    default Mono<Collection<Prefix>> apply(CommandContext context) {
-        return get(context);
-    }
 
     /**
      * Finds the index to start parsing from.

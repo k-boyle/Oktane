@@ -46,7 +46,10 @@ public enum Mentions {
             }
         }
 
-        var right = str.indexOf('>', left);
+        var right = str.charAt(endIndex) == '>'
+            ? endIndex
+            : str.indexOf('>', left);
+
         if (right == -1 || right < endIndex) {
             return Optional.empty();
         }

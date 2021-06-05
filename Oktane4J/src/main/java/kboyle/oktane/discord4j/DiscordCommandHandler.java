@@ -20,22 +20,22 @@ import reactor.core.publisher.Mono;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class DiscordCommandHandler {
-    private final CommandHandler commandHandler;
+public class DiscordCommandHandler<CONTEXT extends DiscordCommandContext> {
+    private final CommandHandler<CONTEXT> commandHandler;
 
-    private DiscordCommandHandler(CommandHandler commandHandler) {
+    private DiscordCommandHandler(CommandHandler<CONTEXT> commandHandler) {
         this.commandHandler = commandHandler;
     }
 
-    public static DiscordCommandHandler create(Consumer<CommandHandler.Builder> commandHandlerConsumer) {
-        var builder = CommandHandler.builder();
+    public static <CONTEXT extends DiscordCommandContext> DiscordCommandHandler<CONTEXT> create(Consumer<CommandHandler.Builder<CONTEXT>> commandHandlerConsumer) {
+        var builder = CommandHandler.<CONTEXT>builder();
         addTypeParsers(builder);
         addPreconditionFactories(builder);
         commandHandlerConsumer.accept(builder);
-        return new DiscordCommandHandler(builder.build());
+        return new DiscordCommandHandler<>(builder.build());
     }
 
-    private static void addTypeParsers(CommandHandler.Builder builder) {
+    private static <CONTEXT extends DiscordCommandContext> void addTypeParsers(CommandHandler.Builder<CONTEXT> builder) {
         builder.withTypeParser(Channel.class, new ChannelTypeParser<>(Channel.class))
             .withTypeParser(TextChannel.class, new ChannelTypeParser<>(TextChannel.class))
             .withTypeParser(MessageChannel.class, new ChannelTypeParser<>(MessageChannel.class))
@@ -48,21 +48,21 @@ public class DiscordCommandHandler {
             .withTypeParser(Role.class, new RoleTypeParser<>());
     }
 
-    private static void addPreconditionFactories(CommandHandler.Builder builder) {
+    private static <CONTEXT extends DiscordCommandContext> void addPreconditionFactories(CommandHandler.Builder<CONTEXT> builder) {
         builder.withPreconditionFactory(new RequirePermission.Factory())
             .withPreconditionFactory(new RequireBotOwner.Factory())
             .withPreconditionFactory(new RequireGuildOwner.Factory());
     }
 
-    public CommandHandler innerHandler() {
+    public CommandHandler<CONTEXT> innerHandler() {
         return this.commandHandler;
     }
 
-    public Mono<Result> execute(String input, DiscordCommandContext context) {
+    public Mono<Result> execute(String input, CONTEXT context) {
         return commandHandler.execute(input, context);
     }
 
-    public Mono<Result> execute(String input, DiscordCommandContext context, int startIndex) {
+    public Mono<Result> execute(String input, CONTEXT context, int startIndex) {
         return commandHandler.execute(input, context, startIndex);
     }
 
