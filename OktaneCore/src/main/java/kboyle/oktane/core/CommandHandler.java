@@ -38,10 +38,12 @@ import static java.lang.reflect.Modifier.isPublic;
  * The entry point for executing commands.
  *
  * {@code
- * CommandHandler.builder()
+ * CommandHandler.<YourContextType>builder()
  *     .withModule(YourCommandModule.class)
  *     .build();
  * }
+ *
+ * @param <CONTEXT> The type of context that's used in commands.
  */
 public class CommandHandler<CONTEXT extends CommandContext> {
     private static final Mono<Result> COMMAND_NOT_FOUND = Mono.just(CommandNotFoundResult.get());
@@ -221,6 +223,8 @@ public class CommandHandler<CONTEXT extends CommandContext> {
 
     /**
      * A builder for the {@link CommandHandler}.
+     *
+     * @param <CONTEXT> The type of context that's used in commands.
      */
     public static class Builder<CONTEXT extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
