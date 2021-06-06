@@ -183,7 +183,7 @@ public class CommandModule {
             return build(null);
         }
 
-        public CommandModule build(CommandModule parent) {
+        CommandModule build(CommandModule parent) {
             return new CommandModule(parent, this);
         }
     }

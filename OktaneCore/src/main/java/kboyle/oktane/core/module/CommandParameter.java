@@ -110,7 +110,7 @@ public final class CommandParameter {
             return this;
         }
 
-        public CommandParameter build(Command command) {
+        CommandParameter build(Command command) {
             return new CommandParameter(command, this);
         }
     }
