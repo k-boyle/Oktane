@@ -16,6 +16,7 @@ import kboyle.oktane.core.precondition.AnyPrecondition;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
@@ -36,7 +37,12 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
     }
 
     public <MODULE extends BASE> CommandModule create(Class<MODULE> moduleClass) {
+        return create(moduleClass, builder -> {});
+    }
+
+    public <MODULE extends BASE> CommandModule create(Class<MODULE> moduleClass, Consumer<CommandModule.Builder> builderConsumer) {
         var moduleBuilder = createBuilder(moduleClass);
+        builderConsumer.accept(moduleBuilder);
         return moduleBuilder.build();
     }
 
@@ -44,7 +50,8 @@ public class CommandModuleFactory<CONTEXT extends CommandContext, BASE extends M
         Preconditions.checkState(!Modifier.isAbstract(moduleClass.getModifiers()), "A module cannot be abstract");
 
         var moduleBuilder = CommandModule.builder()
-            .withName(moduleClass.getSimpleName());
+            .withName(moduleClass.getSimpleName())
+            .withOriginalClass(moduleClass);
 
         var constructors = moduleClass.getConstructors();
         Preconditions.checkState(constructors.length == 1, "There must be only 1 public constructor");

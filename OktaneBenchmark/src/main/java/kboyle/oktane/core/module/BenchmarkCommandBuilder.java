@@ -1,11 +1,7 @@
 package kboyle.oktane.core.module;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class BenchmarkCommandBuilder {
     private static int counter;
@@ -27,16 +23,9 @@ public class BenchmarkCommandBuilder {
     }
 
     public Command create() {
-        return new Command(
-            "",
-            ImmutableSet.of(),
-            Optional.empty(),
-            null,
-            parameters,
-            ImmutableList.of(),
-            null,
-            false,
-            0
-        );
+        var builder = Command.builder();
+        parameters.forEach(builder::withParameter);
+
+        return new Command(null, builder);
     }
 }

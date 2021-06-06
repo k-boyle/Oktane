@@ -21,6 +21,19 @@ public class Program {
     public static void main(String[] args) {
         var commandHandler = CommandHandler.<ExampleCommandContext>builder()
             .withModules(PingModule.class)
+            .withModule(moduleBuilder -> {
+                moduleBuilder.groups.add("builder");
+                moduleBuilder.withName("Builder Module")
+                    .withCommand(commandBuilder -> {
+                        commandBuilder.aliases.add("command");
+                        commandBuilder.withName("Builder Command")
+                            .withParameter(parameterBuilder -> {
+                                parameterBuilder.withName("Builder Parameter")
+                                    .withType(int.class);
+                            })
+                            .withCallback((ctx, beans, parameters) -> new CommandMessageResult(ctx.command(), String.valueOf(parameters[0])).mono());
+                    });
+            })
             .withPreconditionFactory(new RequireFailure.Factory())
             .withPreconditionFactory(new RequireHi.Factory())
             .withPrefixHandler(context -> Mono.just(List.of(new CharPrefix('!'))))
