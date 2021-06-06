@@ -1,7 +1,7 @@
 package kboyle.oktane.core.parsers;
 
 import kboyle.oktane.core.CommandContext;
-import kboyle.oktane.core.TestCommandContext;
+import kboyle.oktane.core.ProxyCommandContext;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.TestCommandBuilder;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserFailedResult;
@@ -45,7 +45,7 @@ class DefaultArgumentParserTests {
         .addOptionalParameter(int.class, "20")
         .build();
 
-    private static final CommandContext CONTEXT = new TestCommandContext();
+    private static final CommandContext CONTEXT = new ProxyCommandContext();
 
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")

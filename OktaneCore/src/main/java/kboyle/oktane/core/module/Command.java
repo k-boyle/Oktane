@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * Represents a command.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Command {
+public final class Command {
     public final String name;
     public final ImmutableSet<String> aliases;
     public final Optional<String> description;
@@ -35,7 +35,7 @@ public class Command {
     public final Optional<Method> originalMethod;
 
     Command(CommandModule module, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty value");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A command name must be a non-empty value");
         Preconditions.checkNotNull(builder.commandCallback, "builder.commandCallback cannot be null");
 
         var aliases = ImmutableSet.copyOf(builder.aliases);

@@ -18,7 +18,7 @@ import java.util.function.ToIntFunction;
  * Represents a command module.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class CommandModule {
+public final class CommandModule {
     public final String name;
     public final ImmutableSet<String> groups;
     public final ImmutableList<Command> commands;

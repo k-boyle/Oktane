@@ -24,7 +24,7 @@ public final class CommandParameter {
     public final Optional<Parameter> originalParameter;
 
     CommandParameter(Command command, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty value");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A parameter name must be a non-empty value");
         Preconditions.checkNotNull(builder.type, "builder.type cannot be null");
 
         this.name = builder.name;
