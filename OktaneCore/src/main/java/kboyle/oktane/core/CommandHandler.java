@@ -266,7 +266,15 @@ public class CommandHandler<CONTEXT extends CommandContext> {
             return this;
         }
 
-        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModule(Consumer<CommandModule.Builder> builderConsumer) {
+        /**
+         * Adds a {@link CommandModule} using only the builders and not from a class.
+         *
+         * @param builderConsumer A consumer used to modify the state of the {@link CommandModule.Builder}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code builderConsumer} is null.
+         */
+        public Builder<CONTEXT> withModule(Consumer<CommandModule.Builder> builderConsumer) {
             Preconditions.checkNotNull(builderConsumer, "builderConsumer cannot be null");
             this.commandModules.add(new ModuleInfo<>(null, builderConsumer));
             return this;
@@ -294,6 +302,7 @@ public class CommandHandler<CONTEXT extends CommandContext> {
          * @return The {@link CommandHandler.Builder}.
          *
          * @throws NullPointerException when {@code moduleClass} is null.
+         * @throws NullPointerException when {@code builderConsumer} is null.
          */
         public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModule(Class<MODULE> moduleClass, Consumer<CommandModule.Builder> builderConsumer) {
             Preconditions.checkNotNull(moduleClass, "moduleClass cannot be null");

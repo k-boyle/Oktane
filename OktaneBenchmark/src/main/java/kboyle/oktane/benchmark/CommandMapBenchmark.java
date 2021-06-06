@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 public class CommandMapBenchmark {
     private static final CommandModule MODULE = new CommandModuleFactory<BenchmarkContext, ModuleBase<BenchmarkContext>>(BeanProvider.empty(), Map.of(), new PreconditionFactoryMap())
-        .create(GeneratedBenchmarkModule.class, builder -> {});
+        .create(GeneratedBenchmarkModule.class);
 
     private static final CommandMap COMMAND_MAP = CommandMap.builder()
         .map(MODULE)
