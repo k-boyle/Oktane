@@ -3,6 +3,7 @@ package kboyle.oktane.discord4j.precondition;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
+import kboyle.oktane.core.processor.AutoWith;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import reactor.core.publisher.Mono;
@@ -35,6 +36,7 @@ public @interface RequireBotOwner {
         }
     }
 
+    @AutoWith
     class Factory extends PreconditionFactory<RequireBotOwner> {
         @Override
         public Class<RequireBotOwner> supportedType() {

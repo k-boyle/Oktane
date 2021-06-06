@@ -2,6 +2,7 @@ package kboyle.oktane.core.processor;
 
 import com.google.auto.service.AutoService;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
@@ -15,7 +16,6 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -60,16 +60,16 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         print(NOTE, "");
 
-        var allSuccess = roundEnv.getRootElements().stream()
-            .mapMulti(this::flattenElement)
-            .allMatch(this::createCommandCallback);
-
-        if (!allSuccess) {
+        if (roundEnv.processingOver() || roundEnv.errorRaised()) {
             return false;
         }
 
+        roundEnv.getRootElements().stream()
+            .mapMulti(this::flattenElement)
+            .forEach(this::createCommandCallback);
+
         print(NOTE, "");
-        return true;
+        return false;
     }
 
     private void print(Diagnostic.Kind kind, String message, Object... args) {
@@ -96,20 +96,19 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             && element.getModifiers().contains(Modifier.PUBLIC);
     }
 
-    private boolean createCommandCallback(Element commandModule) {
+    private void createCommandCallback(Element commandModule) {
         print(NOTE, "Processing annotated class %s", commandModule);
 
         var contextType = getContextType(commandModule.asType());
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
-            return false;
         }
 
         var constructor = getConstructor(commandModule);
 
         var context = contextType.toString();
 
-        var classWriter = new ClassWriter(commandModule, constructor, context);
+        var classWriter = new CommandCallbackClassWriter(commandModule, constructor, context);
         commandModule.getEnclosedElements().stream()
             .filter(ExecutableElement.class::isInstance)
             .map(ExecutableElement.class::cast)
@@ -117,11 +116,9 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .map(this::getMethodData)
             .filter(MethodData::isValid)
             .forEach(method -> createClass(commandModule, classWriter, method));
-
-        return true;
     }
 
-    private void createClass(Element commandModule, ClassWriter classWriter, MethodData data) {
+    private void createClass(Element commandModule, CommandCallbackClassWriter commandCallbackClassWriter, MethodData data) {
         var method = data.method();
         var classPackage = getPackage(commandModule);
         var callbackClassname = getGeneratedClassName(commandModule, method);
@@ -130,16 +127,10 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             var javaFileObject = filer.createSourceFile(callbackClassname);
 
             try (var writer = new PrintWriter(javaFileObject.openWriter())) {
-                classWriter.write(writer, callbackClassname, classPackage, data);
+                commandCallbackClassWriter.write(writer, callbackClassname, classPackage, data);
             }
         } catch (IOException ex) {
-            print(ERROR,
-                "An exception was thrown whilst try to create callback for %s\n%s",
-                method,
-                Arrays.stream(ex.getStackTrace())
-                    .map(StackTraceElement::toString)
-                    .collect(Collectors.joining("\n"))
-            );
+            throw new RuntimeIOException(ex);
         }
     }
 

@@ -7,6 +7,7 @@ import discord4j.rest.util.PermissionSet;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
+import kboyle.oktane.core.processor.AutoWith;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import reactor.core.publisher.Mono;
@@ -59,6 +60,7 @@ public @interface RequirePermission {
         }
     }
 
+    @AutoWith
     class Factory extends PreconditionFactory<RequirePermission> {
         @Override
         public Class<RequirePermission> supportedType() {
