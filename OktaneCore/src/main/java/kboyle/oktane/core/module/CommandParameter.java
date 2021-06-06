@@ -2,8 +2,10 @@ package kboyle.oktane.core.module;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import kboyle.oktane.core.parsers.TypeParser;
 
+import java.lang.reflect.Parameter;
 import java.util.Optional;
 
 /**
@@ -11,32 +13,29 @@ import java.util.Optional;
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class CommandParameter {
+    public final String name;
     public final Class<?> type;
     public final Optional<String> description;
-    public final String name;
     public final boolean remainder;
     public final TypeParser<?> parser;
     public final Command command;
     public final boolean optional;
     public final Optional<String> defaultValue;
+    public final Optional<Parameter> originalParameter;
 
-    CommandParameter(
-            Class<?> type,
-            Optional<String> description,
-            String name,
-            boolean remainder,
-            TypeParser<?> parser,
-            Command command,
-            boolean optional,
-            Optional<String> defaultValue) {
-        this.type = type;
-        this.description = description;
-        this.name = name;
-        this.remainder = remainder;
-        this.parser = parser;
+    CommandParameter(Command command, Builder builder) {
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A parameter name must be a non-empty value");
+        Preconditions.checkNotNull(builder.type, "builder.type cannot be null");
+
+        this.name = builder.name;
+        this.type = builder.type;
+        this.description = Optional.ofNullable(builder.description);
+        this.remainder = builder.remainder;
+        this.parser = builder.parser;
         this.command = command;
-        this.optional = optional;
-        this.defaultValue = defaultValue;
+        this.optional = builder.optional;
+        this.defaultValue = Optional.ofNullable(builder.defaultValue);
+        this.originalParameter = Optional.ofNullable(builder.originalParameter);
     }
 
     public static Builder builder() {
@@ -58,6 +57,7 @@ public final class CommandParameter {
         private TypeParser<?> parser;
         private boolean optional;
         private String defaultValue;
+        private Parameter originalParameter;
 
         private Builder() {
         }
@@ -105,19 +105,13 @@ public final class CommandParameter {
             return this;
         }
 
-        public CommandParameter build(Command command) {
-            Preconditions.checkNotNull(type, "A parameter type must be specified");
-            Preconditions.checkNotNull(name, "A parameter name must be specified");
-            return new CommandParameter(
-                type,
-                Optional.ofNullable(description),
-                name,
-                remainder,
-                parser,
-                command,
-                optional,
-                Optional.ofNullable(defaultValue)
-            );
+        public Builder withOriginalParameter(Parameter originalParameter) {
+            this.originalParameter = originalParameter;
+            return this;
+        }
+
+        CommandParameter build(Command command) {
+            return new CommandParameter(command, this);
         }
     }
 }

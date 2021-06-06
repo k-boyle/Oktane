@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isAbstract;
@@ -229,7 +230,7 @@ public class CommandHandler<CONTEXT extends CommandContext> {
     public static class Builder<CONTEXT extends CommandContext> {
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
-        private final List<Class<? extends ModuleBase<CONTEXT>>> commandModules;
+        private final List<ModuleInfo<CONTEXT, ? extends ModuleBase<CONTEXT>>> commandModules;
         private final PreconditionFactoryMap preconditionFactoryMap;
 
         private BeanProvider beanProvider;
@@ -266,6 +267,20 @@ public class CommandHandler<CONTEXT extends CommandContext> {
         }
 
         /**
+         * Adds a {@link CommandModule} using only the builders and not from a class.
+         *
+         * @param builderConsumer A consumer used to modify the state of the {@link CommandModule.Builder}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code builderConsumer} is null.
+         */
+        public Builder<CONTEXT> withModule(Consumer<CommandModule.Builder> builderConsumer) {
+            Preconditions.checkNotNull(builderConsumer, "builderConsumer cannot be null");
+            this.commandModules.add(new ModuleInfo<>(null, builderConsumer));
+            return this;
+        }
+
+        /**
          * Adds a {@link CommandModule} that will be used by the {@link CommandHandler}.
          *
          * @param moduleClass The class representing the type of module that you want to add.
@@ -275,8 +290,24 @@ public class CommandHandler<CONTEXT extends CommandContext> {
          * @throws NullPointerException when {@code moduleClass} is null.
          */
         public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModule(Class<MODULE> moduleClass) {
+            return withModule(moduleClass, builder -> {});
+        }
+
+        /**
+         * Adds a {@link CommandModule} that will be used by the {@link CommandHandler}.
+         *
+         * @param moduleClass The class representing the type of module that you want to add.
+         * @param builderConsumer A consumer used to modify the state of the {@link CommandModule.Builder}.
+         * @param <MODULE> The type of module you want to add.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws NullPointerException when {@code moduleClass} is null.
+         * @throws NullPointerException when {@code builderConsumer} is null.
+         */
+        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModule(Class<MODULE> moduleClass, Consumer<CommandModule.Builder> builderConsumer) {
             Preconditions.checkNotNull(moduleClass, "moduleClass cannot be null");
-            this.commandModules.add(moduleClass);
+            Preconditions.checkNotNull(builderConsumer, "builderConsumer cannot be null");
+            this.commandModules.add(new ModuleInfo<>(moduleClass, builderConsumer));
             return this;
         }
 
@@ -290,14 +321,29 @@ public class CommandHandler<CONTEXT extends CommandContext> {
          *
          * @throws RuntimeIOException if the attempt to read class path resources (jar files or directories) failed.
          */
-        @SuppressWarnings("UnstableApiUsage")
         public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModules(Class<MODULE> moduleClass) {
+            return withModules(moduleClass, builder -> {});
+        }
+
+        /**
+         * Adds all the {@link CommandModule}'s that link in the same package as the {@code moduleClass}.
+         *
+         * <b>This method is not type safe and will add modules that don't inherit from {@code ModuleBase<CONTEXT>}</b>
+         *
+         * @param moduleClass The module that lives in the same package as your other modules.
+         * @param builderConsumer A consumer used to modify the state of the {@link CommandModule.Builder}.
+         * @return The {@link CommandHandler.Builder}.
+         *
+         * @throws RuntimeIOException if the attempt to read class path resources (jar files or directories) failed.
+         */
+        @SuppressWarnings("UnstableApiUsage")
+        public <MODULE extends ModuleBase<CONTEXT>> Builder<CONTEXT> withModules(Class<MODULE> moduleClass, Consumer<CommandModule.Builder> builderConsumer) {
             try {
                 ClassPath.from(moduleClass.getClassLoader()).getTopLevelClasses(moduleClass.getPackageName())
                     .stream()
                     .map(ClassPath.ClassInfo::load)
                     .filter(cls -> isPublic(cls.getModifiers()) && !isAbstract(cls.getModifiers()) && ModuleBase.class.isAssignableFrom(cls))
-                    .forEach(cl -> withModule(cl.asSubclass(ModuleBase.class)));
+                    .forEach(cl -> withModule(cl.asSubclass(ModuleBase.class), builderConsumer));
 
                 return this;
             } catch (IOException exception) {
@@ -385,8 +431,16 @@ public class CommandHandler<CONTEXT extends CommandContext> {
                 preconditionFactoryMap.copy()
             );
 
-            for (var moduleClass : commandModules) {
-                var module = moduleFactory.create(moduleClass);
+            for (var moduleInfo : commandModules) {
+                CommandModule module;
+                if (moduleInfo.moduleClass() == null) {
+                    CommandModule.Builder builder = CommandModule.builder();
+                    moduleInfo.builderConsumer().accept(builder);
+                    module = builder.build();
+                }
+                else {
+                    module = moduleFactory.create(moduleInfo.moduleClass(), moduleInfo.builderConsumer());
+                }
                 modules.add(module);
                 commandMap.map(module);
             }
@@ -402,6 +456,11 @@ public class CommandHandler<CONTEXT extends CommandContext> {
                 ImmutableList.copyOf(modules),
                 prefixHandler
             );
+        }
+
+        private static record ModuleInfo<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>>(
+            Class<MODULE> moduleClass,
+            Consumer<CommandModule.Builder> builderConsumer) {
         }
     }
 }

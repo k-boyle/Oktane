@@ -2,6 +2,7 @@ package kboyle.oktane.core.module;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import kboyle.oktane.core.CommandContext;
@@ -9,17 +10,15 @@ import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 
 /**
  * Represents a command module.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class CommandModule {
+public final class CommandModule {
     public final String name;
     public final ImmutableSet<String> groups;
     public final ImmutableList<Command> commands;
@@ -30,33 +29,27 @@ public class CommandModule {
     public final boolean synchronised;
     public final Optional<CommandModule> parent;
     public final ImmutableList<CommandModule> children;
+    public final Optional<Class<? extends ModuleBase<?>>> originalClass;
 
-    private CommandModule(
-            String name,
-            ImmutableSet<String> groups,
-            List<Command.Builder> commands,
-            ImmutableList<Precondition> preconditions,
-            Optional<String> description,
-            ImmutableList<Class<?>> beans,
-            boolean singleton,
-            boolean synchronised,
-            Optional<CommandModule> parent,
-            List<CommandModule.Builder> children) {
-        this.name = name;
-        this.groups = groups;
-        this.commands = commands.stream()
+    private CommandModule(CommandModule parent, Builder builder) {
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty value");
+
+        this.name = builder.name;
+        this.groups = ImmutableSet.copyOf(builder.groups);
+        this.commands = builder.commands.stream()
             .map(command -> command.build(this))
             .sorted(Comparator.comparingInt((ToIntFunction<Command>) command -> command.priority).reversed()) //lol
             .collect(ImmutableList.toImmutableList());
-        this.preconditions = preconditions;
-        this.description = description;
-        this.beans = beans;
-        this.singleton = singleton;
-        this.synchronised = synchronised;
-        this.parent = parent;
-        this.children = children.stream()
+        this.preconditions = ImmutableList.copyOf(builder.preconditions);
+        this.description = Optional.ofNullable(builder.description);
+        this.beans = ImmutableList.copyOf(builder.beans);
+        this.singleton = builder.singleton;
+        this.synchronised = builder.synchronised;
+        this.parent = Optional.ofNullable(parent);
+        this.children = builder.children.stream()
             .map(child -> child.build(this))
             .collect(ImmutableList.toImmutableList());
+        this.originalClass = Optional.ofNullable(builder.originalClass);
     }
 
     public static Builder builder() {
@@ -92,22 +85,23 @@ public class CommandModule {
     public static class Builder {
         private static final String SPACE = " ";
 
-        private final ImmutableSet.Builder<String> groups;
-        private final List<Command.Builder> commands;
-        private final ImmutableList.Builder<Precondition> preconditions;
-        private final ImmutableList.Builder<Class<?>> beans;
-        private final List<Builder> children;
+        public final Set<String> groups;
+        public final List<Command.Builder> commands;
+        public final List<Precondition> preconditions;
+        public final List<Class<?>> beans;
+        public final List<Builder> children;
 
         private String name;
         private String description;
         private boolean singleton;
         private boolean synchronised;
+        private Class<? extends ModuleBase<?>> originalClass;
 
         private Builder() {
-            this.groups = ImmutableSet.builder();
+            this.groups = new HashSet<>();
             this.commands = new ArrayList<>();
-            this.preconditions = ImmutableList.builder();
-            this.beans = ImmutableList.builder();
+            this.preconditions = new ArrayList<>();
+            this.beans = new ArrayList<>();
             this.children = new ArrayList<>();
         }
 
@@ -132,6 +126,14 @@ public class CommandModule {
         public Builder withCommand(Command.Builder command) {
             Preconditions.checkNotNull(command, "command cannot be null");
             this.commands.add(command);
+            return this;
+        }
+
+        public Builder withCommand(Consumer<Command.Builder> builderConsumer) {
+            Preconditions.checkNotNull(builderConsumer, "builderConsumer cannot be null");
+            var builder = Command.builder();
+            builderConsumer.accept(builder);
+            this.commands.add(builder);
             return this;
         }
 
@@ -172,25 +174,17 @@ public class CommandModule {
             return this;
         }
 
+        public Builder withOriginalClass(Class<? extends ModuleBase<?>> originalClass) {
+            this.originalClass = originalClass;
+            return this;
+        }
+
         public CommandModule build() {
             return build(null);
         }
 
-        public CommandModule build(CommandModule parent) {
-            Preconditions.checkNotNull(name, "A module name must be specified");
-
-            return new CommandModule(
-                name,
-                groups.build(),
-                commands,
-                preconditions.build(),
-                Optional.ofNullable(description),
-                beans.build(),
-                singleton,
-                synchronised,
-                Optional.ofNullable(parent),
-                children
-            );
+        CommandModule build(CommandModule parent) {
+            return new CommandModule(parent, this);
         }
     }
 }

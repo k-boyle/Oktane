@@ -38,7 +38,8 @@ public class CommandParameterFactory {
             .withType(parameterType)
             .withName(parameter.getName())
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
-            .withParser(parser);
+            .withParser(parser)
+            .withOriginalParameter(parameter);
 
         for (var annotation : parameter.getAnnotations()) {
             if (annotation instanceof Description description) {

@@ -58,7 +58,8 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
         }
 
         var commandBuilder = Command.builder()
-            .withName(method.getName());
+            .withName(method.getName())
+            .withOriginalMethod(method);
 
         boolean synchronised = false;
         var preconditionsByGroup = HashMultimap.<Object, Precondition>create();
