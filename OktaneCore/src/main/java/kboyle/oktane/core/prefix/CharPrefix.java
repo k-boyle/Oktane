@@ -18,7 +18,7 @@ public class CharPrefix implements Prefix {
     @Override
     public int find(CommandContext context) {
         var input = context.input();
-        return input.length() > 1 && input.startsWith(String.valueOf(prefix))
+        return input.startsWith(String.valueOf(prefix))
             ? 1
             : -1;
     }
