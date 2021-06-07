@@ -1,10 +1,12 @@
 package kboyle.oktane.core.processor;
 
 import com.google.auto.service.AutoService;
+import com.google.common.reflect.TypeToken;
 import kboyle.oktane.core.CommandHandler;
 import kboyle.oktane.core.configuration.CommandHandlerConfigurator;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
 class CommandHandlerWithClassBuilder {
@@ -20,13 +22,28 @@ class CommandHandlerWithClassBuilder {
     }
 
     CommandHandlerWithClassBuilder appendTypeParser(TypeMirror targetType) {
-        builder.append("\t\tcommandHandler.withTypeParser(")
-            .append(targetType)
-            .append(".class, new ")
+        builder.append("\t\tvar targetType = ")
+            .append(formatType(targetType))
+            .append(";\n")
+            .append("\t\tcommandHandler.withTypeParser(")
+            .append("targetType, new ")
             .append(element)
             .append("());\n");
 
         return this;
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private String formatType(TypeMirror type) {
+        if (type instanceof DeclaredType declaredType) {
+            if (declaredType.getTypeArguments().isEmpty()) {
+                return declaredType + ".class";
+            }
+
+            return "(Class<" + declaredType + ">) new " + TypeToken.class.getName() + "<" + declaredType + ">() {}.getRawType()";
+        }
+
+        return type + ".class";
     }
 
     CommandHandlerWithClassBuilder appendPreconditionFactory() {
