@@ -2,13 +2,11 @@ package kboyle.oktane.example.modules;
 
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.module.annotations.Aliases;
-import kboyle.oktane.core.processor.ConfigureWith;
 import kboyle.oktane.core.results.command.CommandResult;
 import kboyle.oktane.example.ExampleCommandContext;
 import kboyle.oktane.example.preconditions.RequireFailure;
 import kboyle.oktane.example.preconditions.RequireHi;
 
-@ConfigureWith
 public class ErrorModule extends ModuleBase<ExampleCommandContext> {
     @Aliases("error")
     public CommandResult error() {
