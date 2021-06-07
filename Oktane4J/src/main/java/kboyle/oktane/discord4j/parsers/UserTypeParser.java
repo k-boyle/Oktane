@@ -3,9 +3,6 @@ package kboyle.oktane.discord4j.parsers;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.User;
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.processor.AutoWith;
-import kboyle.oktane.core.processor.AutoWith.GenericParameter;
-import kboyle.oktane.core.processor.AutoWith.GenericParameters;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import kboyle.oktane.discord4j.Mentions;
@@ -17,20 +14,6 @@ import reactor.core.publisher.Mono;
  *
  * @param <USER> The type of {@link User} to parse.
  */
-@AutoWith(
-    generics = {
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.User", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.Member", passToConstructor = true)
-            }
-        )
-    }
-)
 public class UserTypeParser<USER extends User> extends DiscordTypeParser<USER> {
     private final Class<USER> userClass;
 

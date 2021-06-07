@@ -1,5 +1,6 @@
 package kboyle.oktane.core.parsers;
 
+import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.ProxyCommandContext;
 import kboyle.oktane.core.module.Command;
@@ -47,10 +48,14 @@ class DefaultArgumentParserTests {
 
     private static final CommandContext CONTEXT = new ProxyCommandContext();
 
+    private static final ImmutableMap<Class<?>, TypeParser<?>> TYPE_PARSERS = ImmutableMap.<Class<?>, TypeParser<?>>builder()
+        .put(int.class, new PrimitiveTypeParser<>(Integer.class, Integer::parseInt))
+        .build();
+
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     void testArgumentParser(Command command, List<String> tokens, ArgumentParserResult expectedResult) {
-        var parser = new DefaultArgumentParser(PrimitiveTypeParserFactory.create());
+        var parser = new DefaultArgumentParser(TYPE_PARSERS);
         var actualResult = parser.parse(CONTEXT, command, tokens);
         Assertions.assertEquals(expectedResult, actualResult.block());
     }

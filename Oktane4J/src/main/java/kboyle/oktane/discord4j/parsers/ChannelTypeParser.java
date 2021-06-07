@@ -3,9 +3,6 @@ package kboyle.oktane.discord4j.parsers;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.channel.Channel;
 import kboyle.oktane.core.module.Command;
-import kboyle.oktane.core.processor.AutoWith;
-import kboyle.oktane.core.processor.AutoWith.GenericParameter;
-import kboyle.oktane.core.processor.AutoWith.GenericParameters;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import kboyle.oktane.discord4j.Mentions;
@@ -17,45 +14,6 @@ import reactor.core.publisher.Mono;
  *
  * @param <CHANNEL> The type of {@link Channel} to parse.
  */
-@AutoWith(
-    generics = {
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.Channel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.TextChannel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.MessageChannel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.PrivateChannel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.GuildChannel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.NewsChannel", passToConstructor = true)
-            }
-        ),
-        @GenericParameters(
-            parameters = {
-                @GenericParameter(value = "discord4j.core.object.entity.channel.VoiceChannel", passToConstructor = true)
-            }
-        )
-    }
-)
 public class ChannelTypeParser<CHANNEL extends Channel> extends DiscordTypeParser<CHANNEL> {
     private final Class<CHANNEL> channelClass;
 

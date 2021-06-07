@@ -7,12 +7,16 @@ import discord4j.rest.util.PermissionSet;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
-import kboyle.oktane.core.processor.AutoWith;
+import kboyle.oktane.core.processor.ConfigureWith;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import kboyle.oktane.discord4j.DiscordCommandContext;
 import reactor.core.publisher.Mono;
 
-import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.function.BiConsumer;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -60,7 +64,7 @@ public @interface RequirePermission {
         }
     }
 
-    @AutoWith
+    @ConfigureWith(priority = -1)
     class Factory extends PreconditionFactory<RequirePermission> {
         @Override
         public Class<RequirePermission> supportedType() {
