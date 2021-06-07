@@ -7,10 +7,19 @@ import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.processing.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -22,6 +31,9 @@ import java.util.stream.Collectors;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
+import static kboyle.oktane.core.processor.ProcessorUtil.getBaseGeneric;
+import static kboyle.oktane.core.processor.ProcessorUtil.getNestedPath;
+import static kboyle.oktane.core.processor.ProcessorUtil.getPackage;
 
 @SupportedAnnotationTypes("kboyle.oktane.core.module.annotations.Aliases")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
@@ -99,7 +111,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     private void createCommandCallback(Element commandModule) {
         print(NOTE, "Processing annotated class %s", commandModule);
 
-        var contextType = getContextType(commandModule.asType());
+        var contextType = getBaseGeneric(types, commandModule.asType(), moduleBaseType);
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
         }
@@ -135,7 +147,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private String getGeneratedClassName(Element commandModule, ExecutableElement method) {
-        var nestedPath = getNestedPath(commandModule);
+        var nestedPath = getNestedPath(commandModule, "$$");
 
         var parameterNameString = method.getParameters().stream()
             .map(variableElement -> {
@@ -150,49 +162,12 @@ public class OktaneModuleProcessor extends AbstractProcessor {
         return String.join("$", nestedPath, method.getSimpleName(), parameterNameString);
     }
 
-    private String getPackage(Element element) {
-        var enclosingElement = element.getEnclosingElement();
-        if (enclosingElement instanceof PackageElement packageElement) {
-            return packageElement.toString();
-        }
-
-        return getPackage(enclosingElement);
-    }
-
-    private String getNestedPath(Element commandModule) {
-        var enclosingElement = commandModule.getEnclosingElement();
-        if (enclosingElement.getKind() == ElementKind.PACKAGE) {
-            return commandModule.getSimpleName().toString();
-        }
-
-        return getNestedPath(enclosingElement) + "$$" + commandModule.getSimpleName();
-    }
-
     private ExecutableElement getConstructor(Element element) {
         return element.getEnclosedElements().stream()
             .filter(enclosed -> enclosed.getKind() == ElementKind.CONSTRUCTOR)
             .map(ExecutableElement.class::cast)
             .findFirst()
             .orElseThrow();
-    }
-
-    private TypeMirror getContextType(TypeMirror type) {
-        return types.directSupertypes(type).stream()
-            .<TypeMirror>mapMulti(this::getContextType)
-            .findFirst()
-            .orElse(null);
-    }
-
-    private void getContextType(TypeMirror type, Consumer<TypeMirror> downstream) {
-        if (types.isSameType(types.erasure(moduleBaseType), types.erasure(type)) && type instanceof DeclaredType declaredType) {
-            var contextType = declaredType.getTypeArguments().get(0);
-            downstream.accept(contextType);
-            return;
-        }
-
-        for (var superType : types.directSupertypes(type)) {
-            getContextType(superType, downstream);
-        }
     }
 
     private MethodData getMethodData(ExecutableElement element) {
