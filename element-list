@@ -1,6 +1,7 @@
 kboyle.oktane.benchmark
 kboyle.oktane.benchmark.jmh_generated
 kboyle.oktane.core
+kboyle.oktane.core.configuration
 kboyle.oktane.core.exceptions
 kboyle.oktane.core.mapping
 kboyle.oktane.core.module
@@ -19,6 +20,7 @@ kboyle.oktane.core.results.search
 kboyle.oktane.core.results.tokeniser
 kboyle.oktane.core.results.typeparser
 kboyle.oktane.discord4j
+kboyle.oktane.discord4j.configuration
 kboyle.oktane.discord4j.module
 kboyle.oktane.discord4j.parsers
 kboyle.oktane.discord4j.precondition
