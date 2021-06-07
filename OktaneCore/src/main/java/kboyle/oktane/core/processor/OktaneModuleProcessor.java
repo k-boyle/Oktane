@@ -2,26 +2,38 @@ package kboyle.oktane.core.processor;
 
 import com.google.auto.service.AutoService;
 import kboyle.oktane.core.CommandContext;
+import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.module.ModuleBase;
 import kboyle.oktane.core.results.command.CommandResult;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.processing.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
+import static kboyle.oktane.core.processor.ProcessorUtil.getBaseGeneric;
+import static kboyle.oktane.core.processor.ProcessorUtil.getNestedPath;
+import static kboyle.oktane.core.processor.ProcessorUtil.getPackage;
 
 @SupportedAnnotationTypes("kboyle.oktane.core.module.annotations.Aliases")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
@@ -60,16 +72,16 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         print(NOTE, "");
 
-        var allSuccess = roundEnv.getRootElements().stream()
-            .mapMulti(this::flattenElement)
-            .allMatch(this::createCommandCallback);
-
-        if (!allSuccess) {
+        if (roundEnv.processingOver() || roundEnv.errorRaised()) {
             return false;
         }
 
+        roundEnv.getRootElements().stream()
+            .mapMulti(this::flattenElement)
+            .forEach(this::createCommandCallback);
+
         print(NOTE, "");
-        return true;
+        return false;
     }
 
     private void print(Diagnostic.Kind kind, String message, Object... args) {
@@ -96,20 +108,19 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             && element.getModifiers().contains(Modifier.PUBLIC);
     }
 
-    private boolean createCommandCallback(Element commandModule) {
+    private void createCommandCallback(Element commandModule) {
         print(NOTE, "Processing annotated class %s", commandModule);
 
-        var contextType = getContextType(commandModule.asType());
+        var contextType = getBaseGeneric(types, commandModule.asType(), moduleBaseType);
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
-            return false;
         }
 
         var constructor = getConstructor(commandModule);
 
         var context = contextType.toString();
 
-        var classWriter = new ClassWriter(commandModule, constructor, context);
+        var classWriter = new CommandCallbackClassWriter(commandModule, constructor, context);
         commandModule.getEnclosedElements().stream()
             .filter(ExecutableElement.class::isInstance)
             .map(ExecutableElement.class::cast)
@@ -117,11 +128,9 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .map(this::getMethodData)
             .filter(MethodData::isValid)
             .forEach(method -> createClass(commandModule, classWriter, method));
-
-        return true;
     }
 
-    private void createClass(Element commandModule, ClassWriter classWriter, MethodData data) {
+    private void createClass(Element commandModule, CommandCallbackClassWriter commandCallbackClassWriter, MethodData data) {
         var method = data.method();
         var classPackage = getPackage(commandModule);
         var callbackClassname = getGeneratedClassName(commandModule, method);
@@ -130,21 +139,15 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             var javaFileObject = filer.createSourceFile(callbackClassname);
 
             try (var writer = new PrintWriter(javaFileObject.openWriter())) {
-                classWriter.write(writer, callbackClassname, classPackage, data);
+                commandCallbackClassWriter.write(writer, callbackClassname, classPackage, data);
             }
         } catch (IOException ex) {
-            print(ERROR,
-                "An exception was thrown whilst try to create callback for %s\n%s",
-                method,
-                Arrays.stream(ex.getStackTrace())
-                    .map(StackTraceElement::toString)
-                    .collect(Collectors.joining("\n"))
-            );
+            throw new RuntimeIOException(ex);
         }
     }
 
     private String getGeneratedClassName(Element commandModule, ExecutableElement method) {
-        var nestedPath = getNestedPath(commandModule);
+        var nestedPath = getNestedPath(commandModule, "$$");
 
         var parameterNameString = method.getParameters().stream()
             .map(variableElement -> {
@@ -159,49 +162,12 @@ public class OktaneModuleProcessor extends AbstractProcessor {
         return String.join("$", nestedPath, method.getSimpleName(), parameterNameString);
     }
 
-    private String getPackage(Element element) {
-        var enclosingElement = element.getEnclosingElement();
-        if (enclosingElement instanceof PackageElement packageElement) {
-            return packageElement.toString();
-        }
-
-        return getPackage(enclosingElement);
-    }
-
-    private String getNestedPath(Element commandModule) {
-        var enclosingElement = commandModule.getEnclosingElement();
-        if (enclosingElement.getKind() == ElementKind.PACKAGE) {
-            return commandModule.getSimpleName().toString();
-        }
-
-        return getNestedPath(enclosingElement) + "$$" + commandModule.getSimpleName();
-    }
-
     private ExecutableElement getConstructor(Element element) {
         return element.getEnclosedElements().stream()
             .filter(enclosed -> enclosed.getKind() == ElementKind.CONSTRUCTOR)
             .map(ExecutableElement.class::cast)
             .findFirst()
             .orElseThrow();
-    }
-
-    private TypeMirror getContextType(TypeMirror type) {
-        return types.directSupertypes(type).stream()
-            .<TypeMirror>mapMulti(this::getContextType)
-            .findFirst()
-            .orElse(null);
-    }
-
-    private void getContextType(TypeMirror type, Consumer<TypeMirror> downstream) {
-        if (types.isSameType(types.erasure(moduleBaseType), types.erasure(type)) && type instanceof DeclaredType declaredType) {
-            var contextType = declaredType.getTypeArguments().get(0);
-            downstream.accept(contextType);
-            return;
-        }
-
-        for (var superType : types.directSupertypes(type)) {
-            getContextType(superType, downstream);
-        }
     }
 
     private MethodData getMethodData(ExecutableElement element) {

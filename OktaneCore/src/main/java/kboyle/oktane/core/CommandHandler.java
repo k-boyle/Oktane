@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
+import kboyle.oktane.core.configuration.CommandHandlerConfigurator;
 import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
 import kboyle.oktane.core.module.Command;
@@ -13,7 +14,11 @@ import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.CommandModuleFactory;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
 import kboyle.oktane.core.module.factory.PreconditionFactoryMap;
-import kboyle.oktane.core.parsers.*;
+import kboyle.oktane.core.parsers.ArgumentParser;
+import kboyle.oktane.core.parsers.DefaultArgumentParser;
+import kboyle.oktane.core.parsers.DefaultTokeniser;
+import kboyle.oktane.core.parsers.Tokeniser;
+import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.prefix.DefaultPrefixHandler;
 import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
@@ -26,9 +31,11 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -229,6 +236,8 @@ public class CommandHandler<CONTEXT extends CommandContext> {
      * @param <CONTEXT> The type of context that's used in commands.
      */
     public static class Builder<CONTEXT extends CommandContext> {
+        private static final ServiceLoader<CommandHandlerConfigurator> COMMAND_HANDLER_CONFIGURATOR_SERVICE_LOADER = ServiceLoader.load(CommandHandlerConfigurator.class);
+
         private final Map<Class<?>, TypeParser<?>> typeParserByClass;
         private final CommandMap.Builder commandMap;
         private final List<ModuleInfo<CONTEXT, ? extends ModuleBase<CONTEXT>>> commandModules;
@@ -240,13 +249,18 @@ public class CommandHandler<CONTEXT extends CommandContext> {
         private PrefixHandler prefixHandler;
 
         private Builder() {
-            this.typeParserByClass = new HashMap<>(PrimitiveTypeParserFactory.create());
+            this.typeParserByClass = new HashMap<>();
             this.commandMap = CommandMap.builder();
             this.commandModules = new ArrayList<>();
             this.preconditionFactoryMap = new PreconditionFactoryMap();
             this.beanProvider = BeanProvider.empty();
             this.tokeniser = new DefaultTokeniser();
             this.prefixHandler = new DefaultPrefixHandler();
+
+            COMMAND_HANDLER_CONFIGURATOR_SERVICE_LOADER.stream()
+                .map(ServiceLoader.Provider::get)
+                .sorted(Comparator.comparingInt(CommandHandlerConfigurator::priority))
+                .forEach(this::applyConfigurator);
         }
 
         /**
@@ -416,6 +430,18 @@ public class CommandHandler<CONTEXT extends CommandContext> {
         public Builder<CONTEXT> withPrefixHandler(PrefixHandler prefixHandler) {
             Preconditions.checkNotNull(prefixHandler, "prefixProvider cannot be null");
             this.prefixHandler = prefixHandler;
+            return this;
+        }
+
+        /**
+         * Applies the given {@link CommandHandlerConfigurator} to the {@link CommandHandler.Builder}.
+         *
+         * @param configurator The {@link CommandHandlerConfigurator} to apply.
+         * @return The {@link CommandHandler.Builder}.
+         */
+        public Builder<CONTEXT> applyConfigurator(CommandHandlerConfigurator configurator) {
+            Preconditions.checkNotNull(configurator, "configurator cannot be null");
+            configurator.apply(this);
             return this;
         }
 

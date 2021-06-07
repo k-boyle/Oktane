@@ -13,18 +13,18 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.StringJoiner;
 
-public class ClassWriter {
+class CommandCallbackClassWriter {
     private final Element commandModule;
     private final ExecutableElement constructor;
     private final String context;
 
-    public ClassWriter(Element commandModule, ExecutableElement constructor, String context) {
+    CommandCallbackClassWriter(Element commandModule, ExecutableElement constructor, String context) {
         this.commandModule = commandModule;
         this.constructor = constructor;
         this.context = context;
     }
 
-    public void write(PrintWriter writer, String callbackClassname, String classPackage, MethodData data) {
+    void write(PrintWriter writer, String callbackClassname, String classPackage, MethodData data) {
         var method = data.method();
 
         writer.print("package ");

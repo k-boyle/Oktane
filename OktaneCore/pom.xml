@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service-annotations</artifactId>
+            <artifactId>auto-service</artifactId>
             <version>${auto-service-annotations.version}</version>
         </dependency>
     </dependencies>
@@ -65,22 +65,8 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <includes>
-                                <include>kboyle.oktane.core.processor.OktaneModuleProcessor</include>
-                            </includes>
-                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>com.google.auto.service</groupId>
-                            <artifactId>auto-service</artifactId>
-                            <version>${auto-service-annotations.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
             </plugin>
         </plugins>
     </build>
