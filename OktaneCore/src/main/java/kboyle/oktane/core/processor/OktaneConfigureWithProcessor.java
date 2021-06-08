@@ -26,7 +26,6 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.NOTE;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static kboyle.oktane.core.processor.ProcessorUtil.getBaseGeneric;
 import static kboyle.oktane.core.processor.ProcessorUtil.getNestedPath;
@@ -61,8 +60,6 @@ public class OktaneConfigureWithProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        print(NOTE, "");
-
         if (roundEnv.processingOver() || roundEnv.errorRaised()) {
             return false;
         }

@@ -30,7 +30,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.NOTE;
 import static kboyle.oktane.core.processor.ProcessorUtil.getBaseGeneric;
 import static kboyle.oktane.core.processor.ProcessorUtil.getNestedPath;
 import static kboyle.oktane.core.processor.ProcessorUtil.getPackage;
@@ -70,8 +69,6 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        print(NOTE, "");
-
         if (roundEnv.processingOver() || roundEnv.errorRaised()) {
             return false;
         }
@@ -80,7 +77,6 @@ public class OktaneModuleProcessor extends AbstractProcessor {
             .mapMulti(this::flattenElement)
             .forEach(this::createCommandCallback);
 
-        print(NOTE, "");
         return false;
     }
 
@@ -90,7 +86,6 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
     private void flattenElement(Element element, Consumer<Element> downstream) {
         if (!isPotentialModule(element)) {
-            print(NOTE, "%s is not a potential module, skipping", element);
             return;
         }
 
@@ -109,8 +104,6 @@ public class OktaneModuleProcessor extends AbstractProcessor {
     }
 
     private void createCommandCallback(Element commandModule) {
-        print(NOTE, "Processing annotated class %s", commandModule);
-
         var contextType = getBaseGeneric(types, commandModule.asType(), moduleBaseType);
         if (contextType == null) {
             print(ERROR, "Failed to unwrap context type for %s", commandModule);
@@ -118,6 +111,7 @@ public class OktaneModuleProcessor extends AbstractProcessor {
 
         var constructor = getConstructor(commandModule);
 
+        assert contextType != null;
         var context = contextType.toString();
 
         var classWriter = new CommandCallbackClassWriter(commandModule, constructor, context);
