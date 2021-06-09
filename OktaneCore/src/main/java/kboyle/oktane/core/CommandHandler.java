@@ -7,6 +7,7 @@ import com.google.common.reflect.ClassPath;
 import kboyle.oktane.core.configuration.CommandHandlerConfigurator;
 import kboyle.oktane.core.exceptions.RuntimeIOException;
 import kboyle.oktane.core.mapping.CommandMap;
+import kboyle.oktane.core.mapping.CommandMatch;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandModule;
 import kboyle.oktane.core.module.ModuleBase;
@@ -21,18 +22,17 @@ import kboyle.oktane.core.parsers.Tokeniser;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.prefix.DefaultPrefixHandler;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
+import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.core.results.search.CommandNotFoundResult;
 import kboyle.oktane.core.results.search.MissingPrefixResult;
-import kboyle.oktane.core.results.tokeniser.TokeniserSuccessfulResult;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -99,6 +99,10 @@ public class CommandHandler<CONTEXT extends CommandContext> {
         Preconditions.checkNotNull(input);
         Preconditions.checkNotNull(context);
 
+        if (input.isEmpty()) {
+            return COMMAND_NOT_FOUND;
+        }
+
         context.input = input;
         return prefixHandler.find(context)
             .flatMap(index -> {
@@ -140,36 +144,48 @@ public class CommandHandler<CONTEXT extends CommandContext> {
             return COMMAND_NOT_FOUND;
         }
 
-        return Flux.fromIterable(matches)
-            .flatMap(match -> match.command().runPreconditions(context)
-                .map(result -> {
-                    if (!result.success()) {
-                        return result;
-                    }
-
-                    return tokeniser.tokenise(input, match);
-                })
-            )
-            .flatMap(result0 -> {
-                if (!result0.success()) {
-                    return Mono.just(result0);
-                }
-
-                var result = (TokeniserSuccessfulResult) result0;
-                return argumentParser.parse(context, result.command(), result.tokens());
-            })
-            .collectList()
-            .flatMap(results -> results.stream()
-                .filter(Result::success)
-                .map(ArgumentParserSuccessfulResult.class::cast)
-                .findFirst()
-                .map(result -> executeCommand(context, result))
-                .orElseGet(() -> Mono.just(new CommandMatchFailedResult(results)))
-            );
+        return executeUntilSuccess(context, matches.iterator(), new ArrayList<>());
     }
 
-    private Mono<Result> executeCommand(CONTEXT context, ArgumentParserSuccessfulResult parserResult) {
-        var command = parserResult.command();
+    private Mono<Result> executeUntilSuccess(
+            CONTEXT context,
+            Iterator<CommandMatch> matchesIterator,
+            List<Result> resultAggregator) {
+        if (!matchesIterator.hasNext()) {
+            return Mono.just(new CommandMatchFailedResult(resultAggregator));
+        }
+
+        var match = matchesIterator.next();
+        context.command = match.command();
+
+        return context.command().runPreconditions(context)
+            .flatMap(preconditionResult -> {
+                if (!preconditionResult.success()) {
+                    resultAggregator.add(preconditionResult);
+                    return executeUntilSuccess(context, matchesIterator, resultAggregator);
+                }
+
+                var tokenResult = tokeniser.tokenise(context.input, match);
+                if (!tokenResult.success()) {
+                    resultAggregator.add(tokenResult);
+                    return executeUntilSuccess(context, matchesIterator, resultAggregator);
+                }
+
+                return argumentParser.parse(context, context.command(), tokenResult.tokens())
+                    .flatMap(argumentParserResult -> {
+                        if (!argumentParserResult.success()) {
+                            resultAggregator.add(argumentParserResult);
+                            return executeUntilSuccess(context, matchesIterator, resultAggregator);
+                        }
+
+                        return executeCommand(context, argumentParserResult);
+                    });
+            });
+    }
+
+    private Mono<Result> executeCommand(CONTEXT context, ArgumentParserResult parserResult) {
+        var command = context.command();
+        System.out.println("executing " + command);
         context.command = command;
         var beans = getBeans(context, command.module.beans);
         return command.commandCallback
