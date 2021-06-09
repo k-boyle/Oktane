@@ -4,6 +4,7 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
+import kboyle.oktane.core.processor.ConfigureWith;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
@@ -31,6 +32,7 @@ public @interface RequireFailure {
         }
     }
 
+    @ConfigureWith
     class Factory extends PreconditionFactory<RequireFailure> {
         @Override
         public Class<RequireFailure> supportedType() {

@@ -4,10 +4,15 @@ import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.Precondition;
 import kboyle.oktane.core.module.factory.PreconditionFactory;
+import kboyle.oktane.core.processor.ConfigureWith;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
-import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.function.BiConsumer;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,6 +41,7 @@ public @interface RequireHi {
         }
     }
 
+    @ConfigureWith
     class Factory extends PreconditionFactory<RequireHi> {
         @Override
         public Class<RequireHi> supportedType() {

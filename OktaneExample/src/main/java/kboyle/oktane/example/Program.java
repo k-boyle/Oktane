@@ -7,8 +7,6 @@ import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.command.CommandMessageResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.example.modules.PingModule;
-import kboyle.oktane.example.preconditions.RequireFailure;
-import kboyle.oktane.example.preconditions.RequireHi;
 import kboyle.oktane.example.results.KillAppCommandResult;
 import reactor.core.publisher.Mono;
 
@@ -34,8 +32,6 @@ public class Program {
                             .withCallback((ctx, beans, parameters) -> new CommandMessageResult(ctx.command(), String.valueOf(parameters[0])).mono());
                     });
             })
-            .withPreconditionFactory(new RequireFailure.Factory())
-            .withPreconditionFactory(new RequireHi.Factory())
             .withPrefixHandler(context -> Mono.just(List.of(new CharPrefix('!'))))
             .build();
 
