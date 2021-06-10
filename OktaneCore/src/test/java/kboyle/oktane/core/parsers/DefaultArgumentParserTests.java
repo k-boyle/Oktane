@@ -35,7 +35,7 @@ class DefaultArgumentParserTests {
         .build();
 
     private static final Command OPTIONAL_STRING_DEFAULT = new TestCommandBuilder()
-        .addOptionalParameter(String.class, "default value")
+        .addOptionalParameter(String.class, "default token")
         .build();
 
     private static final Command OPTIONAL_INT_NO_DEFAULT = new TestCommandBuilder()
@@ -80,7 +80,7 @@ class DefaultArgumentParserTests {
             Arguments.of(
                 INT_ARG,
                 List.of("notint"),
-                new ArgumentParserFailedResult(INT_ARG, List.of(new TypeParserFailedResult<Integer>("Failed to parse notint as class java.lang.Integer")))
+                new ArgumentParserFailedResult(INT_ARG.parameters.get(0), "notint", new TypeParserFailedResult<>("Failed to parse notint as class java.lang.Integer"))
             ),
             Arguments.of(
                 OPTIONAL_STRING_NO_DEFAULT,
@@ -95,7 +95,7 @@ class DefaultArgumentParserTests {
             Arguments.of(
                 OPTIONAL_STRING_DEFAULT,
                 List.of(),
-                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { "default value" })
+                new ArgumentParserSuccessfulResult(OPTIONAL_STRING_NO_DEFAULT, new Object[] { "default token" })
             ),
             Arguments.of(
                 OPTIONAL_STRING_DEFAULT,

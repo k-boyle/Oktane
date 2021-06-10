@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 import java.util.function.Consumer;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
 public @interface RequireFailure {
     int value();
 

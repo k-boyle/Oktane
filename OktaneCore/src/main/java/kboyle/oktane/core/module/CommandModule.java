@@ -10,7 +10,12 @@ import kboyle.oktane.core.CommandUtils;
 import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 
@@ -32,7 +37,7 @@ public final class CommandModule {
     public final Optional<Class<? extends ModuleBase<?>>> originalClass;
 
     private CommandModule(CommandModule parent, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty value");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty token");
 
         this.name = builder.name;
         this.groups = ImmutableSet.copyOf(builder.groups);

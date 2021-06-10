@@ -22,7 +22,6 @@ import kboyle.oktane.core.parsers.Tokeniser;
 import kboyle.oktane.core.parsers.TypeParser;
 import kboyle.oktane.core.prefix.DefaultPrefixHandler;
 import kboyle.oktane.core.results.Result;
-import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.search.CommandMatchFailedResult;
 import kboyle.oktane.core.results.search.CommandNotFoundResult;
 import kboyle.oktane.core.results.search.MissingPrefixResult;
@@ -178,18 +177,26 @@ public class CommandHandler<CONTEXT extends CommandContext> {
                             return executeUntilSuccess(context, matchesIterator, resultAggregator);
                         }
 
-                        return executeCommand(context, argumentParserResult);
+                        context.parsedArguments = argumentParserResult.parsedArguments();
+                        return CommandUtils.runParameterPreconditions(context, context.command)
+                            .flatMap(parameterPreconditionResult -> {
+                                if (!parameterPreconditionResult.success()) {
+                                    resultAggregator.add(parameterPreconditionResult);
+                                    return executeUntilSuccess(context, matchesIterator, resultAggregator);
+                                }
+
+                                return executeCommand(context);
+                            });
                     });
             });
     }
 
-    private Mono<Result> executeCommand(CONTEXT context, ArgumentParserResult parserResult) {
+    private Mono<Result> executeCommand(CONTEXT context) {
         var command = context.command();
-        System.out.println("executing " + command);
         context.command = command;
         var beans = getBeans(context, command.module.beans);
         return command.commandCallback
-            .execute(context, beans, parserResult.parsedArguments())
+            .execute(context, beans, context.parsedArguments)
             .cast(Result.class);
     }
 

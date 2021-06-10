@@ -1,6 +1,7 @@
 package kboyle.oktane.core;
 
 import kboyle.oktane.core.module.Command;
+import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.prefix.Prefix;
 
 import java.util.Optional;
@@ -12,10 +13,11 @@ public class CommandContext {
     private final BeanProvider beanProvider;
 
     Command command;
-
     String input;
-
     Prefix prefix;
+    Object[] parsedArguments;
+    Object currentArgument;
+    CommandParameter currentParameter;
 
     public CommandContext(BeanProvider beanProvider) {
         this.beanProvider = beanProvider;
@@ -51,5 +53,13 @@ public class CommandContext {
      */
     public Optional<Prefix> prefix() {
         return Optional.ofNullable(prefix);
+    }
+
+    public Object currentArgument() {
+        return currentArgument;
+    }
+
+    public CommandParameter currentParameter() {
+        return currentParameter;
     }
 }

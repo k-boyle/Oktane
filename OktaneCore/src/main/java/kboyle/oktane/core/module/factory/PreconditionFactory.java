@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  */
 public abstract class PreconditionFactory<T extends Annotation> {
     /**
-     * The value that the library uses to represent an ungroup {@link Precondition}.
+     * The token that the library uses to represent an ungroup {@link Precondition}.
      */
     public static final Object NO_GROUP = "";
 

@@ -12,7 +12,11 @@ import kboyle.oktane.core.results.precondition.PreconditionResult;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -35,7 +39,7 @@ public final class Command {
     public final Optional<Method> originalMethod;
 
     Command(CommandModule module, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A command name must be a non-empty value");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A command name must be a non-empty token");
         Preconditions.checkNotNull(builder.commandCallback, "builder.commandCallback cannot be null");
 
         var aliases = ImmutableSet.copyOf(builder.aliases);
