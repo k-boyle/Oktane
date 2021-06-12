@@ -8,6 +8,7 @@ import kboyle.oktane.core.parsers.TypeParser;
 
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -54,7 +55,7 @@ public final class CommandParameter {
     }
 
     public static class Builder {
-        public final ArrayList<Precondition> preconditions;
+        public final List<Precondition> preconditions;
 
         private Class<?> type;
         private String description;
