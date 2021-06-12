@@ -55,10 +55,16 @@ public class CommandContext {
         return Optional.ofNullable(prefix);
     }
 
+    /**
+     * @return The current argument having preconditions run against it.
+     */
     public Object currentArgument() {
         return currentArgument;
     }
 
+    /**
+     * @return The current parameter having preconditions run against it.
+     */
     public CommandParameter currentParameter() {
         return currentParameter;
     }

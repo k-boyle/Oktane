@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public class DefaultArgumentParser implements ArgumentParser {
-    private static final Object[] EMPTY = new Object[0];
+    private static final Mono<ArgumentParserResult> EMPTY = Mono.just(ArgumentParserSuccessfulResult.empty());
 
     private final ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass;
 
@@ -30,7 +30,7 @@ public class DefaultArgumentParser implements ArgumentParser {
         var parameters = command.parameters;
 
         if (parameters.isEmpty()) {
-            return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
+            return EMPTY;
         }
 
         return parse(context, command, 0, tokens, parameters, new Object[parameters.size()]);
@@ -44,7 +44,7 @@ public class DefaultArgumentParser implements ArgumentParser {
             ImmutableList<CommandParameter> parameters,
             Object[] parsedArguments) {
         if (index == parameters.size()) {
-            return new ArgumentParserSuccessfulResult(command, parsedArguments).mono();
+            return new ArgumentParserSuccessfulResult(parsedArguments).mono();
         }
 
         var parameter = parameters.get(index);

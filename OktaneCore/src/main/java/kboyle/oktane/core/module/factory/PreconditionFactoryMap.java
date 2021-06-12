@@ -59,7 +59,7 @@ public class PreconditionFactoryMap {
 
         if (repeatedType != null) {
             try {
-                var valueMethod = annotationType.getMethod("token");
+                var valueMethod = annotationType.getMethod("value");
                 var annotations = (Annotation[]) valueMethod.invoke(annotation);
                 for (var repeatedAnnotation : annotations) {
                     handle(repeatedAnnotation, preconditionConsumer);

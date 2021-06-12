@@ -50,7 +50,6 @@ public @interface RequireHi {
 
         @Override
         public void createGrouped(RequireHi annotation, BiConsumer<Object, Precondition> preconditionConsumer) {
-
             preconditionConsumer.accept(annotation.group(), new HiPrecondition(annotation.value()));
         }
     }

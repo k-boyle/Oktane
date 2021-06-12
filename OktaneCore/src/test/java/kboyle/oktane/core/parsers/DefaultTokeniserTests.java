@@ -69,152 +69,152 @@ class DefaultTokeniserTests {
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 " 100",
-                new TokeniserSuccessfulResult(INT_ARG_NOT_REMAINDER, List.of("100"))
+                new TokeniserSuccessfulResult(List.of("100"))
             ),
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 " 100 200",
-                new TokeniserTooManyTokensResult(INT_ARG_NOT_REMAINDER, " 100 200", 1)
+                new TokeniserTooManyTokensResult(" 100 200", 1)
             ),
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 " ",
-                new TokeniserTooFewTokensResult(INT_ARG_NOT_REMAINDER, " ", 1)
+                new TokeniserTooFewTokensResult(" ", 1)
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 " string",
-                new TokeniserSuccessfulResult(STRING_NOT_ARG_REMAINDER, List.of("string"))
+                new TokeniserSuccessfulResult(List.of("string"))
             ),
             Arguments.of(
                 STRING_ARG_REMAINDER,
                 " string 123",
-                new TokeniserSuccessfulResult(STRING_ARG_REMAINDER, List.of("string 123"))
+                new TokeniserSuccessfulResult(List.of("string 123"))
             ),
             Arguments.of(
                 STRING_STRING_ARG_REMAINDER,
                 " string 123 456",
-                new TokeniserSuccessfulResult(STRING_STRING_ARG_REMAINDER, List.of("string", "123 456"))
+                new TokeniserSuccessfulResult(List.of("string", "123 456"))
             ),
             Arguments.of(
                 NO_PARAMETERS,
                 " ",
-                new TokeniserSuccessfulResult(NO_PARAMETERS, List.of())
+                new TokeniserSuccessfulResult(List.of())
             ),
             Arguments.of(
                 NO_PARAMETERS,
                 "          ",
-                new TokeniserSuccessfulResult(NO_PARAMETERS, List.of())
+                new TokeniserSuccessfulResult(List.of())
             ),
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 " 10                   ",
-                new TokeniserSuccessfulResult(INT_ARG_NOT_REMAINDER, List.of("10"))
+                new TokeniserSuccessfulResult(List.of("10"))
             ),
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 "     10         ",
-                new TokeniserSuccessfulResult(INT_ARG_NOT_REMAINDER, List.of("10"))
+                new TokeniserSuccessfulResult(List.of("10"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " \"this is string one\" \"this is string two\"",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("this is string one", "this is string two"))
+                new TokeniserSuccessfulResult(List.of("this is string one", "this is string two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " \"this is string one\" two",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("this is string one", "two"))
+                new TokeniserSuccessfulResult(List.of("this is string one", "two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " one \"this is string two\"",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("one", "this is string two"))
+                new TokeniserSuccessfulResult(List.of("one", "this is string two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " \"one\" \"two\"",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("one", "two"))
+                new TokeniserSuccessfulResult(List.of("one", "two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " \"one\"\"two\"",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("one", "two"))
+                new TokeniserSuccessfulResult(List.of("one", "two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 "                 \"one\"                    \"two\"                    ",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("one", "two"))
+                new TokeniserSuccessfulResult(List.of("one", "two"))
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " \\\"one two\\\"",
-                new TokeniserSuccessfulResult(STRING_STRING_NOT_ARG_REMAINDER, List.of("\"one", "two\\\""))
+                new TokeniserSuccessfulResult(List.of("\"one", "two\\\""))
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 " \"missing quote",
-                new TokeniserMissingQuoteResult(STRING_NOT_ARG_REMAINDER, " \"missing quote", 15)
+                new TokeniserMissingQuoteResult(" \"missing quote", 15)
             ),
             Arguments.of(
                 NO_PARAMETERS,
                 " string",
-                new TokeniserTooManyTokensResult(NO_PARAMETERS, " string", 0)
+                new TokeniserTooManyTokensResult(" string", 0)
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 " string ",
-                new TokeniserTooFewTokensResult(STRING_STRING_NOT_ARG_REMAINDER, " string ", 2)
+                new TokeniserTooFewTokensResult(" string ", 2)
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 " \"\"",
-                new TokeniserSuccessfulResult(STRING_NOT_ARG_REMAINDER, List.of(""))
+                new TokeniserSuccessfulResult(List.of(""))
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 " \\\\",
-                new TokeniserSuccessfulResult(STRING_NOT_ARG_REMAINDER, List.of("\\"))
+                new TokeniserSuccessfulResult(List.of("\\"))
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 " \\\\\\",
-                new TokeniserSuccessfulResult(STRING_NOT_ARG_REMAINDER, List.of("\\\\"))
+                new TokeniserSuccessfulResult(List.of("\\\\"))
             ),
             Arguments.of(
                 OPTIONAL_STRING,
                 " ",
-                new TokeniserSuccessfulResult(OPTIONAL_STRING, List.of())
+                new TokeniserSuccessfulResult(List.of())
             ),
             Arguments.of(
                 OPTIONAL_STRING,
                 " string",
-                new TokeniserSuccessfulResult(OPTIONAL_STRING, List.of("string"))
+                new TokeniserSuccessfulResult(List.of("string"))
             ),
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
                 " ",
-                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of())
+                new TokeniserSuccessfulResult(List.of())
             ),
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
                 " string",
-                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of("string"))
+                new TokeniserSuccessfulResult(List.of("string"))
             ),
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
                 " string1 string2",
-                new TokeniserSuccessfulResult(OPTIONAL_STRING_OPTIONAL_STRING, List.of("string1", "string2"))
+                new TokeniserSuccessfulResult(List.of("string1", "string2"))
             ),
             Arguments.of(
                 STRING_OPTIONAL_STRING,
                 " string",
-                new TokeniserSuccessfulResult(STRING_OPTIONAL_STRING, List.of("string"))
+                new TokeniserSuccessfulResult(List.of("string"))
             ),
             Arguments.of(
                 STRING_OPTIONAL_STRING,
                 " string1 string2",
-                new TokeniserSuccessfulResult(STRING_OPTIONAL_STRING, List.of("string1", "string2"))
+                new TokeniserSuccessfulResult(List.of("string1", "string2"))
             )
         );
     }

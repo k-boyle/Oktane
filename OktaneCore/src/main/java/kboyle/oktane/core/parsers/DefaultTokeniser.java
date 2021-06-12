@@ -1,7 +1,11 @@
 package kboyle.oktane.core.parsers;
 
 import kboyle.oktane.core.mapping.CommandMatch;
-import kboyle.oktane.core.results.tokeniser.*;
+import kboyle.oktane.core.results.tokeniser.TokeniserMissingQuoteResult;
+import kboyle.oktane.core.results.tokeniser.TokeniserResult;
+import kboyle.oktane.core.results.tokeniser.TokeniserSuccessfulResult;
+import kboyle.oktane.core.results.tokeniser.TokeniserTooFewTokensResult;
+import kboyle.oktane.core.results.tokeniser.TokeniserTooManyTokensResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,15 +31,15 @@ public class DefaultTokeniser implements Tokeniser {
 
         var emptyParameters = parameters.isEmpty();
         if (optionalStart == - 1 && (index == commandEnd || inputLastIndex == commandEnd) && !emptyParameters) {
-            return new TokeniserTooFewTokensResult(command, input, parametersSize);
+            return new TokeniserTooFewTokensResult(input, parametersSize);
         }
 
         if (emptyParameters) {
             if (commandEnd != index && noneWhitespaceRemains(input, index)) {
-                return new TokeniserTooManyTokensResult(command, input, parametersSize);
+                return new TokeniserTooManyTokensResult(input, parametersSize);
             }
 
-            return new TokeniserSuccessfulResult(command, List.of());
+            return TokeniserSuccessfulResult.empty();
         }
 
         List<String> tokens = new ArrayList<>(command.parameters.size());
@@ -55,11 +59,11 @@ public class DefaultTokeniser implements Tokeniser {
             }
 
             if (optionalStart != -1 && index >= optionalStart && index >= inputLastIndex) {
-                return new TokeniserSuccessfulResult(command, tokens);
+                return new TokeniserSuccessfulResult(tokens);
             }
 
             if (index > inputLastIndex) {
-                return new TokeniserTooFewTokensResult(command, input, parametersSize);
+                return new TokeniserTooFewTokensResult(input, parametersSize);
             }
 
             if (parameter.remainder) {
@@ -102,7 +106,7 @@ public class DefaultTokeniser implements Tokeniser {
                             break;
                         }
 
-                        return new TokeniserMissingQuoteResult(command, input, index);
+                        return new TokeniserMissingQuoteResult(input, index);
                     } else if (currentCharacter == SPACE) {
                         currentParameter = input.substring(paramStart, index);
                         break;
@@ -118,10 +122,10 @@ public class DefaultTokeniser implements Tokeniser {
         }
 
         if (index != inputLength && noneWhitespaceRemains(input, index)) {
-            return new TokeniserTooManyTokensResult(command, input, parametersSize);
+            return new TokeniserTooManyTokensResult(input, parametersSize);
         }
 
-        return new TokeniserSuccessfulResult(command, tokens);
+        return new TokeniserSuccessfulResult(tokens);
     }
 
     private static boolean noneWhitespaceRemains(String input, int index) {
