@@ -27,7 +27,7 @@ public final class CommandParameter {
     public final ImmutableList<Precondition> preconditions;
 
     CommandParameter(Command command, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A parameter name must be a non-empty token");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A parameter name must be a non-empty value");
         Preconditions.checkNotNull(builder.type, "builder.type cannot be null");
 
         this.name = builder.name;

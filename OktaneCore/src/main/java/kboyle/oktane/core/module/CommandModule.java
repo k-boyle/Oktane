@@ -37,7 +37,7 @@ public final class CommandModule {
     public final Optional<Class<? extends ModuleBase<?>>> originalClass;
 
     private CommandModule(CommandModule parent, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty token");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A module name must be a non-empty value");
 
         this.name = builder.name;
         this.groups = ImmutableSet.copyOf(builder.groups);

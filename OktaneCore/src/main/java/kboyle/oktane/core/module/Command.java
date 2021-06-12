@@ -39,7 +39,7 @@ public final class Command {
     public final Optional<Method> originalMethod;
 
     Command(CommandModule module, Builder builder) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A command name must be a non-empty token");
+        Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A command name must be a non-empty value");
         Preconditions.checkNotNull(builder.commandCallback, "builder.commandCallback cannot be null");
 
         var aliases = ImmutableSet.copyOf(builder.aliases);
