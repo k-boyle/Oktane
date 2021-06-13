@@ -40,7 +40,7 @@ public @interface RequireHierarchy {
 
         @Override
         public Mono<PreconditionResult> run(DiscordCommandContext context, Command command) {
-            if (context.currentArgument() == null || !(context.currentArgument() instanceof Member targetMember)) {
+            if (!(context.currentArgument() instanceof Member targetMember)) {
                 return failure("This precondition can only be used on a Member parameter").mono();
             }
 
