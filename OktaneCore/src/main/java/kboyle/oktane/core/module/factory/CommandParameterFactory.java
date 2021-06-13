@@ -48,8 +48,11 @@ public class CommandParameterFactory {
             .withType(parameterType)
             .withName(parameter.getName())
             .withRemainder(parameter.getAnnotation(Remainder.class) != null)
-            .withParser(parser)
             .withOriginalParameter(parameter);
+
+        if (parameterType != String.class) {
+            parameterBuilder.withParser(parser);
+        }
 
         var preconditionsByGroup = HashMultimap.<Object, Precondition>create();
         for (var annotation : parameter.getAnnotations()) {
