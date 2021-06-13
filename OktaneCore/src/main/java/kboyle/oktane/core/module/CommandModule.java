@@ -144,6 +144,9 @@ public final class CommandModule {
 
         public Builder withPrecondition(Precondition precondition) {
             Preconditions.checkNotNull(precondition, "precondition cannot be null");
+            if (originalClass != null) {
+                precondition.validate(originalClass);
+            }
             this.preconditions.add(precondition);
             return this;
         }
