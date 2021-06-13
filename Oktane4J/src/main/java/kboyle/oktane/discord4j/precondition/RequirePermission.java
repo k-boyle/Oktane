@@ -1,7 +1,5 @@
 package kboyle.oktane.discord4j.precondition;
 
-import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import kboyle.oktane.core.module.Command;
@@ -44,7 +42,7 @@ public @interface RequirePermission {
 
         @Override
         public Mono<PreconditionResult> run(DiscordCommandContext context, Command command) {
-            return getTarget(context)
+            return target.get(context)
                 .flatMap(member -> context.textChannel().flatMap(channel -> channel.getEffectivePermissions(member.getId())))
                 .map(targetPerms -> {
                     if (targetPerms.and(permissions).equals(permissions)) {
@@ -53,14 +51,7 @@ public @interface RequirePermission {
 
                     return failure("%s require %s to execute this command", target == PermissionTarget.USER ? "You" : "I", permissions);
                 })
-                .switchIfEmpty(failure("This command can only be executed in a guild").mono());
-        }
-
-        private Mono<Member> getTarget(DiscordCommandContext context) {
-            return switch (target) {
-                case USER -> context.member();
-                case BOT -> context.guild().flatMap(Guild::getSelfMember);
-            };
+                .switchIfEmpty(NOT_IN_GUILD);
         }
     }
 

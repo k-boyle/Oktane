@@ -190,6 +190,9 @@ public final class Command {
 
         public Builder withPrecondition(Precondition precondition) {
             Preconditions.checkNotNull(precondition, "precondition cannot be null");
+            if (originalMethod != null) {
+                precondition.validate(originalMethod);
+            }
             this.preconditions.add(precondition);
             return this;
         }

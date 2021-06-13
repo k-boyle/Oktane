@@ -93,6 +93,7 @@ public final class CommandParameter {
         }
 
         public Builder withParser(TypeParser<?> parser) {
+            Preconditions.checkNotNull(parser, "parser cannot be null");
             this.parser = parser;
             return this;
         }
@@ -114,11 +115,14 @@ public final class CommandParameter {
         }
 
         public Builder withOriginalParameter(Parameter originalParameter) {
+            Preconditions.checkNotNull(originalParameter, "originalParameter cannot be null");
             this.originalParameter = originalParameter;
             return this;
         }
 
         public Builder withPrecondition(Precondition precondition) {
+            Preconditions.checkNotNull(precondition, "precondition cannot be null");
+            precondition.validate(type);
             this.preconditions.add(precondition);
             return this;
         }
