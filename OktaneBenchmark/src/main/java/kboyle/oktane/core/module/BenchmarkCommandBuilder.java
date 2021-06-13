@@ -1,5 +1,7 @@
 package kboyle.oktane.core.module;
 
+import kboyle.oktane.core.results.command.CommandNOPResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +25,16 @@ public class BenchmarkCommandBuilder {
     }
 
     public Command create() {
-        var builder = Command.builder();
+        var dummyModule = CommandModule.builder()
+            .withName(String.valueOf(counter++))
+            .withGroup("")
+            .build();
+
+        var builder = Command.builder()
+            .withName(String.valueOf(counter++))
+            .withCallback((ctx, beans, parameters) -> new CommandNOPResult(ctx.command()).mono());
         parameters.forEach(builder::withParameter);
 
-        return new Command(null, builder);
+        return new Command(dummyModule, builder);
     }
 }

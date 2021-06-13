@@ -104,7 +104,7 @@ public class CommandFactory<CONTEXT extends CommandContext, MODULE extends Modul
 
         commandBuilder.withCallback(getCallback(method, synchronised));
 
-        var parameterFactory = new CommandParameterFactory(typeParserByClass);
+        var parameterFactory = new CommandParameterFactory(typeParserByClass, preconditionFactoryMap);
         var parameters = method.getParameters();
         for (var parameter : parameters) {
             var commandParameter = parameterFactory.createParameter(parameter);

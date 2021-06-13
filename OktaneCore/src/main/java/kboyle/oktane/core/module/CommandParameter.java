@@ -3,9 +3,12 @@ package kboyle.oktane.core.module;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import kboyle.oktane.core.parsers.TypeParser;
 
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,6 +25,7 @@ public final class CommandParameter {
     public final boolean optional;
     public final Optional<String> defaultValue;
     public final Optional<Parameter> originalParameter;
+    public final ImmutableList<Precondition> preconditions;
 
     CommandParameter(Command command, Builder builder) {
         Preconditions.checkState(!Strings.isNullOrEmpty(builder.name), "A parameter name must be a non-empty value");
@@ -36,6 +40,7 @@ public final class CommandParameter {
         this.optional = builder.optional;
         this.defaultValue = Optional.ofNullable(builder.defaultValue);
         this.originalParameter = Optional.ofNullable(builder.originalParameter);
+        this.preconditions = ImmutableList.copyOf(builder.preconditions);
     }
 
     public static Builder builder() {
@@ -50,6 +55,8 @@ public final class CommandParameter {
     }
 
     public static class Builder {
+        public final List<Precondition> preconditions;
+
         private Class<?> type;
         private String description;
         private String name;
@@ -60,6 +67,7 @@ public final class CommandParameter {
         private Parameter originalParameter;
 
         private Builder() {
+            this.preconditions = new ArrayList<>();
         }
 
         public Builder withType(Class<?> type) {
@@ -107,6 +115,11 @@ public final class CommandParameter {
 
         public Builder withOriginalParameter(Parameter originalParameter) {
             this.originalParameter = originalParameter;
+            return this;
+        }
+
+        public Builder withPrecondition(Precondition precondition) {
+            this.preconditions.add(precondition);
             return this;
         }
 

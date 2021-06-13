@@ -32,4 +32,9 @@ public class ErrorModule extends ModuleBase<ExampleCommandContext> {
     public CommandResult or() {
         return nop();
     }
+
+    @Aliases("param")
+    public CommandResult param(@RequireFailure(42) int a, @RequireFailure(13) int b) {
+        return nop();
+    }
 }

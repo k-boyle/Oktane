@@ -1,15 +1,13 @@
 package kboyle.oktane.core.results.argumentparser;
 
-import kboyle.oktane.core.module.Command;
+import kboyle.oktane.core.module.CommandParameter;
 import kboyle.oktane.core.results.FailedResult;
-import kboyle.oktane.core.results.Result;
+import kboyle.oktane.core.results.typeparser.TypeParserResult;
 
-import java.util.List;
-
-public record ArgumentParserFailedResult(Command command, List<Result> results) implements FailedResult, ArgumentParserResult {
+public record ArgumentParserFailedResult(CommandParameter parameter, String token, TypeParserResult<?> result) implements FailedResult, ArgumentParserResult {
     @Override
     public String reason() {
-        return String.format("Argument parsing failed for command %s", command.name);
+        return String.format("Argument parsing failed due to not being able to parse %s as %s", token, parameter.type);
     }
 
     @Override

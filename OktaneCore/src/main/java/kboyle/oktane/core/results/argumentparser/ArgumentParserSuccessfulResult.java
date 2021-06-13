@@ -1,12 +1,18 @@
 package kboyle.oktane.core.results.argumentparser;
 
-import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.results.SuccessfulResult;
 
 import java.util.Arrays;
-import java.util.Objects;
 
-public record ArgumentParserSuccessfulResult(Command command, Object[] parsedArguments) implements ArgumentParserResult, SuccessfulResult {
+public record ArgumentParserSuccessfulResult(Object[] parsedArguments) implements ArgumentParserResult, SuccessfulResult {
+    private static class SingletonHolder {
+        private static final ArgumentParserSuccessfulResult INSTANCE = new ArgumentParserSuccessfulResult(new Object[0]);
+    }
+
+    public static ArgumentParserSuccessfulResult empty() {
+        return SingletonHolder.INSTANCE;
+    }
+
     @Override
     public boolean equals(Object o) {
         return this == o
@@ -16,15 +22,12 @@ public record ArgumentParserSuccessfulResult(Command command, Object[] parsedArg
 
     @Override
     public int hashCode() {
-        var result = Objects.hash(command);
-        result = 31 * result + Arrays.hashCode(parsedArguments);
-        return result;
+        return Arrays.hashCode(parsedArguments);
     }
 
     @Override
     public String toString() {
         return "ArgumentParserSuccessfulResult{" +
-            "command=" + command +
             ", parsedArguments=" + Arrays.toString(parsedArguments) +
             '}';
     }

@@ -2,23 +2,22 @@ package kboyle.oktane.core.parsers;
 
 import com.google.common.base.Defaults;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import kboyle.oktane.core.CommandContext;
 import kboyle.oktane.core.module.Command;
 import kboyle.oktane.core.module.CommandParameter;
-import kboyle.oktane.core.results.Result;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserFailedResult;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserResult;
 import kboyle.oktane.core.results.argumentparser.ArgumentParserSuccessfulResult;
 import kboyle.oktane.core.results.typeparser.TypeParserResult;
 import kboyle.oktane.core.results.typeparser.TypeParserSuccessfulResult;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 public class DefaultArgumentParser implements ArgumentParser {
-    private static final Object[] EMPTY = new Object[0];
+    private static final Mono<ArgumentParserResult> EMPTY = Mono.just(ArgumentParserSuccessfulResult.empty());
 
     private final ImmutableMap<Class<?>, TypeParser<?>> typeParserByClass;
 
@@ -31,39 +30,45 @@ public class DefaultArgumentParser implements ArgumentParser {
         var parameters = command.parameters;
 
         if (parameters.isEmpty()) {
-            return Mono.just(new ArgumentParserSuccessfulResult(command, EMPTY));
+            return EMPTY;
         }
 
-        return Flux.range(0, parameters.size())
-            .flatMap(i -> {
-                var parameter = parameters.get(i);
-                var token = getNextToken(tokens, i);
+        return parse(context, command, 0, tokens, parameters, new Object[parameters.size()]);
+    }
 
-                if (token == null) {
-                    Preconditions.checkState(parameter.optional, "A non-optional parameter with a null token should not be possible");
-                    token = parameter.defaultValue.orElse(null);
+    private Mono<ArgumentParserResult> parse(
+            CommandContext context,
+            Command command,
+            int index,
+            List<String> tokens,
+            ImmutableList<CommandParameter> parameters,
+            Object[] parsedArguments) {
+        if (index == parameters.size()) {
+            return new ArgumentParserSuccessfulResult(parsedArguments).mono();
+        }
+
+        var parameter = parameters.get(index);
+        var token = getNextToken(tokens, index);
+
+        if (token == null) {
+            Preconditions.checkState(parameter.optional, "A non-optional parameter with a null token should not be possible");
+            token = parameter.defaultValue.orElse(null);
+        }
+
+        if (token == null) {
+            parsedArguments[index] = Defaults.defaultValue(parameter.type);
+            return parse(context, command, index + 1, tokens, parameters, parsedArguments);
+        }
+
+        var tokenCopy = token;
+        return parse(parameter, context, token)
+            .flatMap(result -> {
+                if (!result.success()) {
+                    return new ArgumentParserFailedResult(parameter, tokenCopy, result).mono();
                 }
 
-                if (token == null) {
-                    return new TypeParserSuccessfulResult<>(Defaults.defaultValue(parameter.type)).mono();
-                }
-
-                return parse(parameter, context, token);
-            })
-            .collectList()
-            .map(results -> {
-                var allSuccess = results.stream().allMatch(Result::success);
-
-                if (!allSuccess) {
-                    return new ArgumentParserFailedResult(command, results);
-                }
-
-                var arguments = results.stream()
-                    .map(TypeParserResult.class::cast)
-                    .map(TypeParserResult::value)
-                    .toArray();
-
-                return new ArgumentParserSuccessfulResult(command, arguments);
+                parsedArguments[index] = result.value();
+                return parse(context, command, index + 1, tokens, parameters, parsedArguments);
             });
     }
 
@@ -75,11 +80,11 @@ public class DefaultArgumentParser implements ArgumentParser {
         return tokens.get(index);
     }
 
-    private Mono<Result> parse(CommandParameter parameter, CommandContext context, String input) {
+    private Mono<? extends TypeParserResult<?>> parse(CommandParameter parameter, CommandContext context, String token) {
         var type = parameter.type;
 
         if (type == String.class) {
-            return Mono.just(new TypeParserSuccessfulResult<>(input));
+            return Mono.just(new TypeParserSuccessfulResult<>(token));
         }
 
         var parser = parameter.parser;
@@ -91,6 +96,6 @@ public class DefaultArgumentParser implements ArgumentParser {
             );
         }
 
-        return parser.parse(context, parameter.command, input).cast(Result.class);
+        return parser.parse(context, parameter.command, token);
     }
 }
