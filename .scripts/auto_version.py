@@ -18,20 +18,6 @@ latest_snapshot = first_artefact.find('latestSnapshot').text.removesuffix('-SNAP
 latest_stable = first_artefact.find('latestRelease').text
 
 stable_major, stable_minor, stable_patch = [int(x) for x in latest_stable.split('.')]
-snapshot_major, snapshot_minor, snapshot_patch = [int(x) for x in latest_snapshot.split('.')]
+_, _, _, snapshot_build = [int(x) for x in latest_snapshot.split('.')]
 
-snapshot_major = max(snapshot_major, stable_major)
-snapshot_minor = max(snapshot_minor, stable_minor)
-snapshot_patch = max(snapshot_patch, stable_patch)
-
-if commit_message.startswith('patch:'):
-    snapshot_patch += 1
-elif commit_message.startswith('minor:'):
-    snapshot_patch = 0
-    snapshot_minor += 1
-elif commit_message.startswith('major:'):
-    snapshot_patch = 0
-    snapshot_minor = 1
-    snapshot_major += 1
-
-print(f'{snapshot_major}.{snapshot_minor}.{snapshot_patch}-SNAPSHOT')
+print(f'{stable_major}.{stable_minor}.{stable_patch}.{snapshot_build + 1}-SNAPSHOT')
