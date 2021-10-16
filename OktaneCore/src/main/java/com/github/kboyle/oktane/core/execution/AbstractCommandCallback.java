@@ -16,6 +16,7 @@ import java.util.Arrays;
 import static com.github.kboyle.oktane.core.Utilities.Streams.single;
 
 public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> implements CommandCallback {
+    @SuppressWarnings("unchecked")
     @SneakyThrows
     public static <CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> AbstractCommandCallback<CONTEXT, MODULE> create(Class<MODULE> moduleClass, Method method) {
         var constructor = getConstructor(moduleClass);
@@ -61,7 +62,6 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
             .load(AbstractCommandCallback.class.getClassLoader())
             .getLoaded();
 
-        //noinspection unchecked
         return (AbstractCommandCallback<CONTEXT, MODULE>) callbackClass.getDeclaredConstructors()[0].newInstance();
     }
 
