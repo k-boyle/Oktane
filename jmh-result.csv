@@ -1,0 +1,7 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.directNoParameters","avgt",1,5,2.833286,0.029155,"ns/op"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.directOneParameter","avgt",1,5,2.811858,0.011929,"ns/op"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.directTwoParameters","avgt",1,5,2.827110,0.030687,"ns/op"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.generatedNoParameters","avgt",1,5,2.841528,0.047174,"ns/op"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.generatedOneParameter","avgt",1,5,2.749663,0.022462,"ns/op"
+"com.github.kboyle.oktane.benchmark.CallbackExecutionBenchmarks.generatedTwoParameters","avgt",1,5,2.921421,0.025596,"ns/op"

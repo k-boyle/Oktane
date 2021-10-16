@@ -12,6 +12,7 @@
         <module>OktaneCore</module>
         <module>Test</module>
         <module>OktaneReactive</module>
+        <module>Benchmark</module>
     </modules>
 
     <name>Oktane</name>
