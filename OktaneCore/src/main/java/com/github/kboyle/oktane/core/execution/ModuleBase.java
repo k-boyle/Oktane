@@ -16,18 +16,18 @@ public abstract class ModuleBase<CONTEXT extends CommandContext> {
     }
 
     protected CommandResult nop() {
-        return new CommandNopResult(context.command);
+        return new CommandNopResult(context().command);
     }
 
     protected CommandResult text(String text) {
-        return new CommandTextResult(context.command, text);
+        return new CommandTextResult(context().command, text);
     }
 
     protected CommandResult text(String text, Object... args) {
-        return new CommandTextResult(context.command, String.format(text, args));
+        return new CommandTextResult(context().command, String.format(text, args));
     }
 
     protected CommandResult exception(Exception ex) {
-        return new CommandExceptionResult(context.command, ex);
+        return new CommandExceptionResult(context().command, ex);
     }
 }

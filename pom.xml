@@ -12,6 +12,7 @@
         <module>OktaneCore</module>
         <module>Test</module>
         <module>OktaneReactive</module>
+        <module>Benchmark</module>
     </modules>
 
     <name>Oktane</name>
@@ -51,7 +52,6 @@
 
         <lombok.version>1.18.20</lombok.version>
 
-        <byte-buddy-agent.version>1.11.8</byte-buddy-agent.version>
         <byte-buddy.version>1.11.20</byte-buddy.version>
     </properties>
 
@@ -64,6 +64,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
@@ -73,12 +79,6 @@
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
                 <version>${byte-buddy.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy-agent</artifactId>
-                <version>${byte-buddy-agent.version}</version>
             </dependency>
 
             <dependency>

@@ -9,17 +9,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>OktaneReactive</artifactId>
+    <artifactId>Benchmark</artifactId>
 
     <properties>
-        <sonar.projectKey>k-boyle_OktaneReactive</sonar.projectKey>
-        <sonar.organization>k-boyle</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
-
-        <reactor-core.version>3.4.6</reactor-core.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <jmh-core.version>1.33</jmh-core.version>
+        <jmh-generator-annprocess.version>1.33</jmh-generator-annprocess.version>
     </properties>
 
     <dependencies>
@@ -29,14 +25,16 @@
         </dependency>
 
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <version>${reactor-core.version}</version>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh-core.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh-generator-annprocess.version}</version>
         </dependency>
     </dependencies>
+
 </project>

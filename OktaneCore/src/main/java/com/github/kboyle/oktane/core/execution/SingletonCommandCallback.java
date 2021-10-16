@@ -18,13 +18,13 @@ class SingletonCommandCallback<CONTEXT extends CommandContext, MODULE extends Mo
     }
 
     @Override
-    protected MODULE getModule(CONTEXT context, Object[] dependencies) {
+    protected MODULE getModule(CONTEXT context) {
         var dependencyProvider = Preconditions.checkNotNull(context.dependencyProvider(), "dependencyProvider cannot be null");
         return Preconditions.checkNotNull(dependencyProvider.get(moduleClass), "Singleton modules must be provided by the Dependency Provider");
     }
 
     @Override
-    protected CommandResult execute(CONTEXT context, MODULE module, Object[] arguments) {
-        return delegate.execute(context, module, arguments);
+    protected CommandResult execute(CONTEXT context, MODULE module) {
+        return delegate.execute(context, module);
     }
 }

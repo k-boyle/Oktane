@@ -214,7 +214,7 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             boolean singleton,
             boolean synchronised) {
 
-        var callback = AbstractCommandCallback.reflection(moduleClass, method);
+        var callback = AbstractCommandCallback.create(moduleClass, method);
         if (moduleLock != null) {
             callback = callback.synchronised(moduleLock);
         }

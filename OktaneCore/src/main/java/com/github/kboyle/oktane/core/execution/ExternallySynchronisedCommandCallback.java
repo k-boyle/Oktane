@@ -17,14 +17,14 @@ class ExternallySynchronisedCommandCallback<CONTEXT extends CommandContext, MODU
     }
 
     @Override
-    protected MODULE getModule(CONTEXT context, Object[] dependencies) {
-        return delegate.getModule(context, dependencies);
+    protected MODULE getModule(CONTEXT context) {
+        return delegate.getModule(context);
     }
 
     @Override
-    protected CommandResult execute(CONTEXT context, MODULE module, Object[] arguments) {
+    protected CommandResult execute(CONTEXT context, MODULE module) {
         synchronized (lock) {
-            return delegate.execute(context, module, arguments);
+            return delegate.execute(context, module);
         }
     }
 }
