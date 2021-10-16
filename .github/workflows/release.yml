@@ -25,8 +25,8 @@ jobs:
         if: "!startsWith(github.ref, 'refs/tags/')"
         run: |
             python -m pip install --upgrade pip
-            python -m pip install -r .scripts/requirements.txt
-            echo "version=$(python .scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
+            python -m pip install -r .github/scripts/requirements.txt
+            echo "version=$(python .github/scripts/auto_version.py com.github.k-boyle Oktane)" >> $GITHUB_ENV
 
       - name: Get Tag Verion
         if: github.event_name == 'release' && github.event.action == 'created'
@@ -57,4 +57,5 @@ jobs:
           MAVEN_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
         run: |
           mvn versions:set -DnewVersion="$version"
-          mvn -B -s .mvn/settings.xml -P release deploy --file pom.xml -pl OktaneCore,Oktane4J -am
+#          todo fix this
+          mvn -B -s .github/maven/settings.xml -P release deploy --file pom.xml -pl Oktane,Oktane4J -am
