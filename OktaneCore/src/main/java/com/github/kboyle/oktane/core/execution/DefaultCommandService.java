@@ -206,7 +206,7 @@ public class DefaultCommandService implements CommandService {
         var dependencies = new Object[dependencyClasses.size()];
         for (var i = 0; i < dependencyClasses.size(); i++) {
             var dependencyClass = dependencyClasses.get(i);
-            if (dependencyClass.equals(getClass())) {
+            if (dependencyClass.isAssignableFrom(getClass())) {
                 dependencies[i] = this;
                 continue;
             }
