@@ -36,7 +36,14 @@ public class DefaultArgumentParser implements ArgumentParser {
 
             if (token == null) {
                 if (parameter.defaultString().isEmpty()) {
-                    parameterIndex = setArgument(parameterIndex, parsedArguments, parameter, Defaults.defaultValue(parameter.type()), tokensSize - tokenIndex);
+                    parameterIndex = setArgument(
+                        parameterIndex,
+                        parsedArguments,
+                        parameter,
+                        Defaults.defaultValue(parameter.type()),
+                        tokensSize - tokenIndex
+                    );
+
                     continue;
                 }
 
@@ -54,7 +61,13 @@ public class DefaultArgumentParser implements ArgumentParser {
                 parameterIndex++;
             }
 
-            parameterIndex = setArgument(parameterIndex, parsedArguments, parameter, result.value(), tokensSize - tokenIndex);
+            parameterIndex = setArgument(
+                parameterIndex,
+                parsedArguments,
+                parameter,
+                result.value(),
+                tokensSize - tokenIndex
+            );
         }
 
         return new ArgumentParserSuccessfulResult(parsedArguments);
