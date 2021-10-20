@@ -20,7 +20,6 @@ public interface CommandParameter<T> extends CommandComponent {
     Command command();
     boolean remainder();
     boolean optional();
-    boolean varargs();
     boolean greedy();
 
     static <T> Builder<T> builder() {
@@ -57,7 +56,6 @@ public interface CommandParameter<T> extends CommandComponent {
         Builder<T> command(Command command);
         Builder<T> remainder(boolean remainder);
         Builder<T> optional(boolean optional);
-        Builder<T> varargs(boolean varargs);
         Builder<T> annotation(Annotation annotation);
         Builder<T> greedy(boolean greedy);
 
@@ -74,7 +72,6 @@ public interface CommandParameter<T> extends CommandComponent {
         Command command();
         boolean remainder();
         boolean optional();
-        boolean varargs();
         List<Annotation> annotations();
         boolean greedy();
 

@@ -22,11 +22,6 @@ public class TestModule extends ModuleBase<CommandContext> {
         return text(String.valueOf(a + b));
     }
 
-    @Aliases("vargs")
-    public CommandResult vargs(String... vargs) {
-        return text(String.join(", ", vargs));
-    }
-
     @Override
     protected void before() {
         System.out.println("before");

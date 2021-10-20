@@ -5,15 +5,19 @@ import com.github.kboyle.oktane.core.command.TestCommandBuilder;
 import com.github.kboyle.oktane.core.mapping.CommandMatch;
 import com.github.kboyle.oktane.core.result.Result;
 import com.github.kboyle.oktane.core.result.tokeniser.*;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class DefaultTokeniserTests {
+    private static final String NULL = null;
+
     private static final Command INT_ARG_NOT_REMAINDER = new TestCommandBuilder()
         .parameter(int.class, false)
         .build();
@@ -59,23 +63,33 @@ class DefaultTokeniserTests {
         .build();
 
     private static final Command STRING_VARARGS = new TestCommandBuilder()
-        .varargs(String.class)
+        .greedy(String.class, false)
         .build();
 
     private static final Command STRING_VARARGS_REMAINDER = new TestCommandBuilder()
-        .varargs(String.class, true)
+        .greedy(String.class, false, true)
         .build();
 
     private static final Command STRING_VARARGS_OPTIONAL = new TestCommandBuilder()
-        .varargs(String.class, false, true)
+        .greedy(String.class, true)
+        .build();
+
+    private static final Command INT_GREEDY_STRING = new TestCommandBuilder()
+        .greedy(int.class, false)
+        .parameter(String.class, false)
+        .build();
+
+    private static final Command INT_OPTIONAL_GREEDY_STRING_OPTIONAL = new TestCommandBuilder()
+        .greedy(int.class, true)
+        .optionalParameter(String.class, false)
         .build();
 
     @ParameterizedTest(name = "Input: {1}, Result: {2}")
     @MethodSource("argumentParserTestSource")
-    void argumentParserTest(Command Command, String arguments, Result expectedResult) {
+    void defaultTokeniserReturnsExpectedValue(Command Command, String arguments, Result expectedResult) {
         var tokeniser = new DefaultTokeniser();
-        var actualResult = tokeniser.tokenise(arguments, new CommandMatch(Command, 0, 0));
-        Assertions.assertEquals(expectedResult.getClass(), actualResult.getClass());
+        var actualResult = tokeniser.tokenise(arguments, new CommandMatch(Command, 0));
+        assertEquals(expectedResult, actualResult);
     }
 
     private static Stream<Arguments> argumentParserTestSource() {
@@ -88,12 +102,12 @@ class DefaultTokeniserTests {
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 "c 100 200",
-                new TokeniserTooManyTokensResult(" 100 200", 1)
+                new TokeniserTooManyTokensResult("c 100 200", 1)
             ),
             Arguments.of(
                 INT_ARG_NOT_REMAINDER,
                 "c",
-                new TokeniserTooFewTokensResult(" ", 1)
+                new TokeniserTooFewTokensResult("c", 1)
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
@@ -168,17 +182,17 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
                 "c \"missing quote",
-                new TokeniserMissingQuoteResult(" \"missing quote", 15)
+                new TokeniserMissingQuoteResult("c \"missing quote", 2)
             ),
             Arguments.of(
                 NO_PARAMETERS,
                 "c string",
-                new TokeniserTooManyTokensResult(" string", 0)
+                new TokeniserTooManyTokensResult("c string", 0)
             ),
             Arguments.of(
                 STRING_STRING_NOT_ARG_REMAINDER,
                 "c string ",
-                new TokeniserTooFewTokensResult(" string ", 2)
+                new TokeniserTooFewTokensResult("c string ", 2)
             ),
             Arguments.of(
                 STRING_NOT_ARG_REMAINDER,
@@ -198,7 +212,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 OPTIONAL_STRING,
                 "c",
-                new TokeniserSuccessfulResult(List.of())
+                new TokeniserSuccessfulResult(Arrays.asList(NULL))
             ),
             Arguments.of(
                 OPTIONAL_STRING,
@@ -208,12 +222,12 @@ class DefaultTokeniserTests {
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
                 "c",
-                new TokeniserSuccessfulResult(List.of())
+                new TokeniserSuccessfulResult(Arrays.asList(NULL, NULL))
             ),
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
                 "c string",
-                new TokeniserSuccessfulResult(List.of("string"))
+                new TokeniserSuccessfulResult(Arrays.asList("string", NULL))
             ),
             Arguments.of(
                 OPTIONAL_STRING_OPTIONAL_STRING,
@@ -223,7 +237,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_OPTIONAL_STRING,
                 "c string",
-                new TokeniserSuccessfulResult(List.of("string"))
+                new TokeniserSuccessfulResult(Arrays.asList("string", NULL))
             ),
             Arguments.of(
                 STRING_OPTIONAL_STRING,
@@ -238,7 +252,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_REMAINDER_OPTIONAL_STRING,
                 "c string1",
-                new TokeniserSuccessfulResult(List.of("string1"))
+                new TokeniserSuccessfulResult(Arrays.asList("string1", NULL))
             ),
             Arguments.of(
                 STRING_VARARGS,
@@ -268,7 +282,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_VARARGS_REMAINDER,
                 "c string1 \"string2 string3\"",
-                new TokeniserSuccessfulResult(List.of("string1 string2 string3"))
+                new TokeniserSuccessfulResult(List.of("string1 \"string2 string3\""))
             ),
             Arguments.of(
                 STRING_VARARGS_OPTIONAL,
@@ -278,7 +292,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_VARARGS_OPTIONAL,
                 "c",
-                new TokeniserSuccessfulResult(List.of())
+                new TokeniserSuccessfulResult(Arrays.asList(NULL))
             ),
             Arguments.of(
                 STRING_VARARGS,
@@ -318,7 +332,7 @@ class DefaultTokeniserTests {
             Arguments.of(
                 STRING_VARARGS,
                 "c \"missing quote",
-                new TokeniserMissingQuoteResult(" \"missing quote", 15)
+                new TokeniserMissingQuoteResult("c \"missing quote", 2)
             ),
             Arguments.of(
                 STRING_VARARGS,
@@ -334,6 +348,46 @@ class DefaultTokeniserTests {
                 STRING_VARARGS,
                 "c \\\\\\",
                 new TokeniserSuccessfulResult(List.of("\\\\"))
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                "c 10 string",
+                new TokeniserSuccessfulResult(List.of("10", "string"))
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                "c 10 20 30 string",
+                new TokeniserSuccessfulResult(List.of("10", "20", "30", "string"))
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                "c 10 20 30",
+                new TokeniserSuccessfulResult(List.of("10", "20", "30"))
+            ),
+            Arguments.of(
+                INT_OPTIONAL_GREEDY_STRING_OPTIONAL,
+                "c 10 string",
+                new TokeniserSuccessfulResult(List.of("10", "string"))
+            ),
+            Arguments.of(
+                INT_OPTIONAL_GREEDY_STRING_OPTIONAL,
+                "c 10 20 30 string",
+                new TokeniserSuccessfulResult(List.of("10", "20", "30", "string"))
+            ),
+            Arguments.of(
+                INT_OPTIONAL_GREEDY_STRING_OPTIONAL,
+                "c 10 20 30",
+                new TokeniserSuccessfulResult(List.of("10", "20", "30"))
+            ),
+            Arguments.of(
+                INT_OPTIONAL_GREEDY_STRING_OPTIONAL,
+                "c",
+                new TokeniserSuccessfulResult(Arrays.asList(NULL, NULL))
+            ),
+            Arguments.of(
+                INT_OPTIONAL_GREEDY_STRING_OPTIONAL,
+                "c 10",
+                new TokeniserTooFewTokensResult("c 10", 2)
             )
         );
     }

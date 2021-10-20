@@ -12,6 +12,8 @@ public class Program {
     public static void main(String[] args) throws RunnerException {
         var options = new OptionsBuilder()
             .include(CallbackExecutionBenchmarks.class.getSimpleName())
+            .include(DefaultTokeniserBenchmarks.class.getSimpleName())
+            .include(DefaultArgumentParserBenchmarks.class.getSimpleName())
             .resultFormat(ResultFormatType.CSV)
             .forks(1)
             .timeUnit(TimeUnit.NANOSECONDS)

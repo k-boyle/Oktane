@@ -16,7 +16,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
     private final Command command;
     private final boolean remainder;
     private final boolean optional;
-    private final boolean varargs;
     private final boolean greedy;
 
     // todo be consistent about which builder is accepted
@@ -31,7 +30,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
         this.command = Preconditions.checkNotNull(builder.command, "command cannot be null");
         this.remainder = builder.remainder;
         this.optional = builder.optional;
-        this.varargs = builder.varargs;
         this.greedy = builder.greedy;
     }
 
@@ -76,11 +74,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
     }
 
     @Override
-    public boolean varargs() {
-        return varargs;
-    }
-
-    @Override
     public boolean greedy() {
         return greedy;
     }
@@ -95,7 +88,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
         private Command command;
         private boolean remainder;
         private boolean optional;
-        private boolean varargs;
         private boolean greedy;
 
         public Builder() {
@@ -148,12 +140,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
         @Override
         public Builder<T> optional(boolean optional) {
             this.optional = optional;
-            return this;
-        }
-
-        @Override
-        public Builder<T> varargs(boolean varargs) {
-            this.varargs = varargs;
             return this;
         }
 
@@ -212,11 +198,6 @@ public class DefaultCommandParameter<T> extends AbstractCommandComponent impleme
         @Override
         public boolean optional() {
             return optional;
-        }
-
-        @Override
-        public boolean varargs() {
-            return varargs;
         }
 
         @Override

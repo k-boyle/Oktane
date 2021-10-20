@@ -62,32 +62,52 @@ public class TestCommandBuilder extends Command.Builder.Delegating {
         return this;
     }
 
-    public <T> TestCommandBuilder varargs(Class<T> type) {
-        return varargs(type, false);
+    public <T> TestCommandBuilder greedy(Class<T> type, boolean optional) {
+        return greedy(type, optional, false);
     }
 
-    public <T> TestCommandBuilder varargs(Class<T> type, TypeParser<T> typeParser) {
+    public <T> TestCommandBuilder greedy(Class<T> type, boolean optional, boolean remainder) {
         var parameter = CommandParameter.<T>builder()
             .name("Parameter-" + parameterCounter++)
-            .typeParser(typeParser)
-            .varargs(true)
+            .typeParser(parser(type))
+            .greedy(true)
+            .remainder(remainder)
+            .optional(optional)
             .type(type);
 
         delegate.parameter(parameter);
         return this;
     }
 
-    public <T> TestCommandBuilder varargs(Class<T> type, boolean remainder) {
-        return varargs(type, remainder, false);
+    public <T> TestCommandBuilder greedy(Class<T> type, TypeParser<T> parser) {
+        var parameter = CommandParameter.<T>builder()
+            .name("Parameter-" + parameterCounter++)
+            .typeParser(parser)
+            .greedy(true)
+            .type(type);
+
+        delegate.parameter(parameter);
+        return this;
     }
 
-    public <T> TestCommandBuilder varargs(Class<T> type, boolean remainder, boolean optional) {
+    public <T> TestCommandBuilder greedy(Class<T> type, TypeParser<T> parser, String defaultString) {
+        var parameter = CommandParameter.<T>builder()
+            .name("Parameter-" + parameterCounter++)
+            .typeParser(parser)
+            .greedy(true)
+            .defaultString(defaultString)
+            .type(type);
+
+        delegate.parameter(parameter);
+        return this;
+    }
+
+    public <T> TestCommandBuilder greedy(Class<T> type, String defaultString) {
         var parameter = CommandParameter.<T>builder()
             .name("Parameter-" + parameterCounter++)
             .typeParser(parser(type))
-            .varargs(true)
-            .remainder(remainder)
-            .optional(optional)
+            .greedy(true)
+            .defaultString(defaultString)
             .type(type);
 
         delegate.parameter(parameter);
