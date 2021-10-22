@@ -196,6 +196,11 @@ class DefaultArgumentParserTests {
                 new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
             ),
             Arguments.of(
+                STRING_GREEDY_INT,
+                List.of("a", "10", "notint", "20"),
+                new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+            ),
+            Arguments.of(
                 STRING_VARARGS_DEFAULT,
                 List.of("a", "b"),
                 new ArgumentParserSuccessfulResult(new Object[] { List.of("a", "b") })
