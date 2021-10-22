@@ -21,7 +21,9 @@ public class DefaultArgumentParser implements ArgumentParser {
         var parametersSize = parameters.size();
         var parsedArguments = new Object[parametersSize];
         var tokens = context.tokens();
-        int tokenIndex = 0, parameterIndex = 0;
+        int tokenIndex = 0;
+        int parameterIndex = 0;
+
         for (int tokensSize = tokens.size(); tokenIndex < tokensSize; tokenIndex++) {
             var token = tokens.get(tokenIndex);
             var parameter = parameters.get(parameterIndex);
