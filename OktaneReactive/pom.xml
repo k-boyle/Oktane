@@ -12,12 +12,12 @@
     <artifactId>OktaneReactive</artifactId>
 
     <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
         <sonar.projectKey>k-boyle_OktaneReactive</sonar.projectKey>
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
 
         <reactor-core.version>3.4.6</reactor-core.version>
     </properties>
