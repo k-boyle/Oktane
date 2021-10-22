@@ -76,7 +76,7 @@ class ImmutableCommandMapNode implements CommandMap  {
         var commands = commandsByAlias.get(segment);
         if (commands != null) {
             for (var command : commands) {
-                results.add(new CommandMatch(command, commandEnd, argumentStart));
+                results.add(new CommandMatch(command, commandEnd));
             }
         }
     }

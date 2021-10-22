@@ -5,10 +5,8 @@ import com.github.kboyle.oktane.core.execution.CommandContext;
 import com.github.kboyle.oktane.core.execution.ModuleBase;
 import com.github.kboyle.oktane.core.result.command.CommandResult;
 
-import java.util.Arrays;
-import java.util.stream.IntStream;
+import java.util.List;
 
-// todo map optional with default separately to no default
 public class TestCommandModule extends ModuleBase<CommandContext> {
     @Aliases({"ping", "p"})
     public CommandResult ping() {
@@ -22,8 +20,8 @@ public class TestCommandModule extends ModuleBase<CommandContext> {
     }
 
     @Aliases("addvargs")
-    public CommandResult addVargs(int... args) {
-        return text("add vargs: %d", Arrays.stream(args).sum());
+    public CommandResult addVargs(@Greedy(int.class) List<Integer> args) {
+        return text("add vargs: %d", args.stream().reduce(Integer::sum).get());
     }
 
     @Aliases("echo")
@@ -52,12 +50,12 @@ public class TestCommandModule extends ModuleBase<CommandContext> {
     }
 
     @Aliases("optionalvargs")
-    public CommandResult optionalvargs(@Optional String... args) {
+    public CommandResult optionalvargs(@Greedy(String.class) @Optional List<String> args) {
         return text("args: %s", String.join(", ", args));
     }
 
     @Aliases("defaultvargs")
-    public CommandResult defaultvargs(@Default("default") String... args) {
+    public CommandResult defaultvargs(@Greedy(String.class) @Default("default") List<String> args) {
         return text("args: %s", String.join(", ", args));
     }
 
@@ -72,18 +70,18 @@ public class TestCommandModule extends ModuleBase<CommandContext> {
     }
 
     @Aliases("greedyint")
-    public CommandResult greedyInt(int a, @Greedy int[] greedyInts, String str) {
-        return text("a: %d, sum: %d, str: %s", a, IntStream.of(greedyInts).sum(), str);
+    public CommandResult greedyInt(int a, @Greedy(int.class) List<Integer> greedyInts, String str) {
+        return text("a: %d, sum: %d, str: %s", a, greedyInts.stream().reduce(Integer::sum).get(), str);
     }
 
     @Aliases("optionalgreedyint")
-    public CommandResult optionalGreedyInt(int a, @Optional @Greedy int[] greedyInts, @Optional String str) {
-        return text("a: %d, sum: %d, str: %s", a, IntStream.of(greedyInts).sum(), str);
+    public CommandResult optionalGreedyInt(int a, @Optional @Greedy(int.class) List<Integer> greedyInts, @Optional String str) {
+        return text("a: %d, sum: %d, str: %s", a, greedyInts.stream().reduce(Integer::sum).get(), str);
     }
 
     @Aliases("defaultgreedyint")
-    public CommandResult defaultGreedyInt(int a, @Default("10") @Greedy int[] greedyInts, @Default("default") String str) {
-        return text("a: %d, sum: %d, str: %s", a, IntStream.of(greedyInts).sum(), str);
+    public CommandResult defaultGreedyInt(int a, @Default("10") @Greedy(int.class) List<Integer> greedyInts, @Default("default") String str) {
+        return text("a: %d, sum: %d, str: %s", a, greedyInts.stream().reduce(Integer::sum).get(), str);
     }
 
     @Aliases("nested")

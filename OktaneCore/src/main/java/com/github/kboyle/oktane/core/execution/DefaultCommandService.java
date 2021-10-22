@@ -14,7 +14,6 @@ import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionRe
 import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionSuccessfulResult;
 import com.google.common.base.Preconditions;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -96,8 +95,8 @@ public class DefaultCommandService implements CommandService {
             var tokens = tokeniserResult.tokens();
             context.tokens = tokens;
 
-            var argumentParserResult = argumentParser.parse(context, command, tokens);
-            if (!tokeniserResult.success()) {
+            var argumentParserResult = argumentParser.parse(context);
+            if (!argumentParserResult.success()) {
                 failureResults.add(argumentParserResult);
                 continue;
             }
@@ -151,7 +150,7 @@ public class DefaultCommandService implements CommandService {
 
         Preconditions.checkState(
             size == arguments.length,
-            "incompatible number of parameters (%d) to arguments (%d)",
+            "incompatible number of parameters (%s) to arguments (%s)",
             size,
             arguments.length
         );
@@ -160,9 +159,9 @@ public class DefaultCommandService implements CommandService {
             var parameter = parameters.get(i);
             var argument = arguments[i];
 
-            var parameterPreconditionResult = parameter.varargs()
-                ? runPreconditionsVarargs(context, parameter, argument)
-                : runPreconditions(context, parameter, argument);
+            var parameterPreconditionResult = parameter.greedy()
+                    ? runPreconditionsGreedy(context, parameter, argument)
+                    : runPreconditions(context, parameter, argument);
 
             if (!parameterPreconditionResult.success()) {
                 return parameterPreconditionResult;
@@ -172,12 +171,11 @@ public class DefaultCommandService implements CommandService {
         return ParameterPreconditionSuccessfulResult.get();
     }
 
-    private static <T> ParameterPreconditionResult<T> runPreconditionsVarargs(CommandContext context, CommandParameter<T> parameter, Object arguments) {
-        // todo this is "slow", solve with code-gen?
-        var length = Array.getLength(arguments);
-        for (int i = 0; i < length; i++) {
-            var argument = Array.get(arguments, i);
-            var result = runPreconditions(context, parameter, argument);
+    @SuppressWarnings("unchecked")
+    private static <T> ParameterPreconditionResult<T> runPreconditionsGreedy(CommandContext context, CommandParameter<T> parameter, Object argument) {
+        var greedyList = (List<T>) argument;
+        for (var value : greedyList) {
+            var result = runPreconditions(context, parameter, value);
             if (!result.success()) {
                 return result;
             }

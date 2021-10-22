@@ -19,6 +19,7 @@ public class DefaultTokeniser implements Tokeniser {
             return endOfInput(input, parameters, 0);
         }
 
+        // todo we can optimise here, look at DefaultTokeniserBenchmarks#noParameters, it enters parameter loop for no reason
         var currentIndex = nextCharacterIndex(input, commandEnd + 1);
 
         if (currentIndex == inputLength - 1) {
@@ -33,25 +34,46 @@ public class DefaultTokeniser implements Tokeniser {
         var tokens = new ArrayList<String>(parameterCount);
         var currentTokenBuilder = new StringBuilder();
 
+        boolean greedyParameter = false;
+        boolean appendEnd = false;
         for (int p = 0; p < parameterCount; p++) {
             currentIndex = nextCharacterIndex(input, currentIndex);
 
             if (currentIndex == input.length()) {
-                return endOfInput(input, parameters, p);
-            }
-
-            if (currentIndex == input.length() - 1 && p != parameterCount - 1) {
                 var allParametersOptional = allParametersOptional(parameters, p);
                 if (!allParametersOptional) {
                     return new TokeniserTooFewTokensResult(input, parameterCount);
                 }
 
-                tokens.add(Character.toString(currentIndex));
-                fillNulls(tokens, parameterCount - p + 1);
+                fillNulls(tokens, parameterCount - p);
+                break;
+            }
+
+            if (currentIndex == input.length() - 1) {
+                if (input.charAt(currentIndex - 1) == ' ') {
+                    tokens.add(Character.toString(input.charAt(currentIndex)));
+                }
+
+                if (!greedyParameter) {
+                    var allParametersOptional = allParametersOptional(parameters, p);
+                    if (!allParametersOptional) {
+                        return new TokeniserTooFewTokensResult(input, parameterCount);
+                    }
+
+                    fillNulls(tokens, parameterCount - tokens.size());
+                } else {
+                    if (tokens.size() >= parameterCount) {
+                        return new TokeniserSuccessfulResult(tokens);
+                    }
+
+                    return new TokeniserTooFewTokensResult(input, parameterCount);
+                }
+
                 break;
             }
 
             var parameter = parameters.get(p);
+            greedyParameter = greedyParameter || parameter.greedy();
             if (parameter.remainder()) {
                 tokens.add(input.substring(currentIndex));
                 return new TokeniserSuccessfulResult(tokens);
@@ -65,7 +87,7 @@ public class DefaultTokeniser implements Tokeniser {
                         if (currentIndex > 0 && input.charAt(currentIndex - 1) == '\\') {
                             if (currentIndex == input.length() - 1) {
                                 currentTokenBuilder.append(input, startIndex, currentIndex - 1).append('"');
-                                if (parameter.varargs()) {
+                                if (parameter.greedy()) {
                                     currentIndex++;
                                 }
 
@@ -79,18 +101,21 @@ public class DefaultTokeniser implements Tokeniser {
                             return new TokeniserMissingQuoteResult(input, currentIndex);
                         }
                         currentTokenBuilder.append(input, startIndex + 1, nextQuoteIndex);
-                        currentIndex = nextQuoteIndex + 1;
+                        currentIndex = nextCharacterIndex(input, nextQuoteIndex + 1);
                         break;
                     } else if (currentCharacter == ' ') {
                         currentTokenBuilder.append(input, startIndex, currentIndex);
-                        if (parameter.varargs()) {
+                        if (parameter.greedy()) {
                             currentIndex++;
+
+                            appendEnd = currentIndex == input.length() - 1;
                         }
 
                         break;
                     } else {
                         if (currentIndex == input.length() - 1) {
                             currentTokenBuilder.append(input, startIndex, currentIndex + 1);
+                            break;
                         }
                     }
                 }
@@ -98,6 +123,10 @@ public class DefaultTokeniser implements Tokeniser {
                 tokens.add(currentTokenBuilder.toString());
                 currentTokenBuilder.delete(0, currentTokenBuilder.length());
             } while (continueParsing(parameter, input, currentIndex));
+        }
+
+        if (appendEnd) {
+            tokens.add(Character.toString(input.charAt(currentIndex)));
         }
 
         if (currentIndex != input.length() - 1 && noneWhitespaceRemains(input, currentIndex)) {
@@ -181,8 +210,13 @@ public class DefaultTokeniser implements Tokeniser {
 
     private int nextCharacterIndex(String input, int currentIndex) {
         for (; currentIndex < input.length(); currentIndex++) {
-            if (input.charAt(currentIndex) != ' ') {
-                return currentIndex;
+            var currentChar = input.charAt(currentIndex);
+            if (currentChar == ' ') {
+                continue;
+            }
+
+            if (currentChar != '\\' || input.charAt(currentIndex - 1) == '\\') {
+                break;
             }
         }
 
@@ -223,6 +257,6 @@ public class DefaultTokeniser implements Tokeniser {
     }
 
     private boolean continueParsing(CommandParameter<?> parameter, String input, int currentIndex) {
-        return parameter.varargs() && noneWhitespaceRemains(input, currentIndex);
+        return parameter.greedy() && noneWhitespaceRemains(input, currentIndex + 1) ;
     }
 }

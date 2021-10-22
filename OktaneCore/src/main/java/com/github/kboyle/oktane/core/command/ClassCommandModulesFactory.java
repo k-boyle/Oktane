@@ -98,14 +98,13 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
     private Stream<CommandParameter.Builder<?>> parameters(Method method, TypeParserProvider typeParserProvider) {
         var parameters = method.getParameters();
         return Streams.zip(Arrays.stream(parameters), IntStream.range(0, parameters.length).boxed(), (parameter, index) -> {
-            // todo or greedy
-            var varargs = varargs(method, parameters, index);
-            var greedy = greedy(parameter);
-            if (varargs || greedy) {
-                return createParameter(parameter, parameter.getType().componentType(), typeParserProvider, varargs, greedy);
+            var greedyAnnotation = parameter.getDeclaredAnnotation(Greedy.class);
+            if (greedyAnnotation == null) {
+                return createParameter(parameter, parameter.getType(), typeParserProvider, false);
             }
 
-            return createParameter(parameter, parameter.getType(), typeParserProvider, false, false);
+            Preconditions.checkState(parameter.getType() == List.class, "A greedy parameter must be a list");
+            return createParameter(parameter, greedyAnnotation.value(), typeParserProvider, true);
         });
     }
 
@@ -234,7 +233,6 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             Parameter parameter,
             Class<T> parameterClass,
             TypeParserProvider typeParserProvider,
-            boolean varargs,
             boolean greedy) {
 
         var parameterBuilder = CommandParameter.<T>builder()
@@ -242,7 +240,6 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             .type(parameterClass)
             .name(name(parameter, parameter::getName))
             .remainder(remainder(parameter))
-            .varargs(varargs)
             .greedy(greedy)
             .optional(optional(parameter))
             .typeParser(typeParser(parameter, parameterClass, typeParserProvider));
@@ -281,16 +278,6 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
 
     private boolean varargs(Method method, Parameter[] parameters, int index) {
         return method.isVarArgs() && index == parameters.length - 1;
-    }
-
-    private boolean greedy(Parameter parameter) {
-        var greedyAnnotation = parameter.isAnnotationPresent(Greedy.class);
-        if (greedyAnnotation) {
-            Preconditions.checkState(parameter.getType().isArray(), "A greedy parameter must be an array");
-            Preconditions.checkState(parameter.getType().componentType() != String.class, "A greedy parameter can't be an array of strings");
-        }
-
-        return greedyAnnotation;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

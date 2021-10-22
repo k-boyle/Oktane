@@ -32,24 +32,8 @@ public class DefaultCommand extends AbstractCommandComponent implements Command 
             var parameter = parameterBuilder.build(this);
 
             Preconditions.checkState(
-                !(parameter.greedy() && parameter.varargs()),
-                "Parameter %s (#%d) of Command %s cannot be both greedy and vargs",
-                parameter,
-                i,
-                name()
-            );
-
-            Preconditions.checkState(
                 !parameter.remainder() || i == parameterBuilders.size() - 1,
                 "Parameter %s (#%d) of Command %s cannot be remainder, only the final parameter can be",
-                parameter.name(),
-                i,
-                name()
-            );
-
-            Preconditions.checkState(
-                !parameter.varargs() || i == parameterBuilders.size() - 1,
-                "Parameter %s (#%d) of Command %s cannot be varargs, only the final parameter can be",
                 parameter.name(),
                 i,
                 name()

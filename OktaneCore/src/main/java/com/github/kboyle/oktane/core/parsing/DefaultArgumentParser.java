@@ -1,6 +1,5 @@
 package com.github.kboyle.oktane.core.parsing;
 
-import com.github.kboyle.oktane.core.command.Command;
 import com.github.kboyle.oktane.core.command.CommandParameter;
 import com.github.kboyle.oktane.core.execution.CommandContext;
 import com.github.kboyle.oktane.core.result.argumentparser.*;
@@ -8,31 +7,45 @@ import com.github.kboyle.oktane.core.result.typeparser.TypeParserResult;
 import com.google.common.base.Defaults;
 import com.google.common.base.Preconditions;
 
-import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
-class DefaultArgumentParser implements ArgumentParser {
-    // todo this desperately needs cleaning up
-    @SuppressWarnings({"unchecked", "rawtypes"})
+public class DefaultArgumentParser implements ArgumentParser {
     @Override
-    public ArgumentParserResult parse(CommandContext context, Command command, List<String> tokens) {
-        var parameters = command.parameters();
+    public ArgumentParserResult parse(CommandContext context) {
+        var parameters = context.command().parameters();
         if (parameters.isEmpty()) {
             return ArgumentParserSuccessfulResult.empty();
         }
 
-        var parsedArguments = new Object[parameters.size()];
-        for (int i = 0; i < parameters.size(); i++) {
-            var parameter = parameters.get(i);
+        var parametersSize = parameters.size();
+        var parsedArguments = new Object[parametersSize];
+        var tokens = context.tokens();
+        int tokenIndex = 0;
+        int parameterIndex = 0;
 
-            if (parameter.varargs()) {
-                return parseVarargs(context, tokens, parsedArguments, i, parameter);
+        for (int tokensSize = tokens.size(); tokenIndex < tokensSize; tokenIndex++) {
+            var token = tokens.get(tokenIndex);
+            var parameter = parameters.get(parameterIndex);
+
+            if (parameter.greedy()) {
+                var fullBelly = tokensSize - tokenIndex - (parametersSize - parameterIndex) + 1 == 0;
+                if (fullBelly) {
+                    parameterIndex++;
+                    parameter = parameters.get(parameterIndex);
+                }
             }
 
-            var token = getNextToken(tokens, i);
             if (token == null) {
                 if (parameter.defaultString().isEmpty()) {
-                    parsedArguments[i] = Defaults.defaultValue(parameter.type());
+                    parameterIndex = setArgument(
+                        parameterIndex,
+                        parsedArguments,
+                        parameter,
+                        Defaults.defaultValue(parameter.type()),
+                        tokensSize - tokenIndex
+                    );
+
                     continue;
                 }
 
@@ -42,69 +55,58 @@ class DefaultArgumentParser implements ArgumentParser {
             var result = parse(context, parameter, token);
 
             if (!result.success()) {
-                return new ArgumentParserTypeParserFailResult(parameter, token, result);
-            }
-
-            parsedArguments[i] = result.value();
-        }
-
-        return new ArgumentParserSuccessfulResult(parsedArguments);
-    }
-
-    private ArgumentParserResult parseVarargs(
-            CommandContext context,
-            List<String> tokens,
-            Object[] parsedArguments,
-            int i,
-            CommandParameter<?> parameter) {
-
-        var remainingTokens = tokens.size() - i;
-        Object vargs;
-
-        if (remainingTokens != 0) {
-            vargs = Array.newInstance(parameter.type(), remainingTokens);
-
-            for (int j = 0; j < remainingTokens; j++) {
-                var token = tokens.get(i + j);
-                var result = parse(context, parameter, token);
-
-                if (!result.success()) {
+                if (!parameter.greedy() || parameterIndex == parametersSize - 1 || parsedArguments[parameterIndex] == null) {
                     return new ArgumentParserTypeParserFailResult(parameter, token, result);
                 }
 
-                Array.set(vargs, j, result.value());
+                tokenIndex--;
+                parameterIndex++;
             }
-        } else {
-            vargs = Array.newInstance(parameter.type(), 1);
 
-            if (parameter.defaultString().isEmpty()) {
-                Array.set(vargs, 0, Defaults.defaultValue(parameter.type()));
-            } else {
-                var token = parameter.defaultString().get();
-                var result = parse(context, parameter, token);
-
-                if (!result.success()) {
-                    return new ArgumentParserTypeParserFailResult(parameter, token, result);
-                }
-
-                Array.set(vargs, 0, result.value());
-            }
+            parameterIndex = setArgument(
+                parameterIndex,
+                parsedArguments,
+                parameter,
+                result.value(),
+                tokensSize - tokenIndex
+            );
         }
 
-        parsedArguments[i] = vargs;
         return new ArgumentParserSuccessfulResult(parsedArguments);
-    }
-
-    private String getNextToken(List<String> tokens, int index) {
-        if (index >= tokens.size()) {
-            return null;
-        }
-
-        return tokens.get(index);
     }
 
     private <T> TypeParserResult<T> parse(CommandContext context, CommandParameter<T> parameter, String token) {
         var parser = Preconditions.checkNotNull(parameter.typeParser(), "CommandParameter#typeParser cannot return null");
         return Preconditions.checkNotNull(parser.parse(context, parameter, token), "TypeParser#parse cannot return null");
+    }
+
+    private int setArgument(
+            int parameterIndex,
+            Object[] parsedArguments,
+            CommandParameter<?> parameter,
+            Object value,
+            int remainingTokens) {
+
+        if (!parameter.greedy()) {
+            parsedArguments[parameterIndex] = value;
+            return parameterIndex + 1;
+        }
+
+        handleGreedy(parsedArguments, parameterIndex, value);
+
+        return remainingTokens == 1
+            ? parameterIndex + 1
+            : parameterIndex;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void handleGreedy(Object[] parsedArguments, int parameterIndex, T value) {
+        var greedyList = (List<T>) parsedArguments[parameterIndex];
+        if (greedyList == null) {
+            greedyList = new ArrayList<>();
+            parsedArguments[parameterIndex] = greedyList;
+        }
+
+        greedyList.add(value);
     }
 }

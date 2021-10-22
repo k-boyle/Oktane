@@ -27,6 +27,7 @@ class DefaultCommandServiceTests {
         if (!(actualResult instanceof CommandExceptionResult actualException)) {
             Assertions.assertEquals(expectedResult, actualResult);
         } else {
+            actualException.exception().printStackTrace();
             Assertions.assertEquals(expectedResult.getClass(), actualException.getClass());
             Assertions.assertEquals(actualException.exception().getClass(), actualException.exception().getClass());
         }
@@ -159,39 +160,35 @@ class DefaultCommandServiceTests {
                 new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: a")
             ),
             Arguments.of(
-                "optionalgreedyint 1",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 0, str: null")
-            ),
-            Arguments.of(
                 "optionalgreedyint 1 2",
                 new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: null")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2 3",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 5, str: null")
+                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: 3")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2 3 4 a",
                 new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 9, str: a")
             ),
             Arguments.of(
-                "defaultgreediInt 1 2 a",
+                "defaultgreedyint 1 2 a",
                 new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: a")
             ),
             Arguments.of(
-                "defaultgreediInt 1",
+                "defaultgreedyint 1",
                 new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 10, str: default")
             ),
             Arguments.of(
-                "defaultgreediInt 1 2",
+                "defaultgreedyint 1 2",
                 new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: default")
             ),
             Arguments.of(
-                "defaultgreediInt 1 2 3",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 5, str: default")
+                "defaultgreedyint 1 2 3",
+                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: 3")
             ),
             Arguments.of(
-                "defaultgreediInt 1 2 3 4 a",
+                "defaultgreedyint 1 2 3 4 a",
                 new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 9, str: a")
             )
         );

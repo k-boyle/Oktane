@@ -12,9 +12,9 @@ public class CallbackExecutionBenchmarks {
     private static final Object[] EMPTY = new Object[0];
     private static final Object[] ONE = new Object[] { "one" };
     private static final Object[] TWO = new Object[] { "one", "TWO" };
-    private static final BenchmarkContext EMPTY_CONTEXT = new BenchmarkContext(EMPTY);
-    private static final BenchmarkContext ONE_CONTEXT = new BenchmarkContext(ONE);
-    private static final BenchmarkContext TWO_CONTEXT = new BenchmarkContext(TWO);
+    private static final BenchmarkCommandContext EMPTY_CONTEXT = new BenchmarkCommandContext(EMPTY);
+    private static final BenchmarkCommandContext ONE_CONTEXT = new BenchmarkCommandContext(ONE);
+    private static final BenchmarkCommandContext TWO_CONTEXT = new BenchmarkCommandContext(TWO);
 
     static {
         try {

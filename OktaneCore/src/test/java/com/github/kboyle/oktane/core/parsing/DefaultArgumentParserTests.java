@@ -1,8 +1,8 @@
 package com.github.kboyle.oktane.core.parsing;
 
+import com.github.kboyle.oktane.core.TestCommandContext;
 import com.github.kboyle.oktane.core.command.Command;
 import com.github.kboyle.oktane.core.command.TestCommandBuilder;
-import com.github.kboyle.oktane.core.execution.CommandContext;
 import com.github.kboyle.oktane.core.result.argumentparser.*;
 import com.github.kboyle.oktane.core.result.typeparser.TypeParserFailResult;
 import org.junit.jupiter.api.Assertions;
@@ -10,10 +10,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 class DefaultArgumentParserTests {
+    private static final String NULL = null;
     private static final TypeParser<Integer> INTEGER_TYPE_PARSER = TypeParser.simple(Integer.class, Integer::parseInt);
 
     private static final Command INT_ARG = new TestCommandBuilder()
@@ -44,29 +46,44 @@ class DefaultArgumentParserTests {
         .optionalParameter(int.class, "20")
         .build();
 
-    private static final Command VARARGS_STRING = new TestCommandBuilder()
-        .varargs(String.class)
+    private static final Command GREEDY_STRING = new TestCommandBuilder()
+        .greedy(String.class, false)
         .build();
 
-    private static final Command STRING_VARARGS_STRING = new TestCommandBuilder()
+    private static final Command STRING_GREEDY_STRING = new TestCommandBuilder()
         .parameter(String.class, false)
-        .varargs(String.class)
+        .greedy(String.class, false)
         .build();
 
-    private static final Command STRING_VARARGS_INT = new TestCommandBuilder()
+    private static final Command STRING_GREEDY_INT = new TestCommandBuilder()
         .parameter(String.class, false)
-        .varargs(int.class, INTEGER_TYPE_PARSER)
+        .greedy(int.class, INTEGER_TYPE_PARSER)
         .build();
 
     private static final Command STRING_VARARGS_DEFAULT = new TestCommandBuilder()
-        .varargs(String.class) // todo
+        .greedy(String.class, "default string")
+        .build();
+
+    private static final Command INT_GREEDY_STRING = new TestCommandBuilder()
+        .greedy(int.class, INTEGER_TYPE_PARSER)
+        .parameter(String.class, false)
+        .build();
+
+    private static final Command OPTIONAL_INT_GREEDY_STRING = new TestCommandBuilder()
+        .greedy(int.class, INTEGER_TYPE_PARSER)
+        .optionalParameter(String.class, false)
+        .build();
+
+    private static final Command OPTIONAL_INT_DEFAULT_GREEDY_STRING = new TestCommandBuilder()
+        .greedy(int.class, INTEGER_TYPE_PARSER, "10")
+        .optionalParameter(String.class, false)
         .build();
 
     @ParameterizedTest
     @MethodSource("argumentParserTestSource")
     void testArgumentParser(Command command, List<String> tokens, ArgumentParserResult expectedResult) {
         var parser = new DefaultArgumentParser();
-        var actualResult = parser.parse(new CommandContext(), command, tokens);
+        var actualResult = parser.parse(new TestCommandContext(command, tokens));
 
         Assertions.assertEquals(expectedResult, actualResult);
     }
@@ -95,7 +112,7 @@ class DefaultArgumentParserTests {
             ),
             Arguments.of(
                 OPTIONAL_STRING_NO_DEFAULT,
-                List.of(),
+                Arrays.asList(NULL),
                 new ArgumentParserSuccessfulResult(new Object[] { null })
             ),
             Arguments.of(
@@ -105,7 +122,7 @@ class DefaultArgumentParserTests {
             ),
             Arguments.of(
                 OPTIONAL_STRING_DEFAULT,
-                List.of(),
+                Arrays.asList(NULL),
                 new ArgumentParserSuccessfulResult(new Object[] { "default token" })
             ),
             Arguments.of(
@@ -115,7 +132,7 @@ class DefaultArgumentParserTests {
             ),
             Arguments.of(
                 OPTIONAL_INT_NO_DEFAULT,
-                List.of(),
+                Arrays.asList(NULL),
                 new ArgumentParserSuccessfulResult(new Object[] { 0 })
             ),
             Arguments.of(
@@ -125,7 +142,7 @@ class DefaultArgumentParserTests {
             ),
             Arguments.of(
                 OPTIONAL_INT_DEFAULT,
-                List.of(),
+                Arrays.asList(NULL),
                 new ArgumentParserSuccessfulResult(new Object[] { 20 })
             ),
             Arguments.of(
@@ -134,49 +151,114 @@ class DefaultArgumentParserTests {
                 new ArgumentParserSuccessfulResult(new Object[] { 10 })
             ),
             Arguments.of(
-                VARARGS_STRING,
+                GREEDY_STRING,
                 List.of("a"),
-                new ArgumentParserSuccessfulResult(new Object[] { new String[] { "a" } })
+                new ArgumentParserSuccessfulResult(new Object[] { List.of( "a") })
             ),
             Arguments.of(
-                VARARGS_STRING,
+                GREEDY_STRING,
                 List.of("a", "b"),
-                new ArgumentParserSuccessfulResult(new Object[] { new String[] { "a", "b" } })
+                new ArgumentParserSuccessfulResult(new Object[] { List.of( "a", "b") })
             ),
             Arguments.of(
-                STRING_VARARGS_STRING,
+                STRING_GREEDY_STRING,
                 List.of("a", "b"),
-                new ArgumentParserSuccessfulResult(new Object[] { "a", new String[] { "b" } })
+                new ArgumentParserSuccessfulResult(new Object[] { "a", List.of( "b") })
             ),
             Arguments.of(
-                STRING_VARARGS_STRING,
+                STRING_GREEDY_STRING,
                 List.of("a", "b"),
-                new ArgumentParserSuccessfulResult(new Object[] { "a", new String[] { "b" } })
+                new ArgumentParserSuccessfulResult(new Object[] { "a", List.of( "b") })
             ),
             Arguments.of(
-                STRING_VARARGS_STRING,
+                STRING_GREEDY_STRING,
                 List.of("a", "b", "c"),
-                new ArgumentParserSuccessfulResult(new Object[] { "a", new String[] { "b", "c" } })
+                new ArgumentParserSuccessfulResult(new Object[] { "a", List.of( "b", "c") })
             ),
             Arguments.of(
-                STRING_VARARGS_INT,
+                STRING_GREEDY_INT,
                 List.of("a", "10", "20"),
-                new ArgumentParserSuccessfulResult(new Object[] { "a", new int[] { 10, 20 } })
+                new ArgumentParserSuccessfulResult(new Object[] { "a", List.of(10, 20) })
             ),
             Arguments.of(
-                STRING_VARARGS_INT,
+                STRING_GREEDY_INT,
                 List.of("a", "notint"),
-                new ArgumentParserTypeParserFailResult(STRING_VARARGS_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+                new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
             ),
             Arguments.of(
-                STRING_VARARGS_INT,
+                STRING_GREEDY_INT,
                 List.of("a", "10", "notint"),
-                new ArgumentParserTypeParserFailResult(STRING_VARARGS_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+                new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
             ),
             Arguments.of(
-                STRING_VARARGS_INT,
+                STRING_GREEDY_INT,
                 List.of("a", "notint", "10"),
-                new ArgumentParserTypeParserFailResult(STRING_VARARGS_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+                new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+            ),
+            Arguments.of(
+                STRING_GREEDY_INT,
+                List.of("a", "10", "notint", "20"),
+                new ArgumentParserTypeParserFailResult(STRING_GREEDY_INT.parameters().get(1), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+            ),
+            Arguments.of(
+                STRING_VARARGS_DEFAULT,
+                List.of("a", "b"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of("a", "b") })
+            ),
+            Arguments.of(
+                STRING_VARARGS_DEFAULT,
+                Arrays.asList(NULL),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of("default string") })
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                List.of("0", "notint"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0), "notint" })
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                List.of("0", "10", "20", "notint"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10, 20), "notint" })
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                List.of("0", "10", "20"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10), "20" })
+            ),
+            Arguments.of(
+                INT_GREEDY_STRING,
+                List.of("notint", "string"),
+                new ArgumentParserTypeParserFailResult(INT_GREEDY_STRING.parameters().get(0), "notint", new TypeParserFailResult<>(INTEGER_TYPE_PARSER, "Failed to parse notint as Integer"))
+            ),
+            Arguments.of(
+                OPTIONAL_INT_GREEDY_STRING,
+                List.of("0", "10", "20", "notint"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10, 20), "notint" })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_GREEDY_STRING,
+                List.of("0", "10", "20"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10), "20" })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_GREEDY_STRING,
+                Arrays.asList(null, null),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0), null })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_DEFAULT_GREEDY_STRING,
+                List.of("0", "10", "20", "notint"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10, 20), "notint" })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_DEFAULT_GREEDY_STRING,
+                List.of("0", "10", "20"),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(0, 10), "20" })
+            ),
+            Arguments.of(
+                OPTIONAL_INT_DEFAULT_GREEDY_STRING,
+                Arrays.asList(null, null),
+                new ArgumentParserSuccessfulResult(new Object[] { List.of(10), null })
             )
         );
     }
