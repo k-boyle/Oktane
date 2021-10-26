@@ -19,8 +19,11 @@ public class DefaultTokeniser implements Tokeniser {
             return endOfInput(input, parameters, 0);
         }
 
-        // todo we can optimise here, look at DefaultTokeniserBenchmarks#noParameters, it enters parameter loop for no reason
         var currentIndex = nextCharacterIndex(input, commandEnd + 1);
+
+        if (currentIndex == inputLength) {
+            return endOfInput(input, parameters, 0);
+        }
 
         if (currentIndex == inputLength - 1) {
             return oneToken(input, currentIndex, command);
@@ -73,7 +76,7 @@ public class DefaultTokeniser implements Tokeniser {
             }
 
             var parameter = parameters.get(p);
-            greedyParameter = greedyParameter || parameter.greedy();
+            greedyParameter |= parameter.greedy();
             if (parameter.remainder()) {
                 tokens.add(input.substring(currentIndex));
                 return new TokeniserSuccessfulResult(tokens);
