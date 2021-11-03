@@ -19,7 +19,7 @@
 
         <reactor-core.version>3.4.9</reactor-core.version>
 
-        <auto-service-annotations.version>1.0</auto-service-annotations.version>
+        <auto-service-annotations.version>1.0.1</auto-service-annotations.version>
     </properties>
 
     <dependencies>
