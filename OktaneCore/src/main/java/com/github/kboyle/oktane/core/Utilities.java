@@ -59,12 +59,12 @@ public final class Utilities {
         }
 
         public static boolean isBoxedPrimitive(Class<?> cl, Object obj) {
-            return BOXED_CLASS_BY_PRIMITIVE.get(cl).isInstance(obj);
+            return BOXED_CLASS_BY_PRIMITIVE.getOrDefault(cl, Objects.class).isInstance(obj);
         }
     }
 
     public static final class Streams {
-        public Streams() {
+        private Streams() {
             throw new UnsupportedOperationException("Instantiation of a utility class");
         }
 

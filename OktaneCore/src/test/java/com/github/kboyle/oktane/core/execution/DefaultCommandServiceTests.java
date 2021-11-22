@@ -1,7 +1,7 @@
 package com.github.kboyle.oktane.core.execution;
 
-import com.github.kboyle.oktane.core.command.*;
-import com.github.kboyle.oktane.core.parsing.TypeParserProvider;
+import com.github.kboyle.oktane.core.OktaneTestConfiguration;
+import com.github.kboyle.oktane.core.command.Command;
 import com.github.kboyle.oktane.core.result.Result;
 import com.github.kboyle.oktane.core.result.command.CommandExceptionResult;
 import com.github.kboyle.oktane.core.result.command.CommandTextResult;
@@ -9,21 +9,22 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
+@SpringBootTest(classes = { DefaultCommandService.class, OktaneTestConfiguration.class })
 class DefaultCommandServiceTests {
-    private static final DefaultCommandService COMMAND_SERVICE = new DefaultCommandService.Builder()
-        .typeParserProvider(TypeParserProvider.defaults())
-        .modulesFactory(CommandModulesFactory.classes(TestCommandModule.class))
-        .build();
+    @Autowired
+    DefaultCommandService commandService;
 
     @ParameterizedTest(name = "Input: {0}, Expected: {1}")
     @MethodSource("testDefaultCommandServiceSource")
-    void testDefaultCommandService(String input, Result expectedResult) {
-        var actualResult = COMMAND_SERVICE.execute(new CommandContext(), input);
+    void testDefaultCommandService(String input, Function<CommandService, Result> expectedResultFunction) {
+        var actualResult = commandService.execute(new CommandContext(), input);
+        var expectedResult = expectedResultFunction.apply(commandService);
         if (!(actualResult instanceof CommandExceptionResult actualException)) {
             Assertions.assertEquals(expectedResult, actualResult);
         } else {
@@ -37,175 +38,175 @@ class DefaultCommandServiceTests {
         return Stream.of(
             Arguments.of(
                 "ping",
-                new CommandTextResult(getCommand("ping"), "pong")
+                textResult("ping", "pong")
             ),
             Arguments.of(
                 "p",
-                new CommandTextResult(getCommand("ping"), "pong")
+                textResult("ping", "pong")
             ),
             Arguments.of(
                 "add 10 20",
-                new CommandTextResult(getCommand("add"), "add 2: 30")
+                textResult("add", "add 2: 30")
             ),
             Arguments.of(
                 "addvargs 10",
-                new CommandTextResult(getCommand("addVargs"), "add vargs: 10")
+                textResult("addVargs", "add vargs: 10")
             ),
             Arguments.of(
                 "addvargs 10 20 30",
-                new CommandTextResult(getCommand("addVargs"), "add vargs: 60")
+                textResult("addVargs", "add vargs: 60")
             ),
             Arguments.of(
                 "echo a",
-                new CommandTextResult(getCommand("echo"), "a")
+                textResult("echo", "a")
             ),
             Arguments.of(
                 "echo a b",
-                new CommandTextResult(getCommand("echo"), "a b")
+                textResult("echo", "a b")
             ),
             Arguments.of(
                 "optionalstring a",
-                new CommandTextResult(getCommand("optionalstring"), "a")
+                textResult("optionalstring", "a")
             ),
             Arguments.of(
                 "optionalstring",
-                new CommandTextResult(getCommand("optionalstring"), null)
+                textResult("optionalstring", null)
             ),
             Arguments.of(
                 "default a",
-                new CommandTextResult(getCommand("default0"), "a")
+                textResult("default0", "a")
             ),
             Arguments.of(
                 "default",
-                new CommandTextResult(getCommand("default0"), "pong")
+                textResult("default0", "pong")
             ),
             Arguments.of(
                 "optionaldefault a b",
-                new CommandTextResult(getCommand("optionaldefault"), "a: a, b: b")
+                textResult("optionaldefault", "a: a, b: b")
             ),
             Arguments.of(
                 "optionaldefault a",
-                new CommandTextResult(getCommand("optionaldefault"), "a: a, b: this is the default")
+                textResult("optionaldefault", "a: a, b: this is the default")
             ),
             Arguments.of(
                 "optionaldefault",
-                new CommandTextResult(getCommand("optionaldefault"), "a: null, b: this is the default")
+                textResult("optionaldefault", "a: null, b: this is the default")
             ),
             Arguments.of(
                 "optionalint 10",
-                new CommandTextResult(getCommand("optionalint"), "x: 10")
+                textResult("optionalint", "x: 10")
             ),
             Arguments.of(
                 "optionalint",
-                new CommandTextResult(getCommand("optionalint"), "x: 0")
+                textResult("optionalint", "x: 0")
             ),
             Arguments.of(
                 "optionalvargs a",
-                new CommandTextResult(getCommand("optionalvargs"), "args: a")
+                textResult("optionalvargs", "args: a")
             ),
             Arguments.of(
                 "optionalvargs a b c",
-                new CommandTextResult(getCommand("optionalvargs"), "args: a, b, c")
+                textResult("optionalvargs", "args: a, b, c")
             ),
             Arguments.of(
                 "optionalvargs",
-                new CommandTextResult(getCommand("optionalvargs"), "args: null")
+                textResult("optionalvargs", "args: null")
             ),
             Arguments.of(
                 "defaultvargs a",
-                new CommandTextResult(getCommand("defaultvargs"), "args: a")
+                textResult("defaultvargs", "args: a")
             ),
             Arguments.of(
                 "defaultvargs a b c",
-                new CommandTextResult(getCommand("defaultvargs"), "args: a, b, c")
+                textResult("defaultvargs", "args: a, b, c")
             ),
             Arguments.of(
                 "defaultvargs",
-                new CommandTextResult(getCommand("defaultvargs"), "args: default")
+                textResult("defaultvargs", "args: default")
             ),
             Arguments.of(
                 "commandthrow",
-                new CommandExceptionResult(getCommand("commandthrow"), new RuntimeException("oh no!"))
+                exceptionResult("commandthrow", new RuntimeException("oh no!"))
             ),
             Arguments.of(
                 "nested",
-                new CommandTextResult(getCommand("group"), "group command")
+                textResult("group", "group command")
             ),
             Arguments.of(
                 "nested ping",
-                new CommandTextResult(getCommand("nestedPing"), "nested pong")
+                textResult("nestedPing", "nested pong")
             ),
             Arguments.of(
                 "enum one",
-                new CommandTextResult(getCommand("enum0"), "ONE")
+                textResult("enum0", "ONE")
             ),
             Arguments.of(
                 "enum TWO",
-                new CommandTextResult(getCommand("enum0"), "TWO")
+                textResult("enum0", "TWO")
             ),
             Arguments.of(
                 "enum 0",
-                new CommandTextResult(getCommand("enum0"), "ONE")
+                textResult("enum0", "ONE")
             ),
             Arguments.of(
                 "greedyint 1 2 3 4 a",
-                new CommandTextResult(getCommand("greedyInt"), "a: 1, sum: 9, str: a")
+                textResult("greedyInt", "a: 1, sum: 9, str: a")
             ),
             Arguments.of(
                 "greedyint 1 2 a",
-                new CommandTextResult(getCommand("greedyInt"), "a: 1, sum: 2, str: a")
+                textResult("greedyInt", "a: 1, sum: 2, str: a")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2 a",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: a")
+                textResult("optionalGreedyInt", "a: 1, sum: 2, str: a")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: null")
+                textResult("optionalGreedyInt", "a: 1, sum: 2, str: null")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2 3",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 2, str: 3")
+                textResult("optionalGreedyInt", "a: 1, sum: 2, str: 3")
             ),
             Arguments.of(
                 "optionalgreedyint 1 2 3 4 a",
-                new CommandTextResult(getCommand("optionalGreedyInt"), "a: 1, sum: 9, str: a")
+                textResult("optionalGreedyInt", "a: 1, sum: 9, str: a")
             ),
             Arguments.of(
                 "defaultgreedyint 1 2 a",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: a")
+                textResult("defaultGreedyInt", "a: 1, sum: 2, str: a")
             ),
             Arguments.of(
                 "defaultgreedyint 1",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 10, str: default")
+                textResult("defaultGreedyInt", "a: 1, sum: 10, str: default")
             ),
             Arguments.of(
                 "defaultgreedyint 1 2",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: default")
+                textResult("defaultGreedyInt", "a: 1, sum: 2, str: default")
             ),
             Arguments.of(
                 "defaultgreedyint 1 2 3",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 2, str: 3")
+                textResult("defaultGreedyInt", "a: 1, sum: 2, str: 3")
             ),
             Arguments.of(
                 "defaultgreedyint 1 2 3 4 a",
-                new CommandTextResult(getCommand("defaultGreedyInt"), "a: 1, sum: 9, str: a")
+                textResult("defaultGreedyInt", "a: 1, sum: 9, str: a")
             )
         );
     }
 
-    private static Command getCommand(String name) {
-        return COMMAND_SERVICE.commands()
+    private static Command getCommand(CommandService commandService, String name) {
+        return commandService.commands()
             .filter(command -> name.equals(command.name().get()))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Failed to find a command with name " + name));
     }
 
-    private static String createSignature(Command command) {
-        var parametersString = command.parameters().stream()
-            .map(CommandParameter::name)
-            .<String>mapMulti(Optional::ifPresent)
-            .collect(Collectors.joining());
-        return command.name().get() + parametersString;
+    private static Function<CommandService, Result> textResult(String commandName, String text) {
+        return service -> new CommandTextResult(getCommand(service, commandName), text);
+    }
+
+    private static Function<CommandService, Result> exceptionResult(String commandName, Exception ex) {
+        return service -> new CommandExceptionResult(getCommand(service, commandName), ex);
     }
 }

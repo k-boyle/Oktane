@@ -1,34 +1,45 @@
 package com.github.kboyle.oktane.test;
 
-import com.github.kboyle.oktane.core.annotation.OtkaneApplication;
-import com.github.kboyle.oktane.core.command.CommandModulesFactory;
+import com.github.kboyle.oktane.core.configuration.OktaneApplication;
 import com.github.kboyle.oktane.core.execution.CommandContext;
 import com.github.kboyle.oktane.core.execution.CommandService;
-import com.github.kboyle.oktane.core.parsing.TypeParserProvider;
-import com.github.kboyle.oktane.test.modules.TestModule;
-import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Scanner;
+import java.util.concurrent.Executor;
 
 // todo remove varargs builder methods?
-@OtkaneApplication
+@OktaneApplication
+@Configuration
 public class Program {
-    public static void main(String[] args) {
-        var service = CommandService.builder()
-            .typeParserProvider(TypeParserProvider.defaults())
-            .modulesFactory(CommandModulesFactory.classes(TestModule.class))
-            .build();
+    private final CommandService commandService;
+    private final Executor executor;
 
-        var scanner = new Scanner(System.in);
-        while (true) {
-            var input = scanner.nextLine();
-            var result = service.execute(new CommandContext(), input);
-            System.out.println(result);
-        }
+    @Autowired
+    public Program(CommandService commandService, Executor executor) {
+        this.commandService = commandService;
+        this.executor = executor;
     }
 
-    @Data
-    private static class Test {
-        private final int i;
+    public static void main(String[] args) {
+        SpringApplication.run(Program.class);
+    }
+
+    @Bean
+    public ApplicationListener<ApplicationReadyEvent> commandLoop() {
+        return ready -> {
+            var scanner = new Scanner(System.in);
+            while(true) {
+                var input = scanner.nextLine();
+                var result = commandService.execute(new CommandContext(), input);
+                System.out.println(result);
+                executor.execute(this::commandLoop);
+            }
+        };
     }
 }

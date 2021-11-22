@@ -1,15 +1,12 @@
 package com.github.kboyle.oktane.core.execution;
 
-import com.github.kboyle.oktane.core.command.*;
+import com.github.kboyle.oktane.core.command.Command;
+import com.github.kboyle.oktane.core.command.CommandModule;
 import com.github.kboyle.oktane.core.mapping.CommandMap;
-import com.github.kboyle.oktane.core.mapping.CommandMapProvider;
 import com.github.kboyle.oktane.core.parsing.*;
-import com.github.kboyle.oktane.core.precondition.ParameterPreconditionAnnotationConsumer;
-import com.github.kboyle.oktane.core.precondition.PreconditionAnnotationConsumer;
 import com.github.kboyle.oktane.core.prefix.PrefixSupplier;
 import com.github.kboyle.oktane.core.result.Result;
 import com.google.common.base.Preconditions;
-import lombok.experimental.Delegate;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -84,45 +81,6 @@ public interface CommandService {
         for (var child : module.children()) {
             Preconditions.checkNotNull(child, "child cannot be null");
             flattenModules(child, commandModuleConsumer);
-        }
-    }
-
-    static Builder builder() {
-        return new DefaultCommandService.Builder();
-    }
-
-    interface Builder {
-        Builder prefixSupplier(PrefixSupplier prefixSupplier);
-        Builder typeParserProvider(TypeParserProvider typeParserProvider);
-        Builder parameterPreconditionConsumer(ParameterPreconditionAnnotationConsumer<?> parameterPreconditionProvider);
-        Builder preconditionConsumer(PreconditionAnnotationConsumer<?> preconditionProvider);
-        Builder module(CommandModule.Builder module);
-        Builder module(CommandModule module);
-        Builder modulesFactory(CommandModulesFactory modulesFactory);
-        Builder commandMapProvider(CommandMapProvider commandMapProvider);
-        Builder tokeniser(Tokeniser tokeniser);
-        Builder argumentParser(ArgumentParser argumentParser);
-
-        PrefixSupplier prefixSupplier();
-        List<ParameterPreconditionAnnotationConsumer<?>> parameterPreconditionAnnotationConsumers();
-        List<PreconditionAnnotationConsumer<?>> preconditionAnnotationConsumers();
-        List<CommandModule.Builder> commandModuleBuilders();
-        List<CommandModule> commandModules();
-        List<CommandModulesFactory> commandModulesFactories();
-        CommandMapProvider commandMapProvider();
-        Tokeniser tokeniser();
-        ArgumentParser argumentParser();
-        TypeParserProvider typeParserProvider();
-
-        CommandService build();
-
-        abstract class Delegating implements Builder {
-            @Delegate
-            protected final Builder delegate;
-
-            protected Delegating(Builder delegate) {
-                this.delegate = delegate;
-            }
         }
     }
 }

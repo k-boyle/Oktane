@@ -19,8 +19,8 @@ class SingletonCommandCallback<CONTEXT extends CommandContext, MODULE extends Mo
 
     @Override
     protected MODULE getModule(CONTEXT context) {
-        var dependencyProvider = Preconditions.checkNotNull(context.dependencyProvider(), "dependencyProvider cannot be null");
-        return Preconditions.checkNotNull(dependencyProvider.get(moduleClass), "Singleton modules must be provided by the Dependency Provider");
+        var dependencyProvider = Preconditions.checkNotNull(context.applicationContext(), "dependencyProvider cannot be null");
+        return Preconditions.checkNotNull(dependencyProvider.getBean(moduleClass), "Singleton modules must be provided by the Dependency Provider");
     }
 
     @Override

@@ -25,8 +25,6 @@ class ImmutableCommandMapNode implements CommandMap  {
     }
 
     static ImmutableCommandMapNode create(List<CommandModule> modules) {
-        Preconditions.checkArgument(!modules.isEmpty(), "Must have at least one module for mapping");
-
         var rootNode = new ImmutableCommandMapNodeBuilder();
         for (var module : modules) {
             rootNode.mapModule(module);

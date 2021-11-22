@@ -276,10 +276,6 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             : defaultString.value();
     }
 
-    private boolean varargs(Method method, Parameter[] parameters, int index) {
-        return method.isVarArgs() && index == parameters.length - 1;
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <T> TypeParser<T> typeParser(Parameter parameter, Class<T> parameterClass, TypeParserProvider typeParserProvider) {
         var override = parameter.getDeclaredAnnotation(OverrideTypeParser.class);

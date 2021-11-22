@@ -4,8 +4,6 @@ import com.github.kboyle.oktane.core.command.*;
 import com.github.kboyle.oktane.core.mapping.CommandMap;
 import com.github.kboyle.oktane.core.mapping.CommandMapProvider;
 import com.github.kboyle.oktane.core.parsing.*;
-import com.github.kboyle.oktane.core.precondition.ParameterPreconditionAnnotationConsumer;
-import com.github.kboyle.oktane.core.precondition.PreconditionAnnotationConsumer;
 import com.github.kboyle.oktane.core.prefix.PrefixSupplier;
 import com.github.kboyle.oktane.core.result.Result;
 import com.github.kboyle.oktane.core.result.argumentparser.ArgumentParserResult;
@@ -13,15 +11,16 @@ import com.github.kboyle.oktane.core.result.execution.*;
 import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionResult;
 import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionSuccessfulResult;
 import com.google.common.base.Preconditions;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.kboyle.oktane.core.Utilities.Objects.getIfNull;
 import static com.github.kboyle.oktane.core.Utilities.Objects.isBoxedPrimitive;
 
+@Component
 public class DefaultCommandService implements CommandService {
     private final List<CommandModule> modules;
     private final PrefixSupplier prefixSupplier;
@@ -30,27 +29,49 @@ public class DefaultCommandService implements CommandService {
     private final ArgumentParser argumentParser;
     private final TypeParserProvider typeParserProvider;
 
-    protected DefaultCommandService(CommandService.Builder builder) {
-        Preconditions.checkNotNull(builder, "builder cannot be null");
+    public DefaultCommandService(
+            List<CommandModule.Builder> commandModuleBuilders,
+            List<CommandModulesFactory> commandModulesFactories,
+            PrefixSupplier prefixSupplier,
+            CommandMapProvider commandMapProvider,
+            Tokeniser tokeniser,
+            ArgumentParser argumentParser,
+            TypeParserProvider typeParserProvider) {
 
-        this.modules = getModules(builder);
-        this.prefixSupplier = getIfNull(builder.prefixSupplier(), PrefixSupplier::empty);
-        this.commandMap = getIfNull(builder.commandMapProvider(), CommandMap::provider).create(modules);
-        this.tokeniser = getIfNull(builder.tokeniser(), Tokeniser::get);
-        this.argumentParser = getIfNull(builder.argumentParser(), ArgumentParser::get);
-        this.typeParserProvider = builder.typeParserProvider();
-    }
+        Preconditions.checkNotNull(commandModuleBuilders, "commandModuleBuilders cannot be null");
+        Preconditions.checkNotNull(commandModulesFactories, "commandModulesFactories cannot be null");
+        Preconditions.checkNotNull(prefixSupplier, "prefixSupplier cannot be null");
+        Preconditions.checkNotNull(commandMapProvider, "commandMapProvider cannot be null");
+        Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
+        Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
+        Preconditions.checkNotNull(typeParserProvider, "typeParserProvider cannot be null");
 
-    private static List<CommandModule> getModules(CommandService.Builder builder) {
-        var preBuiltModules = builder.commandModules().stream();
-        var builtModules = builder.commandModuleBuilders().stream()
+        var builtModules = commandModuleBuilders.stream()
             .map(module -> module.build(null));
-        var factoryModules = builder.commandModulesFactories().stream()
-            .flatMap(factory -> factory.createModules(builder.typeParserProvider()));
+        var factoryModules = commandModulesFactories.stream()
+            .flatMap(factory -> factory.createModules(typeParserProvider));
 
-        return Stream.of(preBuiltModules, builtModules, factoryModules)
+        this.modules = Stream.of(builtModules, factoryModules)
             .flatMap(Function.identity())
             .toList();
+
+        this.prefixSupplier = prefixSupplier;
+        this.commandMap = Preconditions.checkNotNull(commandMapProvider.create(this.modules), "CommandMapProvider#create cannot return null");
+        this.tokeniser = tokeniser;
+        this.argumentParser = argumentParser;
+        this.typeParserProvider = typeParserProvider;
+    }
+
+    public DefaultCommandService(Properties properties) {
+        this(
+            List.copyOf(properties.commandModuleBuilders),
+            List.copyOf(properties.commandModulesFactories),
+            properties.prefixSupplier,
+            properties.commandMapProvider,
+            properties.tokeniser,
+            properties.argumentParser,
+            properties.typeParserProvider
+        );
     }
 
     @Override
@@ -210,7 +231,7 @@ public class DefaultCommandService implements CommandService {
             }
 
             dependencies[i] = Preconditions.checkNotNull(
-                context.dependencyProvider().get(dependencyClass),
+                context.applicationContext().getBean(dependencyClass),
                 "A dependency of type %s must be in your provider",
                 dependencyClass
             );
@@ -250,151 +271,13 @@ public class DefaultCommandService implements CommandService {
         return typeParserProvider;
     }
 
-    protected static class Builder implements CommandService.Builder {
-        final List<CommandModule.Builder> commandModuleBuilders;
-        final List<CommandModule> commandModules;
-        final List<CommandModulesFactory> commandModulesFactories;
-        final List<PreconditionAnnotationConsumer<?>> preconditionAnnotationConsumers;
-        final List<ParameterPreconditionAnnotationConsumer<?>> parameterPreconditionAnnotationConsumers;
-
-        PrefixSupplier prefixSupplier;
-        CommandMapProvider commandMapProvider;
-        Tokeniser tokeniser;
-        ArgumentParser argumentParser;
-        TypeParserProvider typeParserProvider;
-
-        protected Builder() {
-            this.commandModuleBuilders = new ArrayList<>();
-            this.commandModules = new ArrayList<>();
-            this.commandModulesFactories = new ArrayList<>();
-            this.preconditionAnnotationConsumers = new ArrayList<>();
-            this.parameterPreconditionAnnotationConsumers = new ArrayList<>();
-        }
-
-        @Override
-        public Builder prefixSupplier(PrefixSupplier prefixSupplier) {
-            this.prefixSupplier = Preconditions.checkNotNull(prefixSupplier, "prefixSupplier cannot be null");
-            return this;
-        }
-
-        @Override
-        public Builder typeParserProvider(TypeParserProvider typeParserProvider) {
-            this.typeParserProvider = Preconditions.checkNotNull(typeParserProvider, "typeParserProvider cannot be null");
-            return this;
-        }
-
-        @Override
-        public Builder preconditionConsumer(PreconditionAnnotationConsumer<?> preconditionConsumer) {
-            Preconditions.checkNotNull(preconditionConsumer, "preconditionConsumer cannot be null");
-            Preconditions.checkNotNull(
-                preconditionConsumer.annotationClass(),
-                "PreconditionConsumer#targetAnnotationType cannot return null"
-            );
-            preconditionAnnotationConsumers.add(preconditionConsumer);
-            return this;
-        }
-
-        @Override
-        public Builder parameterPreconditionConsumer(ParameterPreconditionAnnotationConsumer<?> parameterPreconditionConsumer) {
-            Preconditions.checkNotNull(parameterPreconditionConsumer, "parameterPreconditionConsumer cannot be null");
-            Preconditions.checkNotNull(
-                parameterPreconditionConsumer.annotationClass(),
-                "ParameterPreconditionConsumer#targetAnnotationType cannot return null"
-            );
-            parameterPreconditionAnnotationConsumers.add(parameterPreconditionConsumer);
-            return this;
-        }
-
-        @Override
-        public Builder module(CommandModule.Builder module) {
-            commandModuleBuilders.add(Preconditions.checkNotNull(module, "module cannot be null"));
-            return this;
-        }
-
-        @Override
-        public Builder module(CommandModule module) {
-            commandModules.add(Preconditions.checkNotNull(module, "module cannot be null"));
-            return this;
-        }
-
-        @Override
-        public Builder modulesFactory(CommandModulesFactory modulesFactory) {
-            Preconditions.checkNotNull(modulesFactory, "modulesFactory cannot be null");
-            commandModulesFactories.add(modulesFactory);
-            return this;
-        }
-
-        @Override
-        public Builder commandMapProvider(CommandMapProvider mapProvider) {
-            this.commandMapProvider = Preconditions.checkNotNull(mapProvider, "mapProvider cannot be null");
-            return this;
-        }
-
-        @Override
-        public Builder tokeniser(Tokeniser tokeniser) {
-            this.tokeniser = Preconditions.checkNotNull(tokeniser, "tokeniser cannot be null");
-            return this;
-        }
-
-        @Override
-        public Builder argumentParser(ArgumentParser argumentParser) {
-            this.argumentParser = Preconditions.checkNotNull(argumentParser, "argumentParser cannot be null");
-            return this;
-        }
-
-        @Override
-        public PrefixSupplier prefixSupplier() {
-            return prefixSupplier;
-        }
-
-        @Override
-        public List<ParameterPreconditionAnnotationConsumer<?>> parameterPreconditionAnnotationConsumers() {
-            return null;
-        }
-
-        @Override
-        public List<PreconditionAnnotationConsumer<?>> preconditionAnnotationConsumers() {
-            return null;
-        }
-
-        @Override
-        public List<CommandModule.Builder> commandModuleBuilders() {
-            return commandModuleBuilders;
-        }
-
-        @Override
-        public List<CommandModule> commandModules() {
-            return commandModules;
-        }
-
-        @Override
-        public List<CommandModulesFactory> commandModulesFactories() {
-            return commandModulesFactories;
-        }
-
-        @Override
-        public CommandMapProvider commandMapProvider() {
-            return commandMapProvider;
-        }
-
-        @Override
-        public Tokeniser tokeniser() {
-            return tokeniser;
-        }
-
-        @Override
-        public ArgumentParser argumentParser() {
-            return argumentParser;
-        }
-
-        @Override
-        public TypeParserProvider typeParserProvider() {
-            return typeParserProvider;
-        }
-
-        @Override
-        public DefaultCommandService build() {
-            return new DefaultCommandService(this);
-        }
+    public static class Properties {
+        public List<CommandModule.Builder> commandModuleBuilders = new ArrayList<>();
+        public List<CommandModulesFactory> commandModulesFactories = new ArrayList<>();
+        public PrefixSupplier prefixSupplier = PrefixSupplier.empty();
+        public CommandMapProvider commandMapProvider = CommandMap.provider();
+        public Tokeniser tokeniser = Tokeniser.get();
+        public ArgumentParser argumentParser = ArgumentParser.get();
+        public TypeParserProvider typeParserProvider = TypeParserProvider.defaults();
     }
 }

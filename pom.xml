@@ -4,6 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- todo cleanup poms -->
+
     <groupId>com.github.k-boyle</groupId>
     <artifactId>Oktane</artifactId>
     <packaging>pom</packaging>
@@ -14,6 +16,12 @@
         <module>OktaneReactive</module>
         <module>Benchmark</module>
     </modules>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.6.0</version>
+    </parent>
 
     <name>Oktane</name>
     <description>A high performance Java command framework</description>
