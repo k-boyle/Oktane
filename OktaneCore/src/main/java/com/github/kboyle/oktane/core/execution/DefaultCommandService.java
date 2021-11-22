@@ -1,6 +1,7 @@
 package com.github.kboyle.oktane.core.execution;
 
 import com.github.kboyle.oktane.core.command.*;
+import com.github.kboyle.oktane.core.configuration.OktaneConfiguration;
 import com.github.kboyle.oktane.core.mapping.CommandMap;
 import com.github.kboyle.oktane.core.mapping.CommandMapProvider;
 import com.github.kboyle.oktane.core.parsing.*;
@@ -11,16 +12,18 @@ import com.github.kboyle.oktane.core.result.execution.*;
 import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionResult;
 import com.github.kboyle.oktane.core.result.precondition.ParameterPreconditionSuccessfulResult;
 import com.google.common.base.Preconditions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.github.kboyle.oktane.core.Utilities.Objects.isBoxedPrimitive;
 
 @Component
+@Import(OktaneConfiguration.class)
 public class DefaultCommandService implements CommandService {
     private final List<CommandModule> modules;
     private final PrefixSupplier prefixSupplier;
@@ -29,9 +32,10 @@ public class DefaultCommandService implements CommandService {
     private final ArgumentParser argumentParser;
     private final TypeParserProvider typeParserProvider;
 
+    @Autowired
     public DefaultCommandService(
-            List<CommandModule.Builder> commandModuleBuilders,
-            List<CommandModulesFactory> commandModulesFactories,
+            Optional<List<CommandModule.Builder>> commandModuleBuilders,
+            Optional<List<CommandModulesFactory>> commandModulesFactories,
             PrefixSupplier prefixSupplier,
             CommandMapProvider commandMapProvider,
             Tokeniser tokeniser,
@@ -47,8 +51,10 @@ public class DefaultCommandService implements CommandService {
         Preconditions.checkNotNull(typeParserProvider, "typeParserProvider cannot be null");
 
         var builtModules = commandModuleBuilders.stream()
+            .flatMap(List::stream)
             .map(module -> module.build(null));
         var factoryModules = commandModulesFactories.stream()
+            .flatMap(List::stream)
             .flatMap(factory -> factory.createModules(typeParserProvider));
 
         this.modules = Stream.of(builtModules, factoryModules)
@@ -64,8 +70,8 @@ public class DefaultCommandService implements CommandService {
 
     public DefaultCommandService(Properties properties) {
         this(
-            List.copyOf(properties.commandModuleBuilders),
-            List.copyOf(properties.commandModulesFactories),
+            Optional.of(List.copyOf(properties.commandModuleBuilders)),
+            Optional.of(List.copyOf(properties.commandModulesFactories)),
             properties.prefixSupplier,
             properties.commandMapProvider,
             properties.tokeniser,
