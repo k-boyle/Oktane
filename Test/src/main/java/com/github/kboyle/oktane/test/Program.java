@@ -1,12 +1,11 @@
 package com.github.kboyle.oktane.test;
 
-import com.github.kboyle.oktane.core.command.CommandModule;
-import com.github.kboyle.oktane.core.command.CommandModulesFactory;
+import com.github.kboyle.oktane.core.command.*;
 import com.github.kboyle.oktane.core.configuration.OktaneApplication;
 import com.github.kboyle.oktane.core.execution.CommandContext;
 import com.github.kboyle.oktane.core.execution.CommandService;
+import com.github.kboyle.oktane.core.result.command.CommandTextResult;
 import com.github.kboyle.oktane.test.modules.TestModule;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -17,20 +16,18 @@ import java.util.Scanner;
 // todo remove varargs builder methods?
 @OktaneApplication
 public class Program {
-    private final CommandService commandService;
-
-    @Autowired
-    public Program(CommandService commandService) {
-        this.commandService = commandService;
-    }
-
     public static void main(String[] args) {
         SpringApplication.run(Program.class);
     }
 
     @Bean
     public CommandModule.Builder builder() {
-        return CommandModule.builder();
+        return CommandModule.builder()
+            .command(
+                Command.builder()
+                    .callback(ctx -> new CommandTextResult(ctx.command(), "callback"))
+                    .alias("something")
+            );
     }
 
     @Bean
@@ -39,7 +36,7 @@ public class Program {
     }
 
     @Bean
-    public ApplicationListener<ApplicationReadyEvent> commandLoop() {
+    public ApplicationListener<ApplicationReadyEvent> commandLoop(CommandService commandService) {
         return ready -> {
             var scanner = new Scanner(System.in);
             while (true) {
