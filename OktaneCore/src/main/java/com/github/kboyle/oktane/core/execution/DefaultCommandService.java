@@ -16,7 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -34,8 +35,8 @@ public class DefaultCommandService implements CommandService {
 
     @Autowired
     public DefaultCommandService(
-            Optional<List<CommandModule.Builder>> commandModuleBuilders,
-            Optional<List<CommandModulesFactory>> commandModulesFactories,
+            List<CommandModule.Builder> commandModuleBuilders,
+            List<CommandModulesFactory> commandModulesFactories,
             PrefixSupplier prefixSupplier,
             CommandMapProvider commandMapProvider,
             Tokeniser tokeniser,
@@ -51,10 +52,8 @@ public class DefaultCommandService implements CommandService {
         Preconditions.checkNotNull(typeParserProvider, "typeParserProvider cannot be null");
 
         var builtModules = commandModuleBuilders.stream()
-            .flatMap(List::stream)
             .map(module -> module.build(null));
         var factoryModules = commandModulesFactories.stream()
-            .flatMap(List::stream)
             .flatMap(factory -> factory.createModules(typeParserProvider));
 
         this.modules = Stream.of(builtModules, factoryModules)
@@ -70,8 +69,8 @@ public class DefaultCommandService implements CommandService {
 
     public DefaultCommandService(Properties properties) {
         this(
-            Optional.of(List.copyOf(properties.commandModuleBuilders)),
-            Optional.of(List.copyOf(properties.commandModulesFactories)),
+            List.copyOf(properties.commandModuleBuilders),
+            List.copyOf(properties.commandModulesFactories),
             properties.prefixSupplier,
             properties.commandMapProvider,
             properties.tokeniser,
