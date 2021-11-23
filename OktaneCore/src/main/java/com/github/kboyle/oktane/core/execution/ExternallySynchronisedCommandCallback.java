@@ -7,6 +7,7 @@ class ExternallySynchronisedCommandCallback<CONTEXT extends CommandContext, MODU
     private final Object lock;
 
     ExternallySynchronisedCommandCallback(AbstractCommandCallback<CONTEXT, MODULE> delegate, Object lock) {
+        super(delegate.moduleClass);
         this.delegate = delegate;
         this.lock = lock;
     }
@@ -14,11 +15,6 @@ class ExternallySynchronisedCommandCallback<CONTEXT extends CommandContext, MODU
     @Override
     protected CONTEXT getContext(CommandContext context) {
         return delegate.getContext(context);
-    }
-
-    @Override
-    protected MODULE getModule(CONTEXT context) {
-        return delegate.getModule(context);
     }
 
     @Override

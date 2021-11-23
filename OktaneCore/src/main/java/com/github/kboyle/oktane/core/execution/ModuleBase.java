@@ -1,7 +1,9 @@
 package com.github.kboyle.oktane.core.execution;
 
+import com.github.kboyle.oktane.core.annotation.PrototypeModule;
 import com.github.kboyle.oktane.core.result.command.*;
 
+@PrototypeModule
 public abstract class ModuleBase<CONTEXT extends CommandContext> {
     CONTEXT context;
 

@@ -8,6 +8,7 @@ import com.github.kboyle.oktane.core.result.command.CommandTextResult;
 import com.github.kboyle.oktane.test.modules.TestModule;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 
@@ -36,12 +37,12 @@ public class Program {
     }
 
     @Bean
-    public ApplicationListener<ApplicationReadyEvent> commandLoop(CommandService commandService) {
+    public ApplicationListener<ApplicationReadyEvent> commandLoop(CommandService commandService, ApplicationContext applicationContext) {
         return ready -> {
             var scanner = new Scanner(System.in);
             while (true) {
                 var input = scanner.nextLine();
-                var result = commandService.execute(new CommandContext(), input);
+                var result = commandService.execute(new CommandContext(applicationContext), input);
                 System.out.println(result);
             }
         };

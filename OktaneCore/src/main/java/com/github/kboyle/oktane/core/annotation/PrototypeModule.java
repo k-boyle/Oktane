@@ -2,7 +2,8 @@ package com.github.kboyle.oktane.core.annotation;
 
 import java.lang.annotation.*;
 
-@Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Target(ElementType.TYPE)
-public @interface Singleton {
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PrototypeModule {
 }

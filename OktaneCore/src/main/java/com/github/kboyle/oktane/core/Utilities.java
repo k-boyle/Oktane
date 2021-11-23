@@ -1,5 +1,9 @@
 package com.github.kboyle.oktane.core;
 
+import com.google.common.base.Preconditions;
+import org.springframework.context.ApplicationContext;
+
+import java.util.List;
 import java.util.Map;
 import java.util.function.*;
 import java.util.stream.Stream;
@@ -71,6 +75,30 @@ public final class Utilities {
         public static <T> T single(Stream<T> stream) {
             return stream.reduce((left, right) -> { throw new IllegalStateException("Expected only a single element"); })
                 .orElseThrow(() -> new IllegalStateException("Expected a single element"));
+        }
+    }
+
+    public static final class Spring {
+        private Spring() {
+            throw new UnsupportedOperationException("Instantiation of a utility class");
+        }
+
+        public static Object[] getBeans(ApplicationContext applicationContext, List<Class<?>> beanClasses) {
+            if (beanClasses.isEmpty()) {
+                return new Object[0];
+            }
+
+            var dependencies = new Object[beanClasses.size()];
+            for (var i = 0; i < beanClasses.size(); i++) {
+                var dependencyClass = beanClasses.get(i);
+                dependencies[i] = Preconditions.checkNotNull(
+                    applicationContext.getBean(dependencyClass),
+                    "A bean of type %s must be registered",
+                    dependencyClass
+                );
+            }
+
+            return dependencies;
         }
     }
 }

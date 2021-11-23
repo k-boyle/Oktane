@@ -7,6 +7,10 @@ import com.github.kboyle.oktane.core.execution.ModuleBase;
 import com.github.kboyle.oktane.core.result.command.CommandResult;
 
 public class TestModule extends ModuleBase<CommandContext> {
+    public TestModule() {
+        System.out.println("ctor");
+    }
+
     @Aliases("ping")
     public CommandResult ping() {
         return nop();

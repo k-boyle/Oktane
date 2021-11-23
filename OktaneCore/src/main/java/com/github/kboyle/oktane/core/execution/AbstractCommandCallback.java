@@ -2,35 +2,29 @@ package com.github.kboyle.oktane.core.execution;
 
 import com.github.kboyle.oktane.core.result.command.CommandExceptionResult;
 import com.github.kboyle.oktane.core.result.command.CommandResult;
+import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
-import java.lang.reflect.*;
-import java.util.Arrays;
-
-import static com.github.kboyle.oktane.core.Utilities.Streams.single;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> implements CommandCallback {
+    protected final Class<MODULE> moduleClass;
+
+    protected AbstractCommandCallback(Class<MODULE> moduleClass) {
+        this.moduleClass = moduleClass;
+    }
+
     @SuppressWarnings("unchecked")
     @SneakyThrows
     public static <CONTEXT extends CommandContext, MODULE extends ModuleBase<CONTEXT>> AbstractCommandCallback<CONTEXT, MODULE> create(Class<MODULE> moduleClass, Method method) {
-        var constructor = getConstructor(moduleClass);
-
-        var constructorCall = MethodCall.construct(constructor)
-            .withArgumentArrayElements(0)
-            .withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
-
-        var dependenciesCall = MethodCall.invoke(ElementMatchers.named("dependencies"))
-            .onArgument(0);
-
-        var getModuleMethodCall = MethodCall.invoke(ElementMatchers.definedMethod(ElementMatchers.named("getModule0")))
-            .withMethodCall(dependenciesCall);
-
         var commandCall = MethodCall.invoke(method)
             .onArgument(0)
             .withArgumentArrayElements(1)
@@ -45,14 +39,9 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
             .withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC);
 
         var callbackClass = new ByteBuddy()
-            .subclass(AbstractCommandCallback.class)
+            .subclass(AbstractCommandCallback.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING)
             .method(ElementMatchers.named("getContext"))
             .intercept(MethodDelegation.to(GetContextInterceptor.INSTANCE))
-            .defineMethod("getModule0", moduleClass, Modifier.PRIVATE)
-            .withParameters(Object[].class)
-            .intercept(constructorCall)
-            .method(ElementMatchers.named("getModule"))
-            .intercept(getModuleMethodCall)
             .defineMethod("execute0", CommandResult.class, Modifier.PRIVATE)
             .withParameters(moduleClass, Object[].class)
             .intercept(commandCall)
@@ -62,11 +51,7 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
             .load(AbstractCommandCallback.class.getClassLoader())
             .getLoaded();
 
-        return (AbstractCommandCallback<CONTEXT, MODULE>) callbackClass.getDeclaredConstructors()[0].newInstance();
-    }
-
-    private static Constructor<?> getConstructor(Class<?> cl) {
-        return single(Arrays.stream(cl.getDeclaredConstructors()));
+        return (AbstractCommandCallback<CONTEXT, MODULE>) callbackClass.getDeclaredConstructors()[0].newInstance(moduleClass);
     }
 
     public enum GetContextInterceptor {
@@ -80,8 +65,8 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
 
     @Override
     public CommandResult execute(CommandContext baseContext) {
-        var context = getContext(baseContext);
-        var module = getModule(context);
+        var context = Preconditions.checkNotNull(getContext(baseContext), "getContext cannot return null");
+        var module = Preconditions.checkNotNull(getModule(context), "getModule cannot return null");
         module.context = context;
 
         try {
@@ -95,9 +80,11 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
         }
     }
 
-    protected abstract CONTEXT getContext(CommandContext context);
+    protected MODULE getModule(CommandContext context) {
+        return context.applicationContext().getBean(moduleClass);
+    }
 
-    protected abstract MODULE getModule(CONTEXT context);
+    protected abstract CONTEXT getContext(CommandContext context);
 
     protected abstract CommandResult execute(CONTEXT context, MODULE module);
 
@@ -116,9 +103,5 @@ public abstract class AbstractCommandCallback<CONTEXT extends CommandContext, MO
 
     public AbstractCommandCallback<CONTEXT, MODULE> synchronised(Object lock) {
         return new ExternallySynchronisedCommandCallback<>(this, lock);
-    }
-
-    public AbstractCommandCallback<CONTEXT, MODULE> singleton(Class<MODULE> moduleClass) {
-        return new SingletonCommandCallback<>(this, moduleClass);
     }
 }

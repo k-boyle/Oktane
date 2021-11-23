@@ -64,12 +64,11 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
         }
 
         var synchronised = synchronised(moduleClass);
-        var singleton = singleton(moduleClass);
         moduleBuilder.synchronised(synchronised);
-        moduleBuilder.singleton(singleton);
+//        moduleBuilder.singleton(singleton); // todo
 
         preconditions(moduleClass).forEach(moduleBuilder::precondition);
-        commands(moduleClass, typeParserProvider, synchronised ? new Object() : null, singleton).forEach(moduleBuilder::command);
+        commands(moduleClass, typeParserProvider, synchronised ? new Object() : null).forEach(moduleBuilder::command);
         children(moduleClass, typeParserProvider).forEach(moduleBuilder::child);
 
         commandModuleBuilderConsumer.accept(moduleBuilder);
@@ -86,12 +85,11 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
     private Stream<Command.Builder> commands(
             Class<MODULE> moduleClass,
             TypeParserProvider typeParserProvider,
-            Object moduleLock,
-            boolean singleton) {
+            Object moduleLock) {
 
         return Arrays.stream(moduleClass.getDeclaredMethods())
             .filter(this::validCommandSignature)
-            .map(method -> createCommand(moduleClass, typeParserProvider, method, moduleLock, singleton));
+            .map(method -> createCommand(moduleClass, typeParserProvider, method, moduleLock));
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -138,10 +136,6 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             : description.value();
     }
 
-    private boolean singleton(Class<MODULE> moduleClass) {
-        return moduleClass.isAnnotationPresent(Singleton.class);
-    }
-
     private boolean synchronised(AnnotatedElement element) {
         return element.isAnnotationPresent(Synchronised.class);
     }
@@ -155,8 +149,7 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             Class<MODULE> moduleClass,
             TypeParserProvider typeParserProvider,
             Method method,
-            Object moduleLock,
-            boolean singleton) {
+            Object moduleLock) {
 
         var commandBuilder = Command.builder();
         commandBuilder.name(name(method, method::getName));
@@ -180,7 +173,7 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
 
         preconditions(method).forEach(commandBuilder::precondition);
 
-        var callback = callback(moduleClass, method, moduleLock, singleton, synchronised);
+        var callback = callback(moduleClass, method, moduleLock, synchronised);
 
         parameters(method, typeParserProvider).forEach(commandBuilder::parameter);
 
@@ -210,16 +203,11 @@ class ClassCommandModulesFactory<CONTEXT extends CommandContext, MODULE extends 
             Class<MODULE> moduleClass,
             Method method,
             Object moduleLock,
-            boolean singleton,
             boolean synchronised) {
 
         var callback = AbstractCommandCallback.create(moduleClass, method);
         if (moduleLock != null) {
             callback = callback.synchronised(moduleLock);
-        }
-
-        if (singleton) {
-            callback = callback.singleton(moduleClass);
         }
 
         if (synchronised) {

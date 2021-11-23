@@ -134,8 +134,6 @@ public class DefaultCommandService implements CommandService {
                 continue;
             }
 
-            context.dependencies = getDependencies(context, command.module().dependencies());
-
             command.module().before().run();
             var commandResult = command.callback().execute(context);
             command.module().after().run();
@@ -221,30 +219,6 @@ public class DefaultCommandService implements CommandService {
         Preconditions.checkState(isBoxedPrimitive(type, argument), "argument is of type %s expected %s", argument.getClass(), type);
         return parameter.runPreconditions(context, (T) argument);
     }
-
-    private Object[] getDependencies(CommandContext context, List<Class<?>> dependencyClasses) {
-        if (dependencyClasses.isEmpty()) {
-            return new Object[0];
-        }
-
-        var dependencies = new Object[dependencyClasses.size()];
-        for (var i = 0; i < dependencyClasses.size(); i++) {
-            var dependencyClass = dependencyClasses.get(i);
-            if (dependencyClass.isAssignableFrom(getClass())) {
-                dependencies[i] = this;
-                continue;
-            }
-
-            dependencies[i] = Preconditions.checkNotNull(
-                context.applicationContext().getBean(dependencyClass),
-                "A dependency of type %s must be in your provider",
-                dependencyClass
-            );
-        }
-
-        return dependencies;
-    }
-
 
     @Override
     public List<CommandModule> modules() {

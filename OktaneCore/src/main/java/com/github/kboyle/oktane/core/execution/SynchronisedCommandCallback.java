@@ -6,17 +6,13 @@ class SynchronisedCommandCallback<CONTEXT extends CommandContext, MODULE extends
     private final AbstractCommandCallback<CONTEXT, MODULE> delegate;
 
     SynchronisedCommandCallback(AbstractCommandCallback<CONTEXT, MODULE> delegate) {
+        super(delegate.moduleClass);
         this.delegate = delegate;
     }
 
     @Override
     protected CONTEXT getContext(CommandContext context) {
         return delegate.getContext(context);
-    }
-
-    @Override
-    protected MODULE getModule(CONTEXT context) {
-        return delegate.getModule(context);
     }
 
     @Override
