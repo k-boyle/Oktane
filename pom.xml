@@ -48,7 +48,7 @@
 
         <junit.version>5.7.2</junit.version>
 
-        <staging.version>1.6.8</staging.version>
+        <staging.version>1.6.13</staging.version>
     </properties>
 
     <dependencyManagement>
