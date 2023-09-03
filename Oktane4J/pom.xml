@@ -16,7 +16,7 @@
         <sonar.organization>k-boyle</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
-        <discord4j.version>3.1.7</discord4j.version>
+        <discord4j.version>3.2.6</discord4j.version>
     </properties>
 
     <dependencies>
