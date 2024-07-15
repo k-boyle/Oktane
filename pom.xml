@@ -40,7 +40,7 @@
         <maven-source.version>3.2.1</maven-source.version>
         <maven-javadoc.version>3.3.0</maven-javadoc.version>
         <maven-gpg.version>3.0.1</maven-gpg.version>
-        <maven-versions.version>2.8.1</maven-versions.version>
+        <maven-versions.version>2.17.1</maven-versions.version>
 
         <guava.version>30.1.1-jre</guava.version>
 
